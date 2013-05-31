@@ -58,7 +58,7 @@ template<typename T> struct DeviceRegistrar
 };
 
 #define TYRSOUND_REGISTER_DEVICE(name, type) \
-    DeviceRegistrar<type> _static_autoregister_device_##type = DeviceRegistrar<type>(name);
+    TYRSOUND_STATIC_REGISTER(DeviceRegistrar, type, (name))
 
 
 

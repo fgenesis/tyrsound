@@ -77,6 +77,10 @@ private:
     size_t _idx;
 };
 
+#define TYRSOUND_STATIC_REGISTER(registrar, type, expr) \
+    registrar<type> _static_autoregister_##registrar##_##type expr ; \
+    extern "C" TYRSOUND_DLL_EXPORT void *_static_autoregister_helper_##registrar##_##type() \
+    { return &_static_autoregister_##registrar##_##type; }
 
 #include "tyrsound_end.h"
 #endif

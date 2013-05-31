@@ -52,8 +52,7 @@ template<typename T> struct DecoderRegistrar
 };
 
 #define TYRSOUND_REGISTER_DECODER(type) \
-    DecoderRegistrar<type> _static_autoregister_decoder_##type;
-
+    TYRSOUND_STATIC_REGISTER(DecoderRegistrar, type, )
 
 
 #include "tyrsound_end.h"
