@@ -168,9 +168,9 @@ TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle);
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle, float seconds);
 
 /* When the decoder hits stream EOF, seek back to position
- *    seconds: -1 to disable looping, any value > 0 to seek to.
+ *    seconds: -1 to disable looping, any value >= 0 to seek to.
  *    loops: How often to loop. 0 disables looping (plays exactly once),
-             1 repeats once (= plays 2 times, etc. -1 to loop infinitely. */
+             1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Handle, float seconds, int loops);
 
 

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(tyrsound)
 
-option(TYRSOUND_BUILD_EXAMPLES "Build examples?" FALSE)
+option(TYRSOUND_BUILD_EXAMPLES "Build examples?" TRUE)
+option(TYRSOUND_BUILD_DYNAMIC "Build as DLL/Shared object?" TRUE)
+
 
 option(TYRSOUND_SUPPORT_OGG "Support OGG format?" TRUE)
 #option(TYRSOUND_SUPPORT_OPUS "Support OPUS format?" TRUE)
@@ -60,17 +62,12 @@ if(NOT MSVC)
     endif()
 endif()
 
+# dependencies first
+add_subdirectory(dep)
+
+
 set(TYRSOUND_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/core")
 
-
-add_subdirectory(dep)
-add_subdirectory(decoders)
-add_subdirectory(output)
-add_subdirectory(core)
-
-if(TYRSOUND_BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
+add_subdirectory(src)
