@@ -41,37 +41,37 @@ void *tyrsound_ex_alloc(void *ptr, size_t size)
 
 tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
-	if(tyrsound::getDevice())
-		return TYRSOUND_ERR_UNSPECIFIED;
+    if(tyrsound::getDevice())
+        return TYRSOUND_ERR_UNSPECIFIED;
 
-	bool haveDevice = false;
+    bool haveDevice = false;
 
     if(!output || !*output)
     {
         haveDevice = tyrsound::initDevice(NULL, fmt);
     }
-	else
-	{
-		char buf[32];
-		const char *next, *prev = output;
-		while(true)
-		{
-			next = strchr(prev, ' ');
-			unsigned int len = tyrsound::Min<unsigned int>(next - prev, sizeof(buf) - 2);
-			memcpy(buf, prev, len);
-			buf[len+1] = 0;
-			prev = next + 1;
+    else
+    {
+        char buf[32];
+        const char *next, *prev = output;
+        while(true)
+        {
+            next = strchr(prev, ' ');
+            unsigned int len = tyrsound::Min<unsigned int>(next - prev, sizeof(buf) - 2);
+            memcpy(buf, prev, len);
+            buf[len+1] = 0;
+            prev = next + 1;
 
-			if(tyrsound::initDevice(&buf[0], fmt))
-			{
-				haveDevice = true;
-				break;
-			}
+            if(tyrsound::initDevice(&buf[0], fmt))
+            {
+                haveDevice = true;
+                break;
+            }
 
-			if(!next)
-				break;
-		}
-	}
+            if(!next)
+                break;
+        }
+    }
 
     return haveDevice ? TYRSOUND_ERR_OK : TYRSOUND_ERR_NO_DEVICE;
 }

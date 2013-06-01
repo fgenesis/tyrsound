@@ -11,7 +11,7 @@
 
 void tyrsound_ex_registerDecoder(DecoderFactoryBase *f)
 {
-	TYRSOUND_DECODER_HOLDER::Register(f);
+    TYRSOUND_DECODER_HOLDER::Register(f);
 }
 
 

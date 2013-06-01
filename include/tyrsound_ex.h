@@ -18,9 +18,9 @@ class DeviceFactoryBase;
 
 extern "C"
 {
-	TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size);
-	TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo&);
-	TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDecoder(DecoderFactoryBase *);
+    TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo&);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDecoder(DecoderFactoryBase *);
 }
 
 inline void *Realloc(void *ptr, size_t size) { return tyrsound_ex_alloc(ptr, size); }

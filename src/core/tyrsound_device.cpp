@@ -25,7 +25,7 @@ static void _applyDefaultFormat(tyrsound_Format& fmt)
 
 void tyrsound_ex_registerDevice(const DeviceInfo& di)
 {
-	TYRSOUND_DEVICE_HOLDER::Register(di);
+    TYRSOUND_DEVICE_HOLDER::Register(di);
 }
 
 DeviceBase *getDevice()
