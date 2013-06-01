@@ -1,4 +1,6 @@
 
+include_directories("${TYRSOUND_INCLUDE_DIR}")
+
 add_executable(tyrplay tyrplay.cpp)
 target_link_libraries(tyrplay tyrsound)
 

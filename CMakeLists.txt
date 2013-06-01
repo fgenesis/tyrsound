@@ -62,9 +62,9 @@ set(INCLUDE_LIST)
 # dependencies first
 add_subdirectory(dep)
 
-
 set(TYRSOUND_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+set(TYRSOUND_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-list(APPEND INCLUDE_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include")
+list(APPEND INCLUDE_LIST "${TYRSOUND_INCLUDE_DIR}")
 
 add_subdirectory(src)
