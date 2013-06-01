@@ -62,12 +62,14 @@ if(NOT MSVC)
     endif()
 endif()
 
+set(INCLUDE_LIST)
+
 # dependencies first
 add_subdirectory(dep)
 
 
 set(TYRSOUND_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
+list(APPEND INCLUDE_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_subdirectory(src)

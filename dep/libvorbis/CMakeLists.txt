@@ -1,4 +1,7 @@
 
+include_directories("${OGG_INCLUDE_DIR}")
+include_directories("${VORBIS_INCLUDE_DIR}")
+
 add_library(vorbis
     lib/analysis.c
     lib/bitrate.c

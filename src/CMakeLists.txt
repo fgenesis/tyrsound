@@ -4,6 +4,9 @@ if(TYRSOUND_BUILD_DYNAMIC)
     set(LIB_TYPE SHARED)
 endif()
 
+message(STATUS "Including external dirs: ${INCLUDE_LIST}")
+include_directories("${INCLUDE_LIST}")
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/core")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/decoders")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/output")
@@ -44,8 +47,6 @@ set(src_decoders
 )
 
 if(TYRSOUND_SUPPORT_OGG)
-    include_directories("${TYRSOUND_SRC_ROOT}/dep/libogg/include")
-    include_directories("${TYRSOUND_SRC_ROOT}/dep/libvorbis/include")
     list(APPEND src_decoders
         decoders/OggDecoder.cpp
         decoders/OggDecoder.h
@@ -54,7 +55,6 @@ if(TYRSOUND_SUPPORT_OGG)
 endif()
 
 if(TYRSOUND_OUTPUT_OPENAL)
-    include_directories("${OPENAL_INCLUDE_DIR}")
     list(APPEND src_output
         output/OpenALDevice.cpp
         output/OpenALDevice.h
