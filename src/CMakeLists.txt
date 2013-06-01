@@ -47,6 +47,8 @@ set(src_decoders
 )
 
 if(TYRSOUND_SUPPORT_OGG)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libogg/include")
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libvorbis/include")
     list(APPEND src_decoders
         decoders/OggDecoder.cpp
         decoders/OggDecoder.h
@@ -55,6 +57,7 @@ if(TYRSOUND_SUPPORT_OGG)
 endif()
 
 if(TYRSOUND_OUTPUT_OPENAL)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/AL/include")
     list(APPEND src_output
         output/OpenALDevice.cpp
         output/OpenALDevice.h
