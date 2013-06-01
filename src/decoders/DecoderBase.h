@@ -21,7 +21,7 @@ public:
     virtual tyrsound_Error setLoop(float seconds, int loops) = 0;
     virtual float getLoopPoint() = 0;
     virtual bool isEOF() = 0;
-
+    virtual void getFormat(tyrsound_Format *fmt) = 0;
 };
 
 class DecoderFactoryBase

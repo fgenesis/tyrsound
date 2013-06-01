@@ -53,14 +53,11 @@ bool NullDevice::_allocateChannels(unsigned int num)
 
 tyrsound_Error NullDevice::setVolume(float vol)
 {
-    return TYRSOUND_ERR_UNSUPPORTED;
+    return TYRSOUND_ERR_OK;
 }
 
 void NullDevice::update()
 {
-    for(unsigned int i = 0; i < _numChannels; ++i)
-        if(ChannelBase *chan = _channels[i])
-            chan->update();
 }
 
 ChannelBase *NullDevice::getFreeChannel()
@@ -88,5 +85,14 @@ ChannelBase *NullDevice::getFreeChannel()
     return NULL;
 }
 
+tyrsound_Error NullDevice::setSpeed(float speed)
+{
+    return TYRSOUND_ERR_OK;
+}
+
+tyrsound_Error NullDevice::setPosition(float x, float y, float z)
+{
+    return TYRSOUND_ERR_OK;
+}
 
 #include "tyrsound_end.h"

@@ -18,11 +18,12 @@ public:
     virtual tyrsound_Error play() = 0;
     virtual tyrsound_Error pause() = 0;
     virtual bool isPlaying() = 0;
+    virtual float getPlayPosition() = 0;
 
     virtual bool wantData() = 0;
     virtual void getBuffer(void **buf, size_t *size) = 0;
     virtual void update() = 0;
-    virtual void filledBuffer(size_t size) = 0;
+    virtual tyrsound_Error filledBuffer(size_t size, const tyrsound_Format& fmt) = 0;
     virtual bool isFree() = 0;
 
 

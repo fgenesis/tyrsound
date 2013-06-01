@@ -60,6 +60,10 @@ static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp)
 
 tyrsound_Handle registerSoundObject(SoundObject *sound)
 {
+    UpdateGuard guard;
+    if(!guard)
+        return 0;
+
     unsigned int idx;
     if(!getFreeIdx(&idx))
     {
@@ -76,6 +80,10 @@ tyrsound_Handle registerSoundObject(SoundObject *sound)
 
 static tyrsound_Error unregisterSoundObject(SoundObject *sound)
 {
+    UpdateGuard guard;
+    if(!guard)
+        return TYRSOUND_ERR_SHIT_HAPPENED;
+
     const unsigned int idx = sound->_idxInStore;
     sound->_idxInStore = unsigned(-1);
 
@@ -136,6 +144,12 @@ tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)
 {
     LOOKUP(sound, handle);
     return sound->setVolume(vol);
+}
+
+tyrsound_Error tyrsound_setSpeed(tyrsound_Handle handle, float speed)
+{
+    LOOKUP(sound, handle);
+    return sound->setSpeed(speed);
 }
 
 tyrsound_Error tyrsound_seek(tyrsound_Handle handle, float seconds)

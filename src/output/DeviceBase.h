@@ -16,6 +16,8 @@ public:
     void destroy();
 
     virtual tyrsound_Error setVolume(float vol) = 0;
+    virtual tyrsound_Error setSpeed(float speed) = 0;
+    virtual tyrsound_Error setPosition(float x, float y, float z) = 0;
     virtual void update() = 0;
     virtual ChannelBase *getFreeChannel() = 0;
 };

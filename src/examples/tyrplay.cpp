@@ -6,7 +6,7 @@ int doExit = 0;
 
 int main(int argc, char **argv)
 {
-    if(tyrsound_init(NULL, "null") != TYRSOUND_ERR_OK)
+    if(tyrsound_init(NULL, NULL) != TYRSOUND_ERR_OK)
         return 1;
 
     tyrsound_Stream strm;

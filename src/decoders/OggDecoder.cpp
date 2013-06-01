@@ -49,7 +49,6 @@ struct OggDecoderState
 
 OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
 : _state(state)
-, _fmt(fmt)
 , _sampleWordSize(fmt.sampleBits <= 8 ? 1 : 2)
 , _loopPoint(-1.0f)
 , _eof(false)
@@ -57,6 +56,10 @@ OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
 {
     _totaltime = (float)ov_time_total(&((OggDecoderState*)state)->vf, -1);
     _seekable = ov_seekable(&((OggDecoderState*)state)->vf) != 0;
+    _fmt = fmt;
+    vorbis_info *vi = ov_info(&((OggDecoderState*)state)->vf, -1);
+    _fmt.channels = vi->channels;
+    _fmt.hz = vi->rate;
 }
 
 OggDecoder::~OggDecoder()
@@ -113,6 +116,7 @@ size_t OggDecoder::fillBuffer(void *buf, size_t size)
 
             if(_loopPoint >= 0)
             {
+                // TODO: callback
                 ov_time_seek(&state->vf, _loopPoint);
                 if(_loopCount > 0)
                     --_loopCount;
@@ -167,6 +171,11 @@ float OggDecoder::tell()
 bool OggDecoder::isEOF()
 {
     return _eof;
+}
+
+void OggDecoder::getFormat(tyrsound_Format *fmt)
+{
+    *fmt = _fmt;
 }
 
 

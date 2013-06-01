@@ -5,16 +5,12 @@
 #include "tyrsound_begin.h"
 
 // Global state
-tyrsound_Alloc g_alloc = NULL;
+static tyrsound_Alloc s_alloc = NULL;
+static void *s_alloc_user = NULL;
 
 static void *s_updateMutex = NULL;
 static int (*s_lockMutexFunc)(void*) = NULL;
 static void (*s_unlockMutexFunc)(void*) = NULL;
-
-static const char *defaultOutputs = "openal";
-
-
-#include "tyrsound_end.h"
 
 
 int lockUpdate()
@@ -31,18 +27,25 @@ void unlockUpdate()
 }
 
 
-static void *_defaultAlloc(void *ptr, size_t size)
+void *doAlloc(void *ptr, size_t size)
 {
+    if(s_alloc)
+        return s_alloc(ptr, size, s_alloc_user);
+
     return realloc(ptr, size);
 }
+
+#include "tyrsound_end.h"
+
 
 
 tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
-    tyrsound_setAlloc(tyrsound::g_alloc); // fixes NULL
-
     if(!output || !*output)
-        output = tyrsound::defaultOutputs;
+    {
+        tyrsound::initDevice(NULL, fmt);
+        goto device_done;
+    }
 
     char buf[32];
     const char *next, *prev = output;
@@ -55,7 +58,7 @@ tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
         prev = next + 1;
 
         if(tyrsound::initDevice(&buf[0], fmt))
-            goto output_done;
+            goto device_done;
 
         if(!next)
             break;
@@ -63,7 +66,7 @@ tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 
     return TYRSOUND_ERR_NO_DEVICE;
 
-output_done:
+device_done:
 
     return TYRSOUND_ERR_OK;
 }
@@ -72,6 +75,7 @@ tyrsound_Error tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
     tyrsound::shutdownDevice();
+    tyrsound_setAlloc(NULL, NULL);
     return TYRSOUND_ERR_OK;
 }
 
@@ -84,9 +88,10 @@ tyrsound_Error tyrsound_setUpdateMutex(void *mutex, int (*lockFunc)(void*), void
     return TYRSOUND_ERR_OK;
 }
 
-void tyrsound_setAlloc(tyrsound_Alloc allocFunc)
+void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 {
-    tyrsound::g_alloc = allocFunc ? allocFunc : _defaultAlloc;
+    tyrsound::s_alloc = allocFunc;
+    tyrsound::s_alloc_user = user;
 }
 
 

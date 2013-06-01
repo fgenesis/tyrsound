@@ -18,6 +18,8 @@ public:
     static NullDevice *create(tyrsound_Format& fmt);
 
     virtual tyrsound_Error setVolume(float vol);
+    virtual tyrsound_Error setSpeed(float speed);
+    virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual void update();
     virtual ChannelBase *getFreeChannel();
 

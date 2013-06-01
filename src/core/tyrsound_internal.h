@@ -1,6 +1,10 @@
 #ifndef TYRSOUND_INTERNAL_H
 #define TYRSOUND_INTERNAL_H
 
+#if !defined(NDEBUG) && (defined(DEBUG) || defined(_DEBUG))
+#  define TYRSOUND_IS_DEBUG 1
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <new>
@@ -19,8 +23,7 @@ class SoundObject;
 typedef DecoderBase *(*StreamLoaderFunc)(tyrsound_Stream);
 
 // in tyrsound.cpp
-extern tyrsound_Alloc g_alloc;
-
+void *doAlloc(void *ptr, size_t size);
 int lockUpdate();
 void unlockUpdate();
 
@@ -36,9 +39,9 @@ private:
 
 // Generic inline functions
 
-inline void *Realloc(void *ptr, size_t size) { return g_alloc(ptr, size); }
-inline void  Free(void *ptr)                 { g_alloc(ptr, 0); }
-inline void *Alloc(size_t size)              { return g_alloc(NULL, size); }
+inline void *Realloc(void *ptr, size_t size) { return doAlloc(ptr, size); }
+inline void  Free(void *ptr)                 { doAlloc(ptr, 0); }
+inline void *Alloc(size_t size)              { return doAlloc(NULL, size); }
 
 template<typename T>       T& Min(      T& a,       T& b) { return a < b ? a : b; }
 template<typename T> const T& Min(const T& a, const T& b) { return a < b ? a : b; }
@@ -56,6 +59,9 @@ void shutdownDevice();
 tyrsound_Handle registerSoundObject(SoundObject *);
 void shutdownSounds();
 void updateSounds();
+
+// in tyrsound_misc.cpp
+void breakpoint();
 
 // Helper for static initialization
 template <typename T, int SZ> class RegistrationHolder

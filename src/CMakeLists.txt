@@ -19,6 +19,7 @@ set(src_core
     core/tyrsound_internal.h
     core/tyrsound_device.cpp
     core/tyrsound_sound.cpp
+    core/tyrsound_misc.cpp
     core/SoundObject.h
     core/SoundObject.cpp
     "${TYRSOUND_SRC_ROOT}/include/tyrsound.h"

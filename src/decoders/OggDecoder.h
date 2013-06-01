@@ -23,6 +23,7 @@ public:
     virtual tyrsound_Error setLoop(float seconds, int loops);
     virtual float getLoopPoint();
     virtual bool isEOF();
+    virtual void getFormat(tyrsound_Format *fmt);
 
 private:
 

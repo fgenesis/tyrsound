@@ -51,11 +51,14 @@ void NullChannel::update()
     _wantData = true;
 }
 
-void NullChannel::filledBuffer(size_t size)
+tyrsound_Error NullChannel::filledBuffer(size_t size, const tyrsound_Format& fmt)
 {
     _wantData = false;
     if(!size) // eof?
         _playing = false;
+    _samplesDone += size;
+    _hz = fmt.hz;
+    return TYRSOUND_ERR_OK;
 }
 
 tyrsound_Error NullChannel::setVolume(float vol)
@@ -85,6 +88,7 @@ tyrsound_Error NullChannel::stop()
 {
     _playing = false;
     _inUse = false;
+    _samplesDone = 0;
     return TYRSOUND_ERR_OK;
 }
 
@@ -96,6 +100,11 @@ bool NullChannel::isPlaying()
 bool NullChannel::isFree()
 {
     return !_inUse;
+}
+
+float NullChannel::getPlayPosition()
+{
+    return (_samplesDone / _hz) + (float(_samplesDone % _hz) / float(_hz));
 }
 
 #include "tyrsound_end.h"

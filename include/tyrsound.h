@@ -70,6 +70,8 @@ enum tyrsound_Error
     TYRSOUND_ERR_NO_DEVICE             = -5,
     TYRSOUND_ERR_SHIT_HAPPENED         = -6,
     TYRSOUND_ERR_OUT_OF_MEMORY         = -7,
+    TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8,
+    TYRSOUND_ERR_NOT_READY             = -9,
 };
 
 
@@ -85,7 +87,7 @@ typedef tyrsound_Error (*tyrsound_positionCallback)(tyrsound_Handle, float posit
    * (NULL, size) -> allocate size bytes
    * (ptr, size) -> reallocate
 */
-typedef void *(*tyrsound_Alloc)(void *ptr, size_t size);
+typedef void *(*tyrsound_Alloc)(void *ptr, size_t size, void *user);
 
 
 /* Startup the sound system.
@@ -96,7 +98,9 @@ typedef void *(*tyrsound_Alloc)(void *ptr, size_t size);
            (Note: Currently only "openal" is supported) */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output);
 
-/* Shuts down the sound system and resets the internal state. */
+/* Shuts down the sound system and resets the internal state.
+ * Clears everything including the the custom allocator,
+ * but NOT the custom mutex and related functions. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown(void);
 
 /* Sets up the library for multithreading,
@@ -129,7 +133,7 @@ TYRSOUND_DLL_EXPORT void tyrsound_getFormat(tyrsound_Format *fmt);
 
 /* Set a custom memory allocation function following the same semantics as realloc().
    See tyrsound_Alloc description. Passing NULL uses the default allocator (realloc()).*/
-TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc);
+TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user);
 
 /*****************************
 * Sound creation/destruction *
@@ -161,6 +165,12 @@ TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle);
 /* Sets volume. 0 = silent, 1 = normal, > 1: louder than normal */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle, float);
 
+/* Sets speed. (0, 1) slows down, 1 is normal, > 1 is faster. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Handle, float);
+
+/* Sets sound world position in (x, y, z)-coordinates. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle, float x, float y, float z);
+
 /* Returns the total play time in seconds. < 0 if unknown. */
 TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle);
 
@@ -172,6 +182,20 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle, float seconds)
  *    loops: How often to loop. 0 disables looping (plays exactly once),
              1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Handle, float seconds, int loops);
+
+/************************
+* Listener manipulation *
+************************/
+
+/* Sets listener world position in (x, y, z)-coordinates. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setListenerPosition(float x, float y, float z);
+
+/* Set master volume. 0 = silent, 1 = normal, > 1: louder than normal. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterVolume(float);
+
+/* Set master speed, affecting all sound sources currently played.
+ * (0, 1) slows down, 1 is normal, > 1 is faster. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterSpeed(float);
 
 
 /* Sets a callback that fires whenever a certain position is reached while playing.

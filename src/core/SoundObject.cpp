@@ -13,15 +13,14 @@ SoundObject *SoundObject::create(DecoderBase *decoder, ChannelBase *output)
 
 void SoundObject::destroy()
 {
-    stop();
-    _decoder->destroy();
-
     this->~SoundObject();
     Free(this);
 }
 
 SoundObject::~SoundObject()
 {
+    stop();
+    _decoder->destroy();
 }
 
 SoundObject::SoundObject(DecoderBase *decoder, ChannelBase *channel)
@@ -33,7 +32,7 @@ SoundObject::SoundObject(DecoderBase *decoder, ChannelBase *channel)
 
 void SoundObject::update()
 {
-    //_channel->update();
+    _channel->update();
     while(_channel->wantData())
     {
         void *buf = NULL;
@@ -42,7 +41,14 @@ void SoundObject::update()
         if(buf && size)
         {
             size_t filled = _decoder->fillBuffer(buf, size);
-            _channel->filledBuffer(filled);
+            tyrsound_Format fmt;
+            _decoder->getFormat(&fmt);
+            tyrsound_Error err = _channel->filledBuffer(filled, fmt);
+            if(err != TYRSOUND_ERR_OK)
+            {
+                breakpoint();
+                return;
+            }
         }
     }
 }
@@ -95,6 +101,11 @@ float SoundObject::getLength()
 bool SoundObject::isPlaying()
 {
     return _channel->isPlaying();
+}
+
+float SoundObject::getPlayPosition()
+{
+    return _channel->getPlayPosition();
 }
 
 #include "tyrsound_end.h"
