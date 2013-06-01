@@ -176,7 +176,10 @@ void OpenALChannel::update()
             break;
         case AL_PLAYING:
             if(!_playing && _paused)
-                    pause();
+                pause();
+            break;
+        default:
+            breakpoint();
             break;
     }
 }
@@ -236,7 +239,7 @@ tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& f
     else
     {
         // end of stream?
-        if(_initialBufferIdx) // if at least one packet was buffered, we're ready to play
+        if(_initial && _initialBufferIdx) // if at least one packet was buffered, we're ready to play
             _initial = false;
     }
 

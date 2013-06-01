@@ -50,6 +50,8 @@ void SoundObject::update()
                 return;
             }
         }
+        if(_decoder->isEOF())
+            break;
     }
 }
 
