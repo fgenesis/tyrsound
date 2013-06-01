@@ -11,25 +11,25 @@ TYRSOUND_REGISTER_DECODER(OggDecoder);
 static size_t read_wrap(void *dst, size_t size, size_t nmemb, void *datasource)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-    return strm->read(dst, size, nmemb, strm->src);
+    return (size_t)strm->read(dst, size, nmemb, strm->user);
 }
 
 static int seek_wrap(void *datasource, ogg_int64_t offset, int whence)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-    return strm->seek(strm->src, offset, whence);
+    return strm->seek(strm->user, offset, whence);
 }
 
 static int close_wrap(void *datasource)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-    return strm->close(strm->src);
+    return strm->close(strm->user);
 }
 
 static long tell_wrap(void *datasource)
 {
      tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-     return (long)strm->tell(strm->src);
+     return (long)strm->tell(strm->user);
 }
 
 static const ov_callbacks stream_callbacks =
@@ -49,17 +49,20 @@ struct OggDecoderState
 
 OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
 : _state(state)
-, _sampleWordSize(fmt.sampleBits <= 8 ? 1 : 2)
 , _loopPoint(-1.0f)
 , _eof(false)
 , _loopCount(0)
 {
+    // 16 bits if not specified
+    unsigned int bits = fmt.sampleBits == 0 ? 16 : fmt.sampleBits;
+    _sampleWordSize = (bits <= 8 ? 1 : 2);
     _totaltime = (float)ov_time_total(&((OggDecoderState*)state)->vf, -1);
     _seekable = ov_seekable(&((OggDecoderState*)state)->vf) != 0;
     _fmt = fmt;
     vorbis_info *vi = ov_info(&((OggDecoderState*)state)->vf, -1);
     _fmt.channels = vi->channels;
     _fmt.hz = vi->rate;
+    _fmt.sampleBits = bits;
 }
 
 OggDecoder::~OggDecoder()

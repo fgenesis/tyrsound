@@ -15,10 +15,8 @@ void tyrsound_ex_registerDecoder(DecoderFactoryBase *f)
 }
 
 
-static DecoderBase *createDecoder(tyrsound_Stream strm)
+static DecoderBase *createDecoder(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
-    tyrsound_Format fmt;
-    tyrsound_getFormat(&fmt);
     for(unsigned int i = 0; TYRSOUND_DECODER_HOLDER::Size(); ++i)
         if(DecoderBase *decoder = TYRSOUND_DECODER_HOLDER::Get(i)->create(fmt, strm))
             return decoder;
@@ -26,7 +24,7 @@ static DecoderBase *createDecoder(tyrsound_Stream strm)
 }
 
 
-static tyrsound_Handle createSoundObject(tyrsound_Stream strm)
+static tyrsound_Handle createSoundObject(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
     if(!strm.read)
         return 0;
@@ -35,7 +33,7 @@ static tyrsound_Handle createSoundObject(tyrsound_Stream strm)
     if(!chan)
         return 0;
 
-    DecoderBase *decoder = createDecoder(strm);
+    DecoderBase *decoder = createDecoder(strm, fmt);
     if(!decoder)
         return 0;
 
@@ -61,8 +59,38 @@ static tyrsound_Handle createSoundObject(tyrsound_Stream strm)
 
 
 
-tyrsound_Handle tyrsound_load(tyrsound_Stream stream)
+tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt)
 {
-    return tyrsound::createSoundObject(stream);
+    tyrsound_Format f;
+    if(!fmt)
+        tyrsound_getFormat(&f);
+    return tyrsound::createSoundObject(stream, fmt ? *fmt : f);
 }
 
+tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt)
+{
+    if(!src.read || !dst.write)
+        return TYRSOUND_ERR_INVALID_VALUE;
+
+    tyrsound_Format f;
+    if(!srcfmt)
+        tyrsound_getFormat(&f);
+
+    tyrsound::DecoderBase *decoder = tyrsound::createDecoder(src, srcfmt ? *srcfmt : f);
+    if(!decoder)
+        TYRSOUND_ERR_UNSUPPORTED;
+
+    char buf[2048];
+    while(!decoder->isEOF())
+    {
+        decoder->fillBuffer(buf, sizeof(buf));
+        tyrsound_int64 written = dst.write(buf, 1, sizeof(buf), dst.user);
+        if(written != sizeof(buf))
+            return TYRSOUND_ERR_NOT_READY;
+    }
+
+    if(dstfmt)
+        decoder->getFormat(dstfmt);
+
+    return TYRSOUND_ERR_OK;
+}

@@ -50,26 +50,39 @@ static tyrsound_int64 wrap_ftell(void *fh)
 #endif
 }
 
-static size_t wrap_fread(void *ptr, size_t size, size_t count, void *fh)
+static int wrap_fflush(void *fh)
 {
-    return fread(ptr, size, count, (FILE*)fh);
+    return fflush((FILE*)fh);
+}
+
+
+static tyrsound_int64 wrap_fread(void *ptr, tyrsound_int64 size, tyrsound_int64 count, void *fh)
+{
+    return fread(ptr, (size_t)size, (size_t)count, (FILE*)fh);
+}
+
+static tyrsound_int64 wrap_fwrite(void *ptr, tyrsound_int64 size, tyrsound_int64 count, void *fh)
+{
+    return fwrite(ptr, (size_t)size, (size_t)count, (FILE*)fh);
 }
 
 tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, FILE *fh, int closeWhenDone)
 {
     if(!fh)
         return TYRSOUND_ERR_INVALID_VALUE;
-    strm->src = fh;
+    strm->user = fh;
     strm->close = closeWhenDone ? wrap_fclose : NULL;
     strm->read = wrap_fread;
     strm->seek = wrap_fseek;
     strm->tell = wrap_ftell;
+    strm->write = wrap_fwrite;
+    strm->flush = wrap_fflush;
     return TYRSOUND_ERR_OK;
 }
 
-tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream *strm, const char *filename)
+tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream *strm, const char *filename, const char *mode)
 {
-    FILE *fh = fopen(filename, "rb");
+    FILE *fh = fopen(filename, (mode && *mode) ? mode : "rb");
     return tyrsound_createFileStream(strm, fh, 1);
 }
 
@@ -110,14 +123,28 @@ static int wrap_memseek(void *memp, tyrsound_int64 pos, int whence)
     return 0;
 }
 
-static size_t wrap_memread(void *dst, size_t size, size_t count, void *memp)
+static tyrsound_int64 wrap_memread(void *dst, tyrsound_int64 size, tyrsound_int64 count, void *memp)
 {
     MemReadInfo *m = (MemReadInfo*)memp;
-    size_t remain = m->size - (m->cur - m->mem);
-    size_t copyable = tyrsound::Min(count, remain);
+    tyrsound_int64 remain = m->size - (m->cur - m->mem);
+    tyrsound_int64 copyable = tyrsound::Min<tyrsound_int64>(count, remain);
+    if(copyable <= 0)
+        return 0;
     memcpy(dst, m->cur, copyable);
     m->cur += copyable;
     return copyable;
+}
+
+static tyrsound_int64 wrap_memwrite(void *src, tyrsound_int64 size, tyrsound_int64 count, void *memp)
+{
+    MemReadInfo *m = (MemReadInfo*)memp;
+    tyrsound_int64 remain = m->size - (m->cur - m->mem);
+    tyrsound_int64 writable = tyrsound::Min<tyrsound_int64>(count, remain);
+    if(writable <= 0)
+        return 0;
+    memcpy(m->cur, src, writable);
+    m->cur += writable;
+    return writable;
 }
 
 static tyrsound_int64 wrap_memtell(void *memp)
@@ -138,11 +165,12 @@ tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t
     m->closeFunc = closeFunc;
     m->size = size;
 
-    strm->src = m;
+    strm->user = m;
     strm->close = wrap_memclose;
     strm->read = wrap_memread;
     strm->seek = wrap_memseek;
     strm->tell = wrap_memtell;
+    strm->write = wrap_memwrite;
     return TYRSOUND_ERR_OK;
 }
 

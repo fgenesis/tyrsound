@@ -37,41 +37,48 @@ typedef unsigned int tyrsound_Handle;
 struct tyrsound_Stream
 {
     /* User-specified stream pointer */
-    void *src;
+    void *user;
 
     /* Function to get more bytes from the pointer.
-     * Same semantics as fread(). Do not use NULL. */
-    size_t (*read)(void *dst, size_t size, size_t count, void *src);
+     * Same semantics as fread(). NULL for write-only streams. */
+    tyrsound_int64 (*read)(void *dst, tyrsound_int64 size, tyrsound_int64 count, void *user);
 
-    /* Seek function. Same semantics as fseek(). Can be NULL if stream is unseekable. */
-    int (*seek)(void *src, tyrsound_int64 offset, int whence);
+    /* Seek function. Same semantics as fseek(). Seeks both read and write positions.
+     * Can be NULL if stream is unseekable. */
+    int (*seek)(void *user, tyrsound_int64 offset, int whence);
 
     /* Stream poisition query function. Same semantics as ftell(). Can be NULL if unknown. */
-    tyrsound_int64 (*tell)(void *src);
+    tyrsound_int64 (*tell)(void *user);
 
     /* Closes the stream; will be called when the stream is no longer needed.
        Can be NULL if stream can not (or should not) be closed. */
-    int (*close)(void *src);
+    int (*close)(void *user);
+
+    /* Writes data to the stream. Same semantics as fwrite(). NULL for read-only streams. */
+    tyrsound_int64 (*write)(void *src, tyrsound_int64 size, tyrsound_int64 count, void *user);
+
+    /* Flushes the stream. Same semantics as fflush(). Can be NULL if not required. */
+    int (*flush)(void *user);
 };
 
 /* Error values */
 enum tyrsound_Error
 {
-    TYRSOUND_ERR_OK                    = 0,
+    TYRSOUND_ERR_OK                    = 0, /* No error */
 
     /* > 0: warnings */
-    TYRSOUND_ERR_PARAMS_ADJUSTED       = 1,
+    TYRSOUND_ERR_PARAMS_ADJUSTED       = 1, /* NOT YET USED */
 
     /* < 0: errors */
-    TYRSOUND_ERR_UNSPECIFIED           = -1,
-    TYRSOUND_ERR_INVALID_HANDLE        = -2,
-    TYRSOUND_ERR_INVALID_VALUE         = -3,
-    TYRSOUND_ERR_UNSUPPORTED           = -4,
-    TYRSOUND_ERR_NO_DEVICE             = -5,
-    TYRSOUND_ERR_SHIT_HAPPENED         = -6,
-    TYRSOUND_ERR_OUT_OF_MEMORY         = -7,
-    TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8,
-    TYRSOUND_ERR_NOT_READY             = -9,
+    TYRSOUND_ERR_UNSPECIFIED           = -1, /* Generic error */
+    TYRSOUND_ERR_INVALID_HANDLE        = -2, /* Inavlid handle passed to function (TYRSOUND_NULLHANDLE is always invalid) */
+    TYRSOUND_ERR_INVALID_VALUE         = -3, /* Parameter error */
+    TYRSOUND_ERR_UNSUPPORTED           = -4, /* Action not suported by device / Stream format not recognized */
+    TYRSOUND_ERR_NO_DEVICE             = -5, /* No device was found */
+    TYRSOUND_ERR_SHIT_HAPPENED         = -6, /* Internal error */
+    TYRSOUND_ERR_OUT_OF_MEMORY         = -7, /* Allocator returned NULL */
+    TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8, /* The passed tyrsound_Format swas not suitable to complete the action */
+    TYRSOUND_ERR_NOT_READY             = -9, /* Action can't be done right now (but possibly later) */
 };
 
 
@@ -139,8 +146,10 @@ TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 * Sound creation/destruction *
 *****************************/
 
-/* Load a sound using a stream loader. Returns TYRSOUND_NULLHANDLE on failure. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream);
+/* Load a sound using a stream loader. Returns TYRSOUND_NULLHANDLE on failure.
+ * The optional format parameter may be set to the desired output format;
+ * if it is NULL, use the format currently used by the output device. */
+TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt);
 
 /* Stops a sound, and frees all related resources. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
@@ -219,6 +228,15 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterSpeed(float);
 * Helper functions  *
 ********************/
 
+/* Decodes data from one stream and writes the result to the 2nd stream.
+ * If dstfmt is not NULL, write format info to it.
+ * The optional dstfmt parameter may be set to the desired output format;
+ * if it is NULL, use the format currently used by the output device. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst,
+                                                         tyrsound_Format *dstfmt,
+                                                         tyrsound_Stream src,
+                                                         tyrsound_Format *srcfmt);
+
 /* Create stream from raw memory.
  *   closeFunc can be set to any function that will be called when the
  *   stream is no longer needed. Ignored if NULL. */
@@ -234,7 +252,8 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileStream(tyrsound_Stream*,
 
 /* Create stream from filename */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream*,
-                                                                 const char *filename);
+                                                                 const char *filename,
+                                                                 const char *mode);
 
 #ifdef __cplusplus
 } /* end extern "C" */

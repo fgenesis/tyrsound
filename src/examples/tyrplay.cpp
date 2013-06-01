@@ -1,19 +1,17 @@
 #include "tyrsound.h"
 
-int doExit = 0;
-
 #include <stdio.h>
 
 int playFile(const char *name)
 {
     tyrsound_Stream strm;
-    if(tyrsound_createFileNameStream(&strm, name) != TYRSOUND_ERR_OK)
+    if(tyrsound_createFileNameStream(&strm, name, "rb") != TYRSOUND_ERR_OK)
     {
         printf("File not found: %s\n", name);
         return 2;
     }
 
-    tyrsound_Handle handle = tyrsound_load(strm);
+    tyrsound_Handle handle = tyrsound_load(strm, NULL);
     if(handle == TYRSOUND_NULLHANDLE)
     {
         printf("Format not recognized / no suitable decoder.\n");
