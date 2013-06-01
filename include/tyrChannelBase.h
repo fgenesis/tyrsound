@@ -17,6 +17,7 @@ public:
     virtual tyrsound_Error stop() = 0;
     virtual tyrsound_Error play() = 0;
     virtual tyrsound_Error pause() = 0;
+    virtual tyrsound_Error setPosition(float x, float y, float z) = 0;
     virtual bool isPlaying() = 0;
     virtual float getPlayPosition() = 0;
 

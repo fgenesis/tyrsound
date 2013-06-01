@@ -20,6 +20,7 @@ public:
     virtual tyrsound_Error stop();
     virtual tyrsound_Error play();
     virtual tyrsound_Error pause();
+    virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual bool isPlaying();
     virtual float getPlayPosition();
 

@@ -162,6 +162,9 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_stop(tyrsound_Handle);
 /* Returns 1 when a sound is currently playing, i.e. not stopped and not paused. */
 TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle);
 
+/* Returns the current playback position in seconds. -1 if unknown. */
+TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Handle);
+
 /* Sets volume. 0 = silent, 1 = normal, > 1: louder than normal */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle, float);
 

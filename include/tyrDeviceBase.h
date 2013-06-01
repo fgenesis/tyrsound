@@ -31,9 +31,10 @@ public:
 
 template<class T> class DeviceFactory : public DeviceFactoryBase
 {
+    typedef typename T K;
     virtual DeviceBase *create(tyrsound_Format& fmt)
     {
-        T *device = T::template create(fmt);
+        T *device = K::create(fmt);
         return static_cast<DeviceBase*>(device);
     }
 };

@@ -158,6 +158,12 @@ tyrsound_Error tyrsound_seek(tyrsound_Handle handle, float seconds)
     return sound->seek(seconds);
 }
 
+tyrsound_Error tyrsound_setPosition(tyrsound_Handle handle, float x, float y, float z)
+{
+    LOOKUP(sound, handle);
+    return sound->setPosition(x, y, z);
+}
+
 tyrsound_Error tyrsound_setLoop(tyrsound_Handle handle, float seconds, int loops)
 {
     LOOKUP(sound, handle);
@@ -180,5 +186,11 @@ int tyrsound_isPlaying(tyrsound_Handle handle)
 {
     LOOKUP_RET(sound, handle, 0);
     return sound->isPlaying();
+}
+
+float tyrsound_getPlayPosition(tyrsound_Handle handle)
+{
+    LOOKUP_RET(sound, handle, 0);
+    return sound->getPlayPosition();
 }
 

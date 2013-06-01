@@ -17,8 +17,8 @@ public:
     void update();
 
     float getPlayPosition();
-    void getPosition(float *x, float *y, float *z);
-
+    tyrsound_Error getPosition(float *x, float *y, float *z);
+    tyrsound_Error setPosition(float x, float y, float z);
     //float getVolume() const; // TODO
     tyrsound_Error setVolume(float vol);
     tyrsound_Error setSpeed(float speed);

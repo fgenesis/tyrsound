@@ -110,4 +110,9 @@ float SoundObject::getPlayPosition()
     return _channel->getPlayPosition();
 }
 
+tyrsound_Error SoundObject::setPosition(float x,  float y, float z)
+{
+    return _channel->setPosition(x, y, z);
+}
+
 #include "tyrsound_end.h"

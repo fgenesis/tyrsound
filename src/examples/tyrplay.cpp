@@ -33,7 +33,7 @@ int playFile(const char *name)
     while(tyrsound_isPlaying(handle))
 	{
         tyrsound_update();
-        //printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(handle), len);
+        printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(handle), len);
 	}
 	return 0;
 }

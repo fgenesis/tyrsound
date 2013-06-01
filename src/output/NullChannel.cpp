@@ -108,4 +108,9 @@ float NullChannel::getPlayPosition()
     return (_samplesDone / _hz) + (float(_samplesDone % _hz) / float(_hz));
 }
 
+tyrsound_Error NullChannel::setPosition(float x, float y, float z)
+{
+    return TYRSOUND_ERR_OK;
+}
+
 #include "tyrsound_end.h"

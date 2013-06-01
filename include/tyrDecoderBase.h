@@ -30,11 +30,12 @@ public:
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) = 0;
 };
 
-template<typename T> class DecoderFactory : public DecoderFactoryBase
+template<class T> class DecoderFactory : public DecoderFactoryBase
 {
+    typedef typename T K;
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     {
-        T *decoder = T::template create(fmt, strm);
+        T *decoder = K::create(fmt, strm);
         return static_cast<DecoderBase*>(decoder);
     }
 };
