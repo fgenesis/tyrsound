@@ -1,5 +1,4 @@
-#include "ChannelBase.h"
-#include "tyrsound_internal.h"
+#include "tyrChannelBase.h"
 
 #include "tyrsound_begin.h"
 

@@ -1,7 +1,7 @@
-#ifndef TYRSOUND_NULL_OUTPUT_H
-#define TYRSOUND_NULL_OUTPUT_H
+#ifndef TYRSOUND_NULL_CHANNEL_H
+#define TYRSOUND_NULL_CHANNEL_H
 
-#include "ChannelBase.h"
+#include "tyrChannelBase.h"
 
 #include "tyrsound_begin.h"
 

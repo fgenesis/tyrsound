@@ -1,13 +1,12 @@
-#include "tyrsound.h"
 #include "tyrsound_internal.h"
 
 // Output devices
 #include "NullDevice.h"
 #include "OpenALDevice.h"
 
-
-
 #include "tyrsound_begin.h"
+
+#define TYRSOUND_DEVICE_HOLDER RegistrationHolder<DeviceInfo, 32>
 
 static tyrsound_Format s_format;
 static DeviceBase *s_device = NULL;
@@ -22,6 +21,11 @@ static void _applyDefaultFormat(tyrsound_Format& fmt)
     fmt.numBuffers = 8;
     fmt.bigendian = 0;
     fmt.signedSamples = 1;
+}
+
+void tyrsound_ex_registerDevice(const DeviceInfo& di)
+{
+	TYRSOUND_DEVICE_HOLDER::Register(di);
 }
 
 DeviceBase *getDevice()

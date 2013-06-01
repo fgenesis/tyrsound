@@ -1,10 +1,18 @@
 #include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
-#include "DecoderBase.h"
-#include "DeviceBase.h"
+#include "tyrDecoderBase.h"
+#include "tyrDeviceBase.h"
 
 #include "tyrsound_begin.h"
+
+#define TYRSOUND_DECODER_HOLDER RegistrationHolder<DecoderFactoryBase*, 128>
+
+
+void tyrsound_ex_registerDecoder(DecoderFactoryBase *f)
+{
+	TYRSOUND_DECODER_HOLDER::Register(f);
+}
 
 
 static DecoderBase *createDecoder(tyrsound_Stream strm)
@@ -21,21 +29,21 @@ static DecoderBase *createDecoder(tyrsound_Stream strm)
 static tyrsound_Handle createSoundObject(tyrsound_Stream strm)
 {
     if(!strm.read)
-        return NULL;
+        return 0;
 
     ChannelBase *chan = getDevice()->getFreeChannel();
     if(!chan)
-        return NULL;
+        return 0;
 
     DecoderBase *decoder = createDecoder(strm);
     if(!decoder)
-        return NULL;
+        return 0;
 
     SoundObject *sound = SoundObject::create(decoder, chan);
     if(!sound)
     {
         decoder->destroy();
-        return NULL;
+        return 0;
     }
 
     tyrsound_Handle handle = registerSoundObject(sound);

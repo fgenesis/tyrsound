@@ -1,7 +1,7 @@
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
-#include "DecoderBase.h"
-#include "ChannelBase.h"
+#include "tyrDecoderBase.h"
+#include "tyrChannelBase.h"
 
 #include "tyrsound_begin.h"
 

@@ -1,4 +1,4 @@
-#include "DecoderBase.h"
+#include "tyrDecoderBase.h"
 #include "tyrsound_internal.h"
 
 #include "tyrsound_begin.h"

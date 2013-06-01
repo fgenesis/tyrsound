@@ -1,29 +1,18 @@
 #ifndef TYRSOUND_INTERNAL_H
 #define TYRSOUND_INTERNAL_H
 
-#if !defined(NDEBUG) && (defined(DEBUG) || defined(_DEBUG))
-#  define TYRSOUND_IS_DEBUG 1
-#endif
-
 #include <stdlib.h>
 #include <string.h>
 #include <new>
 
-#include "tyrsound.h"
+#include "tyrsound_ex.h"
 
 #include "tyrsound_begin.h"
 
 // Definitions
-class DecoderBase;
-class DecoderFactoryBase;
-class ChannelBase;
-class DeviceBase;
-class DeviceFactoryBase;
 class SoundObject;
-typedef DecoderBase *(*StreamLoaderFunc)(tyrsound_Stream);
 
 // in tyrsound.cpp
-void *doAlloc(void *ptr, size_t size);
 int lockUpdate();
 void unlockUpdate();
 
@@ -36,18 +25,6 @@ public:
 private:
     int _ok;
 };
-
-// Generic inline functions
-
-inline void *Realloc(void *ptr, size_t size) { return doAlloc(ptr, size); }
-inline void  Free(void *ptr)                 { doAlloc(ptr, 0); }
-inline void *Alloc(size_t size)              { return doAlloc(NULL, size); }
-
-template<typename T>       T& Min(      T& a,       T& b) { return a < b ? a : b; }
-template<typename T> const T& Min(const T& a, const T& b) { return a < b ? a : b; }
-
-template<typename T>       T& Max(      T& a,       T& b) { return a > b ? a : b; }
-template<typename T> const T& Max(const T& a, const T& b) { return a > b ? a : b; }
 
 
 // in tyrsound_device.cpp
@@ -83,10 +60,6 @@ private:
     size_t _idx;
 };
 
-#define TYRSOUND_STATIC_REGISTER(registrar, type, expr) \
-    registrar<type> _static_autoregister_##registrar##_##type expr ; \
-    extern "C" TYRSOUND_DLL_EXPORT void *_static_autoregister_helper_##registrar##_##type() \
-    { return &_static_autoregister_##registrar##_##type; }
 
 #include "tyrsound_end.h"
 #endif

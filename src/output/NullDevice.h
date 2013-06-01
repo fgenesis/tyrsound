@@ -1,8 +1,7 @@
 #ifndef TYRSOUND_NULL_DEVICE_H
 #define TYRSOUND_NULL_DEVICE_H
 
-#include "DeviceBase.h"
-#include "tyrsound_internal.h"
+#include "tyrDeviceBase.h"
 
 #include "tyrsound_begin.h"
 

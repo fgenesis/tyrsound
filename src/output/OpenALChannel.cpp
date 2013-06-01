@@ -1,9 +1,9 @@
 #include <al.h>
 #include <alc.h>
 
+#include "tyrsound_internal.h"
 #include "OpenALChannel.h"
 #include "OpenALDevice.h"
-#include "tyrsound_internal.h"
 
 #include "tyrsound_begin.h"
 
@@ -199,7 +199,7 @@ tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& f
     if (size > 0)
     {
         ALuint bid = 0;
-        
+
         if(_initial)
         {
             // Initially, fill & queue all buffers

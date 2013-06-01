@@ -1,5 +1,6 @@
-#include "NullChannel.h"
 #include "tyrsound_internal.h"
+#include "NullChannel.h"
+
 #include "tyrsound_begin.h"
 
 
@@ -21,7 +22,7 @@ NullChannel *NullChannel::create(const tyrsound_Format& fmt)
     if(!mem)
         return NULL;
     NullChannel *chan = new(mem) NullChannel();
-    
+
     mem = Alloc(bufsize);
     if(!mem)
     {
@@ -31,7 +32,7 @@ NullChannel *NullChannel::create(const tyrsound_Format& fmt)
 
     chan->_bufsize = bufsize;
     chan->_buffer = mem;
-    
+
     return chan;
 }
 

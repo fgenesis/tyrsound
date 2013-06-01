@@ -1,6 +1,6 @@
 #ifndef TYRSOUND_OUTPUT_BASE_H
 #define TYRSOUND_OUTPUT_BASE_H
-#include "tyrsound.h"
+#include "tyrsound_ex.h"
 #include "tyrsound_begin.h"
 
 

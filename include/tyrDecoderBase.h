@@ -1,6 +1,6 @@
 #ifndef TYRSOUND_DECODER_BASE_H
 #define TYRSOUND_DECODER_BASE_H
-#include "tyrsound_internal.h"
+#include "tyrsound_ex.h"
 #include "tyrsound_begin.h"
 
 
@@ -34,20 +34,17 @@ template<typename T> class DecoderFactory : public DecoderFactoryBase
 {
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     {
-        T *decoder = typename T::create(fmt, strm);
+        T *decoder = T::template create(fmt, strm);
         return static_cast<DecoderBase*>(decoder);
     }
 };
-
-
-#define TYRSOUND_DECODER_HOLDER RegistrationHolder<DecoderFactoryBase*, 64>
 
 template<typename T> struct DecoderRegistrar
 {
     DecoderRegistrar()
     {
         static DecoderFactory<T> instance;
-        typename TYRSOUND_DECODER_HOLDER::Register(&instance);
+        tyrsound_ex_registerDecoder(&instance);
     }
 };
 

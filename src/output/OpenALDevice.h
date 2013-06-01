@@ -1,7 +1,7 @@
 #ifndef TYRSOUND_OPENAL_DEVICE_H
 #define TYRSOUND_OPENAL_DEVICE_H
 
-#include "DeviceBase.h"
+#include "tyrDeviceBase.h"
 
 #include "tyrsound_begin.h"
 

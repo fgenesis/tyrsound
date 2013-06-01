@@ -1,6 +1,6 @@
-#include "NullDevice.h"
-#include "NullChannel.h"
 #include "tyrsound_internal.h"
+#include "NullChannel.h"
+#include "NullDevice.h"
 
 #include "tyrsound_begin.h"
 

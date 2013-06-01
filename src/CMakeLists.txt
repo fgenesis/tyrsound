@@ -15,8 +15,6 @@ set(libs)
 
 set(src_core
     core/tyrsound.cpp
-    core/tyrsound_begin.h
-    core/tyrsound_end.h
     core/tyrsound_streams.cpp
     core/tyrsound_load.cpp
     core/tyrsound_internal.h
@@ -26,13 +24,17 @@ set(src_core
     core/SoundObject.h
     core/SoundObject.cpp
     "${TYRSOUND_SRC_ROOT}/include/tyrsound.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrsound_ex.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrsound_begin.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrsound_end.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrChannelBase.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrDeviceBase.h"
+    "${TYRSOUND_SRC_ROOT}/include/tyrDecoderBase.h"
 )
 
 set(src_output
     output/DeviceBase.cpp
-    output/DeviceBase.h
     output/ChannelBase.cpp
-    output/ChannelBase.h
     output/NullDevice.cpp
     output/NullDevice.h
     output/NullChannel.cpp
@@ -41,7 +43,6 @@ set(src_output
 
 set(src_decoders
     decoders/DecoderBase.cpp
-    decoders/DecoderBase.h
     decoders/WavDecoder.cpp
     decoders/WavDecoder.h
 )

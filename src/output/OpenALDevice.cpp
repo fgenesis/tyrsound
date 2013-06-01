@@ -1,9 +1,9 @@
 #include <al.h>
 #include <alc.h>
 
+#include "tyrsound_internal.h"
 #include "OpenALDevice.h"
 #include "OpenALChannel.h"
-#include "tyrsound_internal.h"
 
 #include "tyrsound_begin.h"
 

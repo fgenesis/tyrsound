@@ -1,8 +1,7 @@
 #ifndef TYRSOUND_OGG_DECODER_H
 #define TYRSOUND_OGG_DECODER_H
-#include "tyrsound_internal.h"
 
-#include "DecoderBase.h"
+#include "tyrDecoderBase.h"
 
 #include "tyrsound_begin.h"
 

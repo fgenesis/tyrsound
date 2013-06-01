@@ -1,6 +1,6 @@
 #include "tyrsound.h"
 #include "tyrsound_internal.h"
-#include "DeviceBase.h"
+#include "tyrDeviceBase.h"
 
 #include "tyrsound_begin.h"
 
@@ -27,7 +27,7 @@ void unlockUpdate()
 }
 
 
-void *doAlloc(void *ptr, size_t size)
+void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
     if(s_alloc)
         return s_alloc(ptr, size, s_alloc_user);
@@ -41,34 +41,39 @@ void *doAlloc(void *ptr, size_t size)
 
 tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
+	if(tyrsound::getDevice())
+		return TYRSOUND_ERR_UNSPECIFIED;
+
+	bool haveDevice = false;
+
     if(!output || !*output)
     {
-        tyrsound::initDevice(NULL, fmt);
-        goto device_done;
+        haveDevice = tyrsound::initDevice(NULL, fmt);
     }
+	else
+	{
+		char buf[32];
+		const char *next, *prev = output;
+		while(true)
+		{
+			next = strchr(prev, ' ');
+			unsigned int len = tyrsound::Min<unsigned int>(next - prev, sizeof(buf) - 2);
+			memcpy(buf, prev, len);
+			buf[len+1] = 0;
+			prev = next + 1;
 
-    char buf[32];
-    const char *next, *prev = output;
-    while(true)
-    {
-        next = strchr(prev, ' ');
-        unsigned int len = tyrsound::Min<unsigned int>(next - prev, sizeof(buf) - 2);
-        memcpy(buf, prev, len);
-        buf[len+1] = 0;
-        prev = next + 1;
+			if(tyrsound::initDevice(&buf[0], fmt))
+			{
+				haveDevice = true;
+				break;
+			}
 
-        if(tyrsound::initDevice(&buf[0], fmt))
-            goto device_done;
+			if(!next)
+				break;
+		}
+	}
 
-        if(!next)
-            break;
-    }
-
-    return TYRSOUND_ERR_NO_DEVICE;
-
-device_done:
-
-    return TYRSOUND_ERR_OK;
+    return haveDevice ? TYRSOUND_ERR_OK : TYRSOUND_ERR_NO_DEVICE;
 }
 
 tyrsound_Error tyrsound_shutdown()
