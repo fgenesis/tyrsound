@@ -32,7 +32,7 @@ public:
 
 template<class T> class DecoderFactory : public DecoderFactoryBase
 {
-    typedef typename T K;
+    typedef T K;
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     {
         T *decoder = K::create(fmt, strm);
