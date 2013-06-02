@@ -31,7 +31,7 @@ protected:
 
 public:
 
-    static SoundGenerator *SoundGenerator::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
+    static SoundGenerator *create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     {
         char start[4];
         strm.read(start, 4, 1, strm.user);
