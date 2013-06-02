@@ -13,9 +13,6 @@ struct ObjectData
 static ObjectData *objectStore = NULL;
 static unsigned int objectStoreCapacity = 0;
 
-static SoundObject *firstDeadObject = NULL;
-static SoundObject *lastDeadObject = NULL;
-
 static bool getFreeIdx(unsigned int *idxp)
 {
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
@@ -51,7 +48,7 @@ static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp)
     unsigned int generation = handle >> 24;
 
     const ObjectData data = objectStore[idx];
-    if(data.generation != generation || data.obj->_idxInStore != idx)
+    if(data.generation != generation || data.obj->_idxInStore != idx || data.obj->_dead)
     {
         *soundp = NULL;
         return TYRSOUND_ERR_INVALID_HANDLE;
@@ -83,10 +80,14 @@ tyrsound_Handle registerSoundObject(SoundObject *sound)
 
 static tyrsound_Error unregisterSoundObject(SoundObject *sound)
 {
+    UpdateGuard guard;
+    if(!guard)
+        return TYRSOUND_ERR_UNSPECIFIED;
+
     const unsigned int idx = sound->_idxInStore;
     sound->_idxInStore = unsigned(-1);
 
-    if(!(objectStore[idx].obj == sound && idx == sound->_idxInStore))
+    if(objectStore[idx].obj != sound)
         return TYRSOUND_ERR_SHIT_HAPPENED;
 
     objectStore[idx].obj = NULL;
@@ -110,43 +111,25 @@ void shutdownSounds()
     Free(objectStore);
     objectStore = NULL;
     objectStoreCapacity = 0;
-    firstDeadObject = NULL;
-    lastDeadObject = NULL;
 }
 
 tyrsound_Error updateSounds()
 {
-    {
-        UpdateGuard guard;
-        if(!guard)
-            return TYRSOUND_ERR_UNSPECIFIED;
-
-        for(SoundObject *deadobj = firstDeadObject; deadobj; deadobj = deadobj->_nextDeadObject)
-            destroySoundObject(deadobj);
-
-        firstDeadObject = NULL;
-        lastDeadObject = NULL;
-    }
-
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
         if(SoundObject *sound = objectStore[i].obj)
-            sound->update();
+        {
+            if(sound->_dead)
+                destroySoundObject(sound);
+            else
+                sound->update();
+        }
 
     return TYRSOUND_ERR_OK;
 }
 
 static tyrsound_Error enqueueDeletion(SoundObject *sound)
 {
-    UpdateGuard guard;
-    if(!guard)
-        return TYRSOUND_ERR_UNSPECIFIED;
-
-    if(!firstDeadObject)
-        firstDeadObject = sound;
-    if(lastDeadObject)
-        lastDeadObject->_nextDeadObject = sound;
-    lastDeadObject = sound;
-
+    sound->_dead = true;
     return TYRSOUND_ERR_OK;
 }
 

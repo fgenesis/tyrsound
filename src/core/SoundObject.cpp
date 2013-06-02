@@ -27,7 +27,7 @@ SoundObject::SoundObject(DecoderBase *decoder, ChannelBase *channel)
 : _idxInStore(unsigned(-1))
 , _decoder(decoder)
 , _channel(channel)
-, _nextDeadObject(NULL)
+, _dead(false)
 {
 }
 

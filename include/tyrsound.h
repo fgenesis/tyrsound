@@ -131,7 +131,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setUpdateMutex(void *mutex,
 /* Expected to be called in the main loop, or at least often enough
    to prevent buffer underrun and subsequent playback starving.
    Triggers callbacks.
-   Can be called from one or more separate threads if an update mutex
+   Can be called from one (!) separate thread if an update mutex
    has been set. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_update(void);
 
@@ -153,7 +153,10 @@ TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
  * if it is NULL, use the format currently used by the output device. */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt);
 
-/* Stops a sound, and frees all related resources. */
+/* Stops a sound, and frees all related resources. 
+ * The actual deletion is delayed and performed in the next update() call.
+ * (This avoids some multithreading issues; don't call tyrsound_update() right after
+ * deleting a sound when a second thread is involved. You have been warned.) */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
 
 

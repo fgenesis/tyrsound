@@ -34,7 +34,7 @@ public:
     float getLength();
 
     unsigned int _idxInStore;
-    SoundObject *_nextDeadObject;
+    bool _dead;
 
 protected:
     DecoderBase *_decoder;

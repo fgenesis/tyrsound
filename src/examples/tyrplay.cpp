@@ -24,8 +24,6 @@ int playFile(const char *name)
         return 4;
     }
 
-    tyrsound_setLoop(handle, 0, -1);
-
     printf("Playing %s ...\n", name);
     const float len = tyrsound_getLength(handle);
 
