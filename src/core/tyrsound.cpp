@@ -108,7 +108,7 @@ tyrsound_Error tyrsound_update(void)
         return TYRSOUND_ERR_NO_DEVICE;
 
     device->update();
-    tyrsound::updateSounds();
-    return TYRSOUND_ERR_OK;
+    tyrsound_Error err = tyrsound::updateSounds();
+    return err;
 }
 

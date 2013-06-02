@@ -19,27 +19,10 @@ protected:
     virtual ~SoundGenerator() {}
 
     unsigned int _t;
-    tyrsound_Format _fmt;
 
-    char (*genfunc)(unsigned int);
-
-
-    // by bst
-    static char getByte1(unsigned int t)
+    inline static char getByte(unsigned int t)
     {
-        return (int)(t/1e7*t*t+t)%127|t>>4|t>>5|t%127+(t>>16)|t;
-    }
-
-    // by ryg
-    static char getByte2(unsigned int t)
-    {
-        return ((t*("36364689"[t>>13&7]&15))/12&128)
-        +(((((t>>12)^(t>>12)-2)%11*t)/4|t>>13)&127);
-    }
-
-    // by mu6k
-    static char getByte3(unsigned int t)
-    {
+        // by mu6k
         int x, y;
         return char((((int)(3e3/(y=t&16383))&1)*35) +
         (x=t*("6689"[t>>16&3]&15)/24&127)*y/4e4 +
@@ -48,51 +31,18 @@ protected:
 
 public:
 
-
     static SoundGenerator *SoundGenerator::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     {
         char start[4];
         strm.read(start, 4, 1, strm.user);
-        if(memcmp(start, "BYB", 3))
+        if(memcmp(start, "BYB0", 4)) // Is the incoming stream meant to be "played" by this decoder?
             return NULL;
-        int which = start[3] - '0';
-
-        tyrsound_Format f;
-        memset(&f, 0, sizeof(f));
-        f.sampleBits = 8;
-        f.hz = 8000;
-        f.channels = 1;
-        f.signedSamples = 0;
-        if(which > 3)
-            return NULL;
-
-        char (*genfunc)(unsigned int);
-
-        switch(which)
-        {
-        case 1:
-            genfunc = getByte1;
-            break;
-        case 2:
-            f.hz = 44100;
-            genfunc = getByte2;
-            break;
-        case 3:
-            genfunc = getByte3;
-            f.hz = 32000;
-            break;
-        default:
-            return NULL;
-        }
 
         void *mem = tyrsound::Alloc(sizeof(SoundGenerator));
         if(!mem)
             return NULL;
 
         SoundGenerator *g = new(mem) SoundGenerator();
-
-        g->genfunc = genfunc;
-        g->_fmt = f;
         return g;
     }
 
@@ -102,10 +52,12 @@ public:
             return 0;
 
         char *out = (char*)buf;
-        const unsigned int tend = _t + size;
+        // This generator produces 8 bit mono samples.
+        // If using more channels, divide size by number of channels.
+        const unsigned int tend = _t + size; 
         for(unsigned int t = _t; t < tend; ++t)
         {
-            *out++ = genfunc(t);
+            *out++ = getByte(t);
         }
         _t += size;
         return size;
@@ -118,7 +70,10 @@ public:
     virtual bool isEOF() { return _t > 3000000; } // arbitrarily high sample count to stop at some point
     virtual void getFormat(tyrsound_Format *fmt)
     {
-        *fmt = _fmt;
+        fmt->sampleBits = 8;
+        fmt->hz = 32000;
+        fmt->channels = 1;
+        fmt->signedSamples = 0;
     }
 };
 
@@ -127,19 +82,12 @@ TYRSOUND_REGISTER_DECODER(SoundGenerator);
 
 int main(int argc, char **argv)
 {
-    if(argc < 2)
-    {
-        printf("Usage: './%s ID' -- where ID is either 1, 2, or 3.\n", argv[0]);
-        return 0;
-    }
-
     if(tyrsound_init(NULL, NULL) != TYRSOUND_ERR_OK)
         return 1;
 
-    char ident[4] = {'B', 'Y', 'B', '0' + (char)atoi(argv[1]) };
-
     tyrsound_Stream strm;
-    tyrsound_createMemStream(&strm, &ident[0], sizeof(ident), NULL);
+    // This creates a 4-byte identifier to allow selecting the decoder
+    tyrsound_createMemStream(&strm, (void*)"BYB0", 4, NULL);
 
     tyrsound_Handle handle = tyrsound_load(strm, NULL);
     if(handle == TYRSOUND_NULLHANDLE)
@@ -149,6 +97,8 @@ int main(int argc, char **argv)
 
     while(tyrsound_isPlaying(handle))
         tyrsound_update();
+
+    tyrsound_unload(handle);
 
     tyrsound_shutdown();
 

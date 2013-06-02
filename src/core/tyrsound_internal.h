@@ -35,7 +35,7 @@ void shutdownDevice();
 // in tyrsound_sound.cpp
 tyrsound_Handle registerSoundObject(SoundObject *);
 void shutdownSounds();
-void updateSounds();
+tyrsound_Error updateSounds();
 
 // in tyrsound_misc.cpp
 void breakpoint();

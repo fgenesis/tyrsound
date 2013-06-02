@@ -13,6 +13,9 @@ struct ObjectData
 static ObjectData *objectStore = NULL;
 static unsigned int objectStoreCapacity = 0;
 
+static SoundObject *firstDeadObject = NULL;
+static SoundObject *lastDeadObject = NULL;
+
 static bool getFreeIdx(unsigned int *idxp)
 {
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
@@ -80,10 +83,6 @@ tyrsound_Handle registerSoundObject(SoundObject *sound)
 
 static tyrsound_Error unregisterSoundObject(SoundObject *sound)
 {
-    UpdateGuard guard;
-    if(!guard)
-        return TYRSOUND_ERR_SHIT_HAPPENED;
-
     const unsigned int idx = sound->_idxInStore;
     sound->_idxInStore = unsigned(-1);
 
@@ -111,13 +110,44 @@ void shutdownSounds()
     Free(objectStore);
     objectStore = NULL;
     objectStoreCapacity = 0;
+    firstDeadObject = NULL;
+    lastDeadObject = NULL;
 }
 
-void updateSounds()
+tyrsound_Error updateSounds()
 {
+    {
+        UpdateGuard guard;
+        if(!guard)
+            return TYRSOUND_ERR_UNSPECIFIED;
+
+        for(SoundObject *deadobj = firstDeadObject; deadobj; deadobj = deadobj->_nextDeadObject)
+            destroySoundObject(deadobj);
+
+        firstDeadObject = NULL;
+        lastDeadObject = NULL;
+    }
+
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
         if(SoundObject *sound = objectStore[i].obj)
             sound->update();
+
+    return TYRSOUND_ERR_OK;
+}
+
+static tyrsound_Error enqueueDeletion(SoundObject *sound)
+{
+    UpdateGuard guard;
+    if(!guard)
+        return TYRSOUND_ERR_UNSPECIFIED;
+
+    if(!firstDeadObject)
+        firstDeadObject = sound;
+    if(lastDeadObject)
+        lastDeadObject->_nextDeadObject = sound;
+    lastDeadObject = sound;
+
+    return TYRSOUND_ERR_OK;
 }
 
 
@@ -137,7 +167,8 @@ void updateSounds()
 tyrsound_Error tyrsound_unload(tyrsound_Handle handle)
 {
     LOOKUP(sound, handle);
-    return tyrsound::destroySoundObject(sound);
+    sound->stop();
+    return tyrsound::enqueueDeletion(sound);
 }
 
 tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)

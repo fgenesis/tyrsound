@@ -24,6 +24,8 @@ int playFile(const char *name)
         return 4;
     }
 
+    tyrsound_setLoop(handle, 0, -1);
+
     printf("Playing %s ...\n", name);
     const float len = tyrsound_getLength(handle);
 
@@ -33,6 +35,10 @@ int playFile(const char *name)
         tyrsound_update();
         printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(handle), len);
     }
+
+    /* Free resources after we're done */
+    tyrsound_unload(handle);
+
     return 0;
 }
 

@@ -103,5 +103,8 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
     if(dstfmt)
         decoder->getFormat(dstfmt);
 
+    decoder->destroy();
+
     return TYRSOUND_ERR_OK;
 }
+
