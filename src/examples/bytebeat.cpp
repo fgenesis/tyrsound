@@ -63,8 +63,27 @@ public:
         f.hz = 8000;
         f.channels = 1;
         f.signedSamples = 0;
-        if(which > 2)
+        if(which > 3)
             return NULL;
+
+        char (*genfunc)(unsigned int);
+
+        switch(which)
+        {
+        case 1:
+            genfunc = getByte1;
+            break;
+        case 2:
+            f.hz = 44100;
+            genfunc = getByte2;
+            break;
+        case 3:
+            genfunc = getByte3;
+            f.hz = 32000;
+            break;
+        default:
+            return NULL;
+        }
 
         void *mem = tyrsound::Alloc(sizeof(SoundGenerator));
         if(!mem)
@@ -72,23 +91,7 @@ public:
 
         SoundGenerator *g = new(mem) SoundGenerator();
 
-        switch(which)
-        {
-        case 1:
-            g->genfunc = getByte1;
-            break;
-        case 2:
-            f.hz = 44100;
-            g->genfunc = getByte2;
-            break;
-        case 3:
-            g->genfunc = getByte3;
-            f.hz = 32000;
-            break;
-        default:
-            return NULL;
-        }
-
+        g->genfunc = genfunc;
         g->_fmt = f;
         return g;
     }
