@@ -50,7 +50,8 @@ bool initDevice(const char *name, const tyrsound_Format *fmt)
     else
         _applyDefaultFormat(s_format);
 
-    for(size_t i = 0; i < TYRSOUND_DEVICE_HOLDER::Size(); ++i)
+    const unsigned int numDevices = TYRSOUND_DEVICE_HOLDER::Size();
+    for(size_t i = 0; i < numDevices; ++i)
     {
         const DeviceInfo& di = TYRSOUND_DEVICE_HOLDER::Get(i);
         // allow all devices except null device when name is not specified

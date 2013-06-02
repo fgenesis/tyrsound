@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
@@ -17,18 +18,21 @@ void tyrsound_ex_registerDecoder(DecoderFactoryBase *f)
 
 static DecoderBase *createDecoder(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
-    for(unsigned int i = 0; TYRSOUND_DECODER_HOLDER::Size(); ++i)
+    tyrsound_int64 pos = strm.tell ? strm.tell(strm.user) : 0;
+    const unsigned int numDecoders = TYRSOUND_DECODER_HOLDER::Size();
+    for(unsigned int i = 0; i < numDecoders; ++i)
+    {
         if(DecoderBase *decoder = TYRSOUND_DECODER_HOLDER::Get(i)->create(fmt, strm))
             return decoder;
+        strm.seek(strm.user, pos, SEEK_SET);
+        // FIXME: try to support non-seekable streams somehow
+    }
     return NULL;
 }
 
 
 static tyrsound_Handle createSoundObject(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
-    if(!strm.read)
-        return 0;
-
     ChannelBase *chan = getDevice()->getFreeChannel();
     if(!chan)
         return 0;
@@ -61,6 +65,11 @@ static tyrsound_Handle createSoundObject(tyrsound_Stream strm, const tyrsound_Fo
 
 tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt)
 {
+    if(!stream.read)
+        return TYRSOUND_ERR_INVALID_VALUE;
+    if(!stream.seek)
+        return TYRSOUND_ERR_INVALID_VALUE;
+
     tyrsound_Format f;
     if(!fmt)
         tyrsound_getFormat(&f);
@@ -70,6 +79,8 @@ tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt
 tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt)
 {
     if(!src.read || !dst.write)
+        return TYRSOUND_ERR_INVALID_VALUE;
+    if(!src.seek)
         return TYRSOUND_ERR_INVALID_VALUE;
 
     tyrsound_Format f;

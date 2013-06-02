@@ -5,9 +5,11 @@
 
 #if defined(_MSC_VER)
     typedef __int64 tyrsound_int64;
+    typedef unsigned __int64 tyrsound_uint64;
 #else
 #   include <stdint.h>
     typedef int64_t tyrsound_int64;
+    typedef uint64_t tyrsound_uint64;
 #endif
 
 #ifdef _WIN32
@@ -41,21 +43,21 @@ struct tyrsound_Stream
 
     /* Function to get more bytes from the pointer.
      * Same semantics as fread(). NULL for write-only streams. */
-    tyrsound_int64 (*read)(void *dst, tyrsound_int64 size, tyrsound_int64 count, void *user);
+    tyrsound_uint64 (*read)(void *dst, tyrsound_uint64 size, tyrsound_uint64 count, void *user);
 
     /* Seek function. Same semantics as fseek(). Seeks both read and write positions.
      * Can be NULL if stream is unseekable. */
-    int (*seek)(void *user, tyrsound_int64 offset, int whence);
+    int (*seek)(void *user, tyrsound_uint64 offset, int whence);
 
     /* Stream poisition query function. Same semantics as ftell(). Can be NULL if unknown. */
-    tyrsound_int64 (*tell)(void *user);
+    tyrsound_uint64 (*tell)(void *user);
 
     /* Closes the stream; will be called when the stream is no longer needed.
        Can be NULL if stream can not (or should not) be closed. */
     int (*close)(void *user);
 
     /* Writes data to the stream. Same semantics as fwrite(). NULL for read-only streams. */
-    tyrsound_int64 (*write)(void *src, tyrsound_int64 size, tyrsound_int64 count, void *user);
+    tyrsound_uint64 (*write)(const void *src, tyrsound_uint64 size, tyrsound_uint64 count, void *user);
 
     /* Flushes the stream. Same semantics as fflush(). Can be NULL if not required. */
     int (*flush)(void *user);

@@ -34,7 +34,7 @@ template<typename T>       T& Max(      T& a,       T& b) { return a > b ? a : b
 template<typename T> const T& Max(const T& a, const T& b) { return a > b ? a : b; }
 
 #define TYRSOUND_STATIC_REGISTER(registrar, type, expr) \
-    registrar<type> _static_autoregister_##registrar##_##type expr ; \
+    tyrsound:: registrar <type> _static_autoregister_##registrar##_##type expr ; \
     extern "C" TYRSOUND_DLL_EXPORT void *_static_autoregister_helper_##registrar##_##type() \
     { return &_static_autoregister_##registrar##_##type; }
 

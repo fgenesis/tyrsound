@@ -6,3 +6,6 @@ target_link_libraries(tyrplay tyrsound)
 
 add_executable(tyrwav tyrwav.cpp)
 target_link_libraries(tyrwav tyrsound)
+
+add_executable(bytebeat bytebeat.cpp)
+target_link_libraries(bytebeat tyrsound)
