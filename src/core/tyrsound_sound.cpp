@@ -182,6 +182,18 @@ tyrsound_Error tyrsound_play(tyrsound_Handle handle)
     return sound->play();
 }
 
+tyrsound_Error tyrsound_pause(tyrsound_Handle handle)
+{
+    LOOKUP(sound, handle);
+    return sound->pause();
+}
+
+tyrsound_Error tyrsound_stop(tyrsound_Handle handle)
+{
+    LOOKUP(sound, handle);
+    return sound->stop();
+}
+
 int tyrsound_isPlaying(tyrsound_Handle handle)
 {
     LOOKUP_RET(sound, handle, 0);
