@@ -192,7 +192,10 @@ tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& f
     unsigned int bytesPerSample = 0;
     ALenum alformat = getALFormat(fmt, &bytesPerSample);
     if(alformat < 0)
+    {
+        breakpoint();
         return TYRSOUND_ERR_UNSUPPORTED_FORMAT;
+    }
 
     _hz = fmt.hz;
 
