@@ -166,7 +166,7 @@ size_t OpusDecoder::fillBuffer(void *buf, size_t size)
 tyrsound_Error OpusDecoder::seek(float seconds)
 {
     _eof = false;
-    opus_int64 samplepos = opus_int64(double(seconds) * 48000.0);
+    opus_int64 samplepos = (opus_int64)(double(seconds) * 48000.0);
     return op_pcm_seek(OPUS, samplepos)
         ? TYRSOUND_ERR_UNSPECIFIED
         : TYRSOUND_ERR_OK;
