@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 
     tyrsound_Stream strm;
     // This creates a 4-byte identifier to allow selecting the decoder
-    tyrsound_createMemStream(&strm, (void*)"BYB0", 4, NULL);
+    tyrsound_createMemStream(&strm, (void*)"BYB0", 4, NULL, 0);
 
     tyrsound_Handle handle = tyrsound_load(strm, NULL);
     if(handle == TYRSOUND_NULLHANDLE)

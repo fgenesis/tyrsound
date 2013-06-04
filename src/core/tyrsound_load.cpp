@@ -25,7 +25,6 @@ static DecoderBase *createDecoder(tyrsound_Stream strm, const tyrsound_Format& f
         if(DecoderBase *decoder = TYRSOUND_DECODER_HOLDER::Get(i)->create(fmt, strm))
             return decoder;
         strm.seek(strm.user, pos, SEEK_SET);
-        // FIXME: try to support non-seekable streams somehow
     }
     return NULL;
 }
@@ -67,8 +66,15 @@ tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt
 {
     if(!stream.read)
         return TYRSOUND_ERR_INVALID_VALUE;
+
     if(!stream.seek)
-        return TYRSOUND_ERR_INVALID_VALUE;
+    {
+        tyrsound_Stream srcbuf;
+        tyrsound_Error err = tyrsound_bufferStream(&srcbuf, NULL, stream);
+        if(err != TYRSOUND_ERR_OK)
+            return err;
+        stream = srcbuf;
+    }
 
     tyrsound_Format f;
     if(!fmt)
@@ -80,8 +86,15 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
 {
     if(!src.read || !dst.write)
         return TYRSOUND_ERR_INVALID_VALUE;
+
     if(!src.seek)
-        return TYRSOUND_ERR_INVALID_VALUE;
+    {
+        tyrsound_Stream srcbuf;
+        tyrsound_Error err = tyrsound_bufferStream(&srcbuf, NULL, src);
+        if(err != TYRSOUND_ERR_OK)
+            return err;
+        src = srcbuf;
+    }
 
     tyrsound_Format f;
     if(!srcfmt)

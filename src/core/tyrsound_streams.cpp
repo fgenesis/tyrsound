@@ -24,7 +24,7 @@ static int wrap_fclose(void *fh)
     return fclose((FILE*)fh);
 }
 
-static int wrap_fseek(void *fh, tyrsound_uint64 offset, int whence)
+static int wrap_fseek(void *fh, tyrsound_int64 offset, int whence)
 {
 #ifdef TYRSOUND_LARGEFILE_SUPPORT
 #  ifdef _MSC_VER
@@ -37,7 +37,7 @@ static int wrap_fseek(void *fh, tyrsound_uint64 offset, int whence)
 #endif
 }
 
-static tyrsound_uint64 wrap_ftell(void *fh)
+static tyrsound_int64 wrap_ftell(void *fh)
 {
 #ifdef TYRSOUND_LARGEFILE_SUPPORT
 #  ifdef _MSC_VER
@@ -66,6 +66,22 @@ static tyrsound_uint64 wrap_fwrite(const void *ptr, tyrsound_uint64 size, tyrsou
     return fwrite(ptr, (size_t)size, (size_t)count, (FILE*)fh);
 }
 
+static tyrsound_int64 wrap_fremain(void *fh)
+{
+    tyrsound_int64 pos = wrap_ftell((FILE*)fh);
+    if(pos < 0)
+        return -1;
+    if(wrap_fseek((FILE*)fh, 0, SEEK_END) < 0)
+        return -2;
+    tyrsound_int64 end = wrap_ftell((FILE*)fh);
+    if(end < 0)
+        return -3;
+    if(wrap_fseek((FILE*)fh, pos, SEEK_SET) < 0)
+        return -4;
+
+    return tyrsound_int64(end - pos);
+}
+
 tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, FILE *fh, int closeWhenDone)
 {
     if(!fh)
@@ -77,6 +93,7 @@ tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, FILE *fh, int cl
     strm->tell = wrap_ftell;
     strm->write = wrap_fwrite;
     strm->flush = wrap_fflush;
+    strm->remain = wrap_fremain;
     return TYRSOUND_ERR_OK;
 }
 
@@ -88,10 +105,11 @@ tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream *strm, const char *
 
 struct MemReadInfo
 {
-    char *cur;
-    char *mem;
-    tyrsound_uint64 size;
-    void (*closeFunc)(void*);
+    char *cur; // read/write pointer
+    char *mem; // pointer to start of memory
+    tyrsound_uint64 size; // size in bytes
+    tyrsound_uint64 capacity; // total size of allocated memory in bytes. only used by growing buffer.
+    void (*closeFunc)(void*); // optional function to pass mem to when closed
 };
 
 static int wrap_memclose(void *memp)
@@ -103,22 +121,29 @@ static int wrap_memclose(void *memp)
     return 0;
 }
 
-static int wrap_memseek(void *memp, tyrsound_uint64 pos, int whence)
+static int wrap_memseek(void *memp, tyrsound_int64 offs, int whence)
 {
     MemReadInfo *m = (MemReadInfo*)memp;
+    char *oldcur = m->cur;
     switch(whence)
     {
         case SEEK_SET:
-            m->cur = m->mem + pos;
+            m->cur = m->mem + offs;
             break;
         case SEEK_CUR:
-            m->cur += pos;
+            m->cur += offs;
             break;
         case SEEK_END:
-            m->cur = (m->mem + m->size) - pos;
+            m->cur = (m->mem + m->size) - offs;
             break;
         default:
             return -1;
+    }
+    // out of bounds seek?
+    if(m->cur < m->mem || m->cur > m->mem + m->size)
+    {
+        m->cur = oldcur;
+        return -1;
     }
     return 0;
 }
@@ -143,13 +168,22 @@ static tyrsound_uint64 wrap_memwrite(const void *src, tyrsound_uint64 size, tyrs
     return writable;
 }
 
-static tyrsound_uint64 wrap_memtell(void *memp)
+static tyrsound_int64 wrap_memtell(void *memp)
 {
     MemReadInfo *m = (MemReadInfo*)memp;
-    return m->cur - m->mem;
+    return tyrsound_int64(m->cur - m->mem);
 }
 
-tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t size, void (*closeFunc)(void *))
+static tyrsound_int64 wrap_memremain(void *memp)
+{
+    MemReadInfo *m = (MemReadInfo*)memp;
+    tyrsound_int64 diff = m->cur - m->mem;
+    if(diff < 0 || tyrsound_uint64(diff) > m->size)
+        return -1;
+    return m->size - tyrsound_uint64(diff);
+}
+
+tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t size, void (*closeFunc)(void *), int allowWrite)
 {
     if(!ptr)
         return TYRSOUND_ERR_INVALID_VALUE;
@@ -166,7 +200,109 @@ tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t
     strm->read = wrap_memread;
     strm->seek = wrap_memseek;
     strm->tell = wrap_memtell;
-    strm->write = wrap_memwrite;
+    strm->remain = wrap_memremain;
+    strm->write = allowWrite ? wrap_memwrite : NULL;
+    strm->remain = wrap_memremain;
+    strm->flush = NULL;
     return TYRSOUND_ERR_OK;
 }
+
+tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size, tyrsound_Stream src)
+{
+    tyrsound_int64 remain = 0;
+    if(src.remain)
+        remain = src.remain(src.user);
+    tyrsound_Error err = tyrsound_createGrowingBuffer(dst, remain < 128 ? 128 : remain);
+    if(err != TYRSOUND_ERR_OK)
+        return err;
+
+    // TODO: this is not quite optimal. Would be less copying overhead when writing to dst's internal structures.
+    char buf[2048];
+    tyrsound_int64 copied = 0;
+    while(true)
+    {
+        tyrsound_int64 rb = src.read(buf, 1, sizeof(buf), src.user);
+        if(!rb)
+            break;
+        tyrsound_int64 wb = dst->write(buf, 1, rb, dst->user);
+        if(rb != wb)
+        {
+            dst->close(dst->user);
+            return TYRSOUND_ERR_UNSPECIFIED;
+        }
+        copied += rb;
+        if(rb != sizeof(buf))
+            break;
+    }
+    if(size)
+        *size = copied;
+
+    dst->seek(dst->user, 0, SEEK_SET);
+
+    return TYRSOUND_ERR_OK;
+}
+
+
+
+void _deleteMem(void *p)
+{
+    tyrsound::Free(p);
+}
+
+bool _ensureSize(MemReadInfo *m, tyrsound_uint64 reqsize)
+{
+    tyrsound_uint64 offs = m->cur - m->mem;
+    tyrsound_uint64 remain = m->capacity - offs;
+    if(!m->mem || remain < reqsize)
+    {
+        tyrsound_uint64 newcap = tyrsound::Max(m->capacity + (m->capacity >> 1) + 64, m->capacity + reqsize);
+        char *newmem = (char*)tyrsound::Realloc(m->mem, (size_t)newcap);
+        if(!newmem)
+            return false;
+        m->mem = newmem;
+        m->cur = newmem + offs;
+        m->capacity = newcap;
+    }
+    return true;
+}
+
+static tyrsound_uint64 wrap_memwriteGrow(const void *src, tyrsound_uint64 size, tyrsound_uint64 count, void *memp)
+{
+    MemReadInfo *m = (MemReadInfo*)memp;
+    tyrsound_uint64 writeBytes = count * size;
+    if(!_ensureSize(m, writeBytes))
+        return 0;
+    memcpy(m->cur, src, (size_t)writeBytes);
+    m->cur += writeBytes;
+    if(m->cur - m->mem > m->size)
+        m->size = m->cur - m->mem;
+    return writeBytes;
+}
+
+tyrsound_Error tyrsound_createGrowingBuffer(tyrsound_Stream *strm, tyrsound_uint64 prealloc)
+{
+    char *ptr = NULL;
+    if(prealloc)
+    {
+        ptr = (char*)tyrsound::Alloc((size_t)prealloc);
+        if(!ptr)
+            return TYRSOUND_ERR_OUT_OF_MEMORY;
+    }
+
+    tyrsound_Error err = tyrsound_createMemStream(strm, ptr, 0, _deleteMem, 1);
+    if(err != TYRSOUND_ERR_OK)
+    {
+        tyrsound::Free(ptr);
+        return err;
+    }
+
+    strm->write = wrap_memwriteGrow;
+
+    MemReadInfo *m = (MemReadInfo*)strm->user;
+    m->capacity = prealloc;
+
+    return TYRSOUND_ERR_OK;
+}
+
+
 
