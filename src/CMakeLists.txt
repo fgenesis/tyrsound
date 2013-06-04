@@ -57,6 +57,27 @@ if(TYRSOUND_SUPPORT_OGG)
     list(APPEND libs ogg vorbis)
 endif()
 
+if(TYRSOUND_SUPPORT_GME)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/gme/include")
+    list(APPEND src_decoders
+        decoders/GmeDecoder.cpp
+        decoders/GmeDecoder.h
+    )
+    list(APPEND libs gme)
+endif()
+
+if(TYRSOUND_SUPPORT_OPUS)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/opus/include")
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/opusfile/include")
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libogg/include")
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libvorbis/include")
+    list(APPEND src_decoders
+        decoders/OpusDecoder.cpp
+        decoders/OpusDecoder.h
+    )
+    list(APPEND libs opus opusfile)
+endif()
+
 if(TYRSOUND_OUTPUT_OPENAL)
     include_directories("${TYRSOUND_SRC_ROOT}/dep/AL/include")
     list(APPEND src_output

@@ -67,6 +67,7 @@ OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
 
 OggDecoder::~OggDecoder()
 {
+    // Stream is closed by ov_clear()
     ov_clear(&((OggDecoderState*)_state)->vf);
     Free(_state);
 }

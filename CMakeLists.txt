@@ -6,10 +6,10 @@ option(TYRSOUND_BUILD_DYNAMIC "Build as DLL/Shared object?" TRUE)
 
 
 option(TYRSOUND_SUPPORT_OGG "Support OGG format?" TRUE)
-#option(TYRSOUND_SUPPORT_OPUS "Support OPUS format?" TRUE)
+option(TYRSOUND_SUPPORT_OPUS "Support OPUS format?" TRUE)
 #option(TYRSOUND_SUPPORT_MP3 "Support MP3 format?" TRUE)
-#option(TYRSOUND_SUPPORT_MOD "Support various tracker formats?", TRUE)
-#option(TYRSOUND_SUPPORT_GME "Support various console formats (NES, SNES, Sega Genesis, ... using GameMusicEmu)?", TRUE)
+#option(TYRSOUND_SUPPORT_MOD "Support various tracker formats?" TRUE)
+option(TYRSOUND_SUPPORT_GME "Support various console formats (using GameMusicEmu)?" TRUE)
 
 option(TYRSOUND_OUTPUT_OPENAL "Use OpenAL for output?" TRUE)
 
@@ -57,6 +57,12 @@ if(NOT MSVC)
     endif()
 endif()
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_definitions("-fPIC") # required
+    add_definitions("-fno-rtti")
+    add_definitions("-fno-exceptions")
+endif()
+
 set(INCLUDE_LIST)
 
 # dependencies first
@@ -66,8 +72,6 @@ set(TYRSOUND_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 set(TYRSOUND_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 list(APPEND INCLUDE_LIST "${TYRSOUND_INCLUDE_DIR}")
-if(CMAKE_COMPILER_IS_GNUCXX)
-		include_directories(${TYRSOUND_INCLUDE_DIR})
-endif()
+include_directories(${TYRSOUND_INCLUDE_DIR})
 
 add_subdirectory(src)
