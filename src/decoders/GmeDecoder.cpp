@@ -86,8 +86,12 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     if(totalsize < 0)
     {
         tyrsound_Stream sbuf;
-        if(tyrsound_bufferStream(&sbuf, (tyrsound_uint64*)totalsize, strm) != TYRSOUND_ERR_OK)
+        if(tyrsound_createGrowingBuffer(&sbuf, 128) != TYRSOUND_ERR_OK)
             return NULL;
+        tyrsound_uint64 totalsizeu;
+        if(tyrsound_bufferStream(&sbuf, &totalsizeu, strm) != TYRSOUND_ERR_OK)
+            return NULL;
+        totalsize = totalsizeu;
         strm.close(strm.user);
         strm = sbuf;
     }
@@ -134,7 +138,7 @@ size_t GmeDecoder::fillBuffer(void *buf, size_t size)
 
 tyrsound_Error GmeDecoder::seek(float seconds)
 {
-    gme_err_t err = gme_seek(EMU, seconds * 1000.0f);
+    gme_err_t err = gme_seek(EMU, int(seconds * 1000.0f));
     if(err)
         return TYRSOUND_ERR_UNSPECIFIED;
     
