@@ -244,12 +244,12 @@ tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size
 
 
 
-void _deleteMem(void *p)
+static void _deleteMem(void *p)
 {
     tyrsound::Free(p);
 }
 
-bool _ensureSize(MemReadInfo *m, tyrsound_uint64 reqsize)
+static bool _ensureSize(MemReadInfo *m, tyrsound_uint64 reqsize)
 {
     tyrsound_uint64 offs = m->cur - m->mem;
     tyrsound_uint64 remain = m->capacity - offs;

@@ -45,6 +45,8 @@ set(src_decoders
     decoders/DecoderBase.cpp
     decoders/WavDecoder.cpp
     decoders/WavDecoder.h
+    decoders/RawDecoder.cpp
+    decoders/RawDecoder.h
 )
 
 if(TYRSOUND_SUPPORT_OGG)
