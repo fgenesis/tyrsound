@@ -24,14 +24,17 @@ public:
     virtual tyrsound_Error setSpeed(float speed);
     virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual void update();
-    virtual ChannelBase *getFreeChannel();
+    virtual ChannelBase *reserveChannel(); // return a free channel, or NULL if no free channel could be found
+    virtual void retainChannel(ChannelBase *); // once a channel is done, this is used so that it can be reserveChannel()'d again.
 
 private:
     void *_dev; // ALCdevice
     void *_ctx; // ALCcontext
     tyrsound_Format _fmt;
     OpenALChannel *_channels;
+    bool *_reserved;
     unsigned int _channelsAllocated;
+    Mutex _channelLock;
 };
 
 

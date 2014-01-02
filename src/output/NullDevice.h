@@ -5,6 +5,8 @@
 
 #include "tyrsound_begin.h"
 
+class NullChannel;
+
 class NullDevice : public DeviceBase
 {
 protected:
@@ -20,12 +22,14 @@ public:
     virtual tyrsound_Error setSpeed(float speed);
     virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual void update();
-    virtual ChannelBase *getFreeChannel();
+    virtual ChannelBase *reserveChannel();
+    virtual void retainChannel(ChannelBase *);
 
 private:
-    ChannelBase **_channels;
+    NullChannel **_channels;
     unsigned int _numChannels;
     tyrsound_Format _fmt;
+    Mutex _channelLock;
 };
 
 

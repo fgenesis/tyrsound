@@ -32,15 +32,11 @@ static DecoderBase *createDecoder(tyrsound_Stream strm, const tyrsound_Format& f
 
 static tyrsound_Handle createSoundObject(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
-    ChannelBase *chan = getDevice()->getFreeChannel();
-    if(!chan)
-        return 0;
-
     DecoderBase *decoder = createDecoder(strm, fmt);
     if(!decoder)
         return 0;
 
-    SoundObject *sound = SoundObject::create(decoder, chan);
+    SoundObject *sound = SoundObject::create(decoder);
     if(!sound)
     {
         decoder->destroy();

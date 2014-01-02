@@ -12,6 +12,7 @@ struct ObjectData
 
 static ObjectData *objectStore = NULL;
 static unsigned int objectStoreCapacity = 0;
+static Mutex *updateMutex = NULL;
 
 static bool getFreeIdx(unsigned int *idxp)
 {
@@ -60,7 +61,7 @@ static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp)
 
 tyrsound_Handle registerSoundObject(SoundObject *sound)
 {
-    UpdateGuard guard;
+    MutexGuard guard(updateMutex);
     if(!guard)
         return 0;
 
@@ -74,13 +75,14 @@ tyrsound_Handle registerSoundObject(SoundObject *sound)
     const unsigned int generation = objectStore[idx].generation;
     objectStore[idx].obj = sound;
     sound->_idxInStore = idx;
+    sound->_dead = false;
     
     return (idx + 1) | (generation << 24); // 8 bits for generation should be enough
 }
 
 static tyrsound_Error unregisterSoundObject(SoundObject *sound)
 {
-    UpdateGuard guard;
+    MutexGuard guard(updateMutex);
     if(!guard)
         return TYRSOUND_ERR_UNSPECIFIED;
 
@@ -103,6 +105,16 @@ static tyrsound_Error destroySoundObject(SoundObject *sound)
     return err;
 }
 
+tyrsound_Error initSounds()
+{
+    updateMutex = Mutex::create();
+    if(!updateMutex && tyrsound_ex_hasMT())
+        return TYRSOUND_ERR_OUT_OF_MEMORY;
+
+
+    return TYRSOUND_ERR_OK;
+}
+
 void shutdownSounds()
 {
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
@@ -111,6 +123,11 @@ void shutdownSounds()
     Free(objectStore);
     objectStore = NULL;
     objectStoreCapacity = 0;
+    if(updateMutex)
+    {
+        updateMutex->destroy();
+        updateMutex = NULL;
+    }
 }
 
 tyrsound_Error updateSounds()

@@ -35,7 +35,6 @@ public:
     virtual void getBuffer(void **buf, size_t *size);
     virtual void update();
     virtual tyrsound_Error filledBuffer(size_t size, const tyrsound_Format& fmt);
-    virtual bool isFree();
     virtual float getPlayPosition();
 
     // TODO: single buffer mode /w AL_LOOPING -- think about API

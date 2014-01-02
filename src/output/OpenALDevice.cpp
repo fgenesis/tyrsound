@@ -61,6 +61,8 @@ OpenALDevice::~OpenALDevice()
             _channels[i].~OpenALChannel();
         Free(_channels);
     }
+    if(_reserved)
+        Free(_reserved);
 
     alcMakeContextCurrent(NULL);
     alcSuspendContext(ALCTX);
@@ -72,6 +74,8 @@ OpenALDevice *OpenALDevice::create(tyrsound_Format& fmt)
 {
     const unsigned int channels = fmt.channels ? fmt.channels : 64;
     fmt.channels = channels;
+
+	// See http://digitalstarcode.googlecode.com/svn-history/r39/trunk/ofxSoundPlayerExample/src/ofxSoundPlayer/OpenAL/AudioDevice.cpp
 
     ALCdevice *dev = alcOpenDevice(NULL); // TODO: allow specifying this in detail
     if (!dev)
@@ -124,9 +128,15 @@ bool OpenALDevice::_allocateChannels()
     _channels = (OpenALChannel*)Alloc(sizeof(OpenALChannel) * totalchannels);
     if(!_channels)
         return false;
+    _reserved = (bool*)Alloc(sizeof(bool) * totalchannels);
+    if(!_reserved)
+        return false;
     _channelsAllocated = totalchannels;
     for(unsigned int i = 0; i < totalchannels; ++i)
+    {
         new ((void*)&_channels[i]) OpenALChannel(this); // nasty in-place construction
+        _reserved[i] = false;
+    }
 
     ALenum err = alGetError();
 
@@ -151,15 +161,38 @@ void OpenALDevice::update()
 {
 }
 
-ChannelBase *OpenALDevice::getFreeChannel()
+ChannelBase *OpenALDevice::reserveChannel()
 {
+    MutexGuard guard(_channelLock);
+    if(!guard)
+        return NULL;
+
     for(unsigned int i = 0; i < _fmt.channels; ++i)
     {
-        OpenALChannel &chan = _channels[i];
-        if(chan.isFree())
-            return &chan;
+        if(!_reserved[i])
+        {
+            _reserved[i] = true;
+            return &_channels[i];
+        }
     }
     return NULL;
+}
+
+void OpenALDevice::retainChannel(ChannelBase *chan)
+{
+    MutexGuard guard(_channelLock);
+    if(!guard)
+        breakpoint();
+
+    // TODO: change this to O(1) lookup
+    for(unsigned int i = 0; i < _fmt.channels; ++i)
+    {
+        if(&_channels[i] == chan)
+        {
+            _reserved[i] = false;
+            break;
+        }
+    }
 }
 
 tyrsound_Error OpenALDevice::setSpeed(float speed)

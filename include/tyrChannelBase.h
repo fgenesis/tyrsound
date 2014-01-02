@@ -25,8 +25,6 @@ public:
     virtual void getBuffer(void **buf, size_t *size) = 0;
     virtual void update() = 0;
     virtual tyrsound_Error filledBuffer(size_t size, const tyrsound_Format& fmt) = 0;
-    virtual bool isFree() = 0;
-
 
 
     void destroy();

@@ -41,8 +41,8 @@ NullDevice *NullDevice::create(tyrsound_Format& fmt)
 
 bool NullDevice::_allocateChannels(unsigned int num)
 {
-    size_t bytes = num * sizeof(ChannelBase*);
-    _channels = (ChannelBase**)Alloc(bytes);
+    size_t bytes = num * sizeof(NullChannel*);
+    _channels = (NullChannel**)Alloc(bytes);
     memset(_channels, 0, bytes);
     if(!_channels)
         return false;
@@ -60,29 +60,45 @@ void NullDevice::update()
 {
 }
 
-ChannelBase *NullDevice::getFreeChannel()
+ChannelBase *NullDevice::reserveChannel()
 {
+    MutexGuard guard(_channelLock);
+    if(!guard)
+        return NULL;
+
     int freeSlot = -1;
     for(unsigned int i = 0; i < _numChannels; ++i)
-    {
-        ChannelBase *chan = _channels[i];
-        if(!chan)
+        if(!_channels[i])
             freeSlot = i;
-        else if(chan->isFree())
-            return chan;
-    }
 
     if(freeSlot >= 0)
     {
         void *mem = Alloc(sizeof(NullChannel));
         if(!mem)
             return NULL;
-        ChannelBase *chan = NullChannel::create(_fmt);
+        NullChannel *chan = NullChannel::create(_fmt);
         _channels[freeSlot] = chan;
         return chan;
     }
 
     return NULL;
+}
+
+void NullDevice::retainChannel(ChannelBase *chan)
+{
+    {
+        MutexGuard guard(_channelLock);
+        if(!guard)
+            breakpoint();
+
+        for(unsigned int i = 0; i < _numChannels; ++i)
+            if(_channels[i] == chan)
+            {
+                _channels[i] = NULL;
+                break;
+            }
+    }
+    chan->destroy();
 }
 
 tyrsound_Error NullDevice::setSpeed(float speed)

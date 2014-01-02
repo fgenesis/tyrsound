@@ -6,8 +6,12 @@
 #include "tyrsound_begin.h"
 
 
+class NullDevice;
+
 class NullChannel : public ChannelBase
 {
+    friend class NullDevice;
+
 protected:
     NullChannel();
     ~NullChannel();
@@ -28,13 +32,11 @@ public:
     virtual void getBuffer(void **buf, size_t *size);
     virtual void update();
     virtual tyrsound_Error filledBuffer(size_t size, const tyrsound_Format& fmt);
-    virtual bool isFree();
 
 protected:
     void *_buffer;
     size_t _bufsize;
     bool _playing;
-    bool _inUse;
     bool _wantData;
     tyrsound_int64 _samplesDone;
     int _hz;

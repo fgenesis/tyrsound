@@ -12,20 +12,6 @@
 // Definitions
 class SoundObject;
 
-// in tyrsound.cpp
-int lockUpdate();
-void unlockUpdate();
-
-class UpdateGuard
-{
-public:
-    UpdateGuard() : _ok(lockUpdate()) {}
-    ~UpdateGuard() { unlockUpdate(); }
-    operator int() const { return _ok; }
-private:
-    int _ok;
-};
-
 
 // in tyrsound_device.cpp
 DeviceBase *getDevice();
@@ -34,6 +20,7 @@ void shutdownDevice();
 
 // in tyrsound_sound.cpp
 tyrsound_Handle registerSoundObject(SoundObject *);
+tyrsound_Error initSounds();
 void shutdownSounds();
 tyrsound_Error updateSounds();
 

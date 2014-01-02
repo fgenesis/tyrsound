@@ -276,18 +276,16 @@ tyrsound_Error OpenALChannel::pause()
 
 tyrsound_Error OpenALChannel::play()
 {
-    if(_inUse)
-    {
-        alSourcePlay(_sid);
-        if(alGetError() != AL_NO_ERROR)
-            return TYRSOUND_ERR_UNSPECIFIED;
-    }
-    else
+    if(!_inUse)
     {
         tyrsound_Error err = prepare();
         if(err != TYRSOUND_ERR_OK)
             return err;
     }
+
+    alSourcePlay(_sid);
+    if(alGetError() != AL_NO_ERROR)
+        return TYRSOUND_ERR_UNSPECIFIED;
 
     _paused = false;
     _playing = true;
@@ -335,11 +333,6 @@ bool OpenALChannel::isPlaying()
     return _playing && !_paused;
 }
 
-bool OpenALChannel::isFree()
-{
-    return !_inUse;
-}
-
 tyrsound_Error OpenALChannel::setPosition(float x, float y, float z)
 {
     alSource3f(_sid, AL_POSITION, x, y, z);
@@ -351,6 +344,7 @@ float OpenALChannel::getPlayPosition()
 {
     ALint offs = 0;
     alGetSourcei(_sid, AL_SAMPLE_OFFSET, &offs);
+    CHECK_AL();
     tyrsound_int64 totalDone = _samplesDone + offs;
     return float((double)totalDone / (double)_hz);
 }

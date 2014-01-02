@@ -1,14 +1,15 @@
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
+#include "tyrDeviceBase.h"
 #include "tyrDecoderBase.h"
 #include "tyrChannelBase.h"
 
 #include "tyrsound_begin.h"
 
-SoundObject *SoundObject::create(DecoderBase *decoder, ChannelBase *output)
+SoundObject *SoundObject::create(DecoderBase *decoder)
 {
     void *p = Alloc(sizeof(SoundObject));
-    return new(p) SoundObject(decoder, output);
+    return new(p) SoundObject(decoder);
 }
 
 void SoundObject::destroy()
@@ -23,17 +24,21 @@ SoundObject::~SoundObject()
     _decoder->destroy();
 }
 
-SoundObject::SoundObject(DecoderBase *decoder, ChannelBase *channel)
+SoundObject::SoundObject(DecoderBase *decoder)
 : _idxInStore(unsigned(-1))
 , _decoder(decoder)
-, _channel(channel)
+, _channel(NULL)
 , _dead(false)
+, _volume(1.0f)
+, _speed(1.0f)
+, _posX(0.0f)
+, _posY(0.0f)
+, _posZ(0.0f)
 {
 }
 
 void SoundObject::update()
 {
-    _channel->update();
     while(_channel->wantData())
     {
         void *buf = NULL;
@@ -52,33 +57,55 @@ void SoundObject::update()
             }
         }
         if(_decoder->isEOF())
-            break;
+            return;
     }
+    _channel->update();
 }
 
 tyrsound_Error SoundObject::setVolume(float vol)
 {
-    return _channel->setVolume(vol);
+    _volume = vol;
+    return _channel ? _channel->setVolume(vol) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 tyrsound_Error SoundObject::setSpeed(float speed)
 {
-    return _channel->setSpeed(speed);
+    _speed = speed;
+    return _channel ? _channel->setSpeed(speed) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 tyrsound_Error SoundObject::play()
 {
-    return _channel->play();
+    if(!_channel)
+        _channel = getDevice()->reserveChannel();
+    if(!_channel)
+        return TYRSOUND_ERR_CHANNELS_FULL;
+    tyrsound_Error err = _channel->play();
+    if(err >= TYRSOUND_ERR_OK)
+    {
+        // If this was set when no channel pointer existed, do it now
+        _channel->setVolume(_volume);
+        _channel->setSpeed(_speed);
+        _channel->setPosition(_posX, _posY, _posZ);
+    }
+    return err;
 }
 
 tyrsound_Error SoundObject::stop()
 {
-    return _channel->stop();
+    if(!_channel)
+        return TYRSOUND_ERR_OK;
+
+    tyrsound_Error err = _channel->stop();
+    getDevice()->retainChannel(_channel);
+    _channel = NULL;
+
+    return err;
 }
 
 tyrsound_Error SoundObject::pause()
 {
-    return _channel->pause();
+    return _channel ? _channel->pause() : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 tyrsound_Error SoundObject::seek(float seconds)
@@ -103,17 +130,20 @@ float SoundObject::getLength()
 
 bool SoundObject::isPlaying()
 {
-    return _channel->isPlaying();
+    return _channel && _channel->isPlaying();
 }
 
 float SoundObject::getPlayPosition()
 {
-    return _channel->getPlayPosition();
+    return _channel ? _channel->getPlayPosition() : 0.0f;
 }
 
 tyrsound_Error SoundObject::setPosition(float x,  float y, float z)
 {
-    return _channel->setPosition(x, y, z);
+    _posX = x;
+    _posY = y;
+    _posZ = z;
+    return _channel ? _channel->setPosition(x, y, z) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 #include "tyrsound_end.h"

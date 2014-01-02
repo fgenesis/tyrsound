@@ -8,11 +8,11 @@ class ChannelBase;
 class SoundObject
 {
 protected:
-    SoundObject(DecoderBase *decoder, ChannelBase *output);
+    SoundObject(DecoderBase *decoder);
     virtual ~SoundObject();
 
 public:
-    static SoundObject *create(DecoderBase *decoder, ChannelBase *output);
+    static SoundObject *create(DecoderBase *decoder);
     void destroy();
     void update();
 
@@ -39,6 +39,11 @@ public:
 protected:
     DecoderBase *_decoder;
     ChannelBase *_channel;
+    
+    float _volume;
+    float _speed;
+    float _posX, _posY, _posZ;
+
 };
 
 #include "tyrsound_end.h"

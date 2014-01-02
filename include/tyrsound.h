@@ -75,6 +75,7 @@ enum tyrsound_Error
 
     /* > 0: warnings */
     TYRSOUND_ERR_PARAMS_ADJUSTED       = 1, /* NOT YET USED */
+    TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL= 2, /* Settings for a sound object were set, but there was no active channel */
 
     /* < 0: errors */
     TYRSOUND_ERR_UNSPECIFIED           = -1, /* Generic error */
@@ -86,6 +87,7 @@ enum tyrsound_Error
     TYRSOUND_ERR_OUT_OF_MEMORY         = -7, /* Allocator returned NULL */
     TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8, /* The passed tyrsound_Format swas not suitable to complete the action */
     TYRSOUND_ERR_NOT_READY             = -9, /* Action can't be done right now (but possibly later) */
+    TYRSOUND_ERR_CHANNELS_FULL         =-10, /* An attempt was made to reserve a channel but none was free */
 };
 
 
@@ -104,6 +106,10 @@ typedef tyrsound_Error (*tyrsound_positionCallback)(tyrsound_Handle, float posit
 typedef void *(*tyrsound_Alloc)(void *ptr, size_t size, void *user);
 
 
+/*****************************
+* Library setup & management *
+*****************************/
+
 /* Startup the sound system.
  * fmt: Sets the format that should be used by tyrsound_init().
  *      Pass NULL to use default parameters (might not work).
@@ -119,25 +125,28 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown(void);
 
 /* Sets up the library for multithreading,
  * allowing to call tyrsound_update() from one or more separate threads.
- *   mutex: Opaque pointer to a mutex that can be locked/unlocked at all times.
-            The pointer must stay alive until tyrsound_shutdown() is called,
-            or NULL is passed to this function.
-            The mutex is never locked recursively.
- *   lockFunc: Function pointer that the mutex pointer is passed to.
+ * IMPORTANT: Must be called before tyrsound_init() !!
+              tyrsound_shutdown() will NOT clear the function pointers set here,
+              but will delete all existing mutexes.
+ *   newMutexFunc: Function pointer that creates a new mutex and returns a pointer to it.
+                   A mutex is never locked recursively.
+ *   deleteMutexFunc: Function pointer that takes a mutex and deletes it.
+                      A mutex will never be locked when passed.
+ *   lockFunc: Function pointer that a mutex pointer is passed to.
                Expected to return 0 if locking the mutex failed
                (causing any action that triggered the call to fail),
                any other value to indicate success.
- *   unlockFunc: Function pointer that unlocks the mutex. Expected not to fail.
+ *   unlockFunc: Function pointer that unlocks a mutex. Expected not to fail.
  */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setUpdateMutex(void *mutex,
-                                                           int (*lockFunc)(void*),
-                                                           void (*unlockFunc)(void*));
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void),
+                                                    void (*deleteMutexFunc)(void*),
+                                                    int (*lockFunc)(void*),
+                                                    void (*unlockFunc)(void*));
 
 /* Expected to be called in the main loop, or at least often enough
    to prevent buffer underrun and subsequent playback starving.
    Triggers callbacks.
-   Can be called from one (!) separate thread if an update mutex
-   has been set. */
+   Can be called from one (!) separate thread if MT has been set up. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_update(void);
 
 
@@ -169,7 +178,8 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
  * Sound manipulation *
  *********************/
 
-/* Starts playing a sound or unpauses a paused sound */
+/* Starts playing a sound or unpauses a paused sound.
+   If already playing, the call has no effect and will not fail. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_play(tyrsound_Handle);
 
 /* Pauses a playing sound. Pausing multiple times has no effect and does not fail. */
@@ -181,7 +191,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_stop(tyrsound_Handle);
 /* Returns 1 when a sound is currently playing, i.e. not stopped and not paused. */
 TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle);
 
-/* Returns the current playback position in seconds. -1 if unknown. */
+/* Returns the current playback position in seconds. -1 if unknown, 0 if not playing. */
 TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Handle);
 
 /* Sets volume. 0 = silent, 1 = normal, > 1: louder than normal */
