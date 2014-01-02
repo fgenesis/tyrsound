@@ -5,7 +5,7 @@
 
 
 NullChannel::NullChannel()
-: _buffer(NULL), _playing(false), _wantData(true)
+: _buffer(NULL), _playing(false), _wantData(true), x_acquired(false)
 {
 }
 

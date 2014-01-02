@@ -11,6 +11,13 @@ class OpenALDevice : public DeviceBase
 {
     friend class OpenALChannel;
 
+    enum ChannelStatus
+    {
+        ALCHAN_FREE,
+        ALCHAN_RESERVED,
+        ALCHAN_INUSE
+    };
+
 protected:
     OpenALDevice(const tyrsound_Format& fmt, void *dev, void *ctx);
     virtual ~OpenALDevice();
@@ -24,15 +31,16 @@ public:
     virtual tyrsound_Error setSpeed(float speed);
     virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual void update();
-    virtual ChannelBase *reserveChannel(); // return a free channel, or NULL if no free channel could be found
-    virtual void retainChannel(ChannelBase *); // once a channel is done, this is used so that it can be reserveChannel()'d again.
+    virtual ChannelBase *reserveChannel();
+    virtual void acquireChannel(ChannelBase *);
+    virtual void retainChannel(ChannelBase *);
 
 private:
     void *_dev; // ALCdevice
     void *_ctx; // ALCcontext
     tyrsound_Format _fmt;
     OpenALChannel *_channels;
-    bool *_reserved;
+    ChannelStatus *_chStatus;
     unsigned int _channelsAllocated;
     Mutex _channelLock;
 };

@@ -12,6 +12,7 @@ protected:
     virtual ~ChannelBase() {}
 
 public:
+    virtual tyrsound_Error prepare() = 0;
     virtual tyrsound_Error setVolume(float vol) = 0;
     virtual tyrsound_Error setSpeed(float speed) = 0;
     virtual tyrsound_Error stop() = 0;

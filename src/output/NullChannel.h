@@ -19,6 +19,7 @@ protected:
 public:
     static NullChannel *create(const tyrsound_Format& fmt);
 
+    virtual tyrsound_Error prepare() { return TYRSOUND_ERR_OK; }
     virtual tyrsound_Error setVolume(float vol);
     virtual tyrsound_Error setSpeed(float speed);
     virtual tyrsound_Error stop();
@@ -40,6 +41,9 @@ protected:
     bool _wantData;
     tyrsound_int64 _samplesDone;
     int _hz;
+
+private:
+    bool x_acquired;
 };
 
 #include "tyrsound_end.h"

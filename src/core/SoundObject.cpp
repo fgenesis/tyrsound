@@ -37,7 +37,7 @@ SoundObject::SoundObject(DecoderBase *decoder)
 {
 }
 
-void SoundObject::update()
+void SoundObject::_decode()
 {
     while(_channel->wantData())
     {
@@ -59,7 +59,11 @@ void SoundObject::update()
         if(_decoder->isEOF())
             return;
     }
-    _channel->update();
+}
+
+void SoundObject::update()
+{
+    _decode();
 }
 
 tyrsound_Error SoundObject::setVolume(float vol)
@@ -76,18 +80,41 @@ tyrsound_Error SoundObject::setSpeed(float speed)
 
 tyrsound_Error SoundObject::play()
 {
+    bool reserved = false;
     if(!_channel)
+    {
         _channel = getDevice()->reserveChannel();
+        reserved = true;
+    }
     if(!_channel)
         return TYRSOUND_ERR_CHANNELS_FULL;
-    tyrsound_Error err = _channel->play();
-    if(err >= TYRSOUND_ERR_OK)
+
+    tyrsound_Error err = TYRSOUND_ERR_OK;
+    if(reserved)
     {
+        err = _channel->prepare();
+        if(err < TYRSOUND_ERR_OK)
+        {
+            if(reserved)
+                getDevice()->retainChannel(_channel);
+            return err;
+        }
+
+        // Initial decoding -- fill the buffer now and start playing immediately
+        _decode();
+
         // If this was set when no channel pointer existed, do it now
         _channel->setVolume(_volume);
         _channel->setSpeed(_speed);
         _channel->setPosition(_posX, _posY, _posZ);
     }
+
+    err = _channel->play();
+    if(err < TYRSOUND_ERR_OK)
+        stop();
+    else if(reserved)
+        getDevice()->acquireChannel(_channel);
+
     return err;
 }
 

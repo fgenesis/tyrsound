@@ -18,7 +18,6 @@ protected:
 private:
     // AL specific
     void setSourceid(int sid) { _sid = sid; }
-    tyrsound_Error prepare();
     void setInitialALValues();
     tyrsound_Error genBuffers();
 
@@ -29,6 +28,7 @@ public:
     virtual tyrsound_Error stop();
     virtual tyrsound_Error play();
     virtual tyrsound_Error pause();
+    virtual tyrsound_Error prepare();
     virtual bool isPlaying();
 
     virtual bool wantData();
@@ -55,6 +55,9 @@ protected:
     float _volume;
     float _speed;
     int _hz;
+
+private:
+    unsigned x_channelIndex; // for OpenALDevice
 };
 
 

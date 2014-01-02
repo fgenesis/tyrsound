@@ -63,6 +63,7 @@ OpenALChannel::OpenALChannel(OpenALDevice *dev)
 , _initial(true)
 , _initialBufferIdx(0)
 , _numBuffers(0)
+, x_channelIndex(unsigned(-1))
 {
 }
 
@@ -276,13 +277,6 @@ tyrsound_Error OpenALChannel::pause()
 
 tyrsound_Error OpenALChannel::play()
 {
-    if(!_inUse)
-    {
-        tyrsound_Error err = prepare();
-        if(err != TYRSOUND_ERR_OK)
-            return err;
-    }
-
     alSourcePlay(_sid);
     if(alGetError() != AL_NO_ERROR)
         return TYRSOUND_ERR_UNSPECIFIED;

@@ -22,7 +22,9 @@ public:
     virtual tyrsound_Error setSpeed(float speed);
     virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual void update();
+
     virtual ChannelBase *reserveChannel();
+    virtual void acquireChannel(ChannelBase *);
     virtual void retainChannel(ChannelBase *);
 
 private:

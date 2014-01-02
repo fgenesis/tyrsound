@@ -37,6 +37,8 @@ public:
     bool _dead;
 
 protected:
+    void _decode();
+
     DecoderBase *_decoder;
     ChannelBase *_channel;
     

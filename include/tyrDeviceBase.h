@@ -19,7 +19,12 @@ public:
     virtual tyrsound_Error setSpeed(float speed) = 0;
     virtual tyrsound_Error setPosition(float x, float y, float z) = 0;
     virtual void update() = 0;
+    // The protocol is as follows:
+    // First, reserve a channel if you plan to use one.
+    // Then, either set it up & acquire it, or, if you changed your mind, retain it again.
+    // When the channel is no longer needed, retain it.
     virtual ChannelBase *reserveChannel() = 0; // return a free channel, or NULL if no free channel could be found
+    virtual void acquireChannel(ChannelBase *) = 0; // mark the channel as in use
     virtual void retainChannel(ChannelBase *) = 0; // once a channel is done, this is used so that it can be reserveChannel()'d again.
 };
 

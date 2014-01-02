@@ -58,6 +58,11 @@ tyrsound_Error NullDevice::setVolume(float vol)
 
 void NullDevice::update()
 {
+    MutexGuard guard(_channelLock);
+
+    for(unsigned int i = 0; i < _numChannels; ++i)
+        if(_channels[i]->x_acquired)
+            _channels[i]->update();
 }
 
 ChannelBase *NullDevice::reserveChannel()
@@ -99,6 +104,21 @@ void NullDevice::retainChannel(ChannelBase *chan)
             }
     }
     chan->destroy();
+}
+
+void NullDevice::acquireChannel(ChannelBase *chan)
+{
+    MutexGuard guard(_channelLock);
+    if(!guard)
+        breakpoint();
+
+    for(unsigned int i = 0; i < _numChannels; ++i)
+        if(_channels[i] == chan)
+        {
+            _channels[i]->x_acquired = false;
+            _channels[i] = NULL;
+            break;
+        }
 }
 
 tyrsound_Error NullDevice::setSpeed(float speed)

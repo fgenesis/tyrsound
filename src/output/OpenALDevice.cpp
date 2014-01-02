@@ -61,8 +61,8 @@ OpenALDevice::~OpenALDevice()
             _channels[i].~OpenALChannel();
         Free(_channels);
     }
-    if(_reserved)
-        Free(_reserved);
+    if(_chStatus)
+        Free(_chStatus);
 
     alcMakeContextCurrent(NULL);
     alcSuspendContext(ALCTX);
@@ -124,18 +124,19 @@ OpenALDevice *OpenALDevice::create(tyrsound_Format& fmt)
 
 bool OpenALDevice::_allocateChannels()
 {
-    unsigned int totalchannels = _fmt.channels;
+    const unsigned int totalchannels = _fmt.channels;
     _channels = (OpenALChannel*)Alloc(sizeof(OpenALChannel) * totalchannels);
     if(!_channels)
         return false;
-    _reserved = (bool*)Alloc(sizeof(bool) * totalchannels);
-    if(!_reserved)
+    _chStatus = (ChannelStatus*)Alloc(sizeof(ChannelStatus) * totalchannels);
+    if(!_chStatus)
         return false;
     _channelsAllocated = totalchannels;
     for(unsigned int i = 0; i < totalchannels; ++i)
     {
         new ((void*)&_channels[i]) OpenALChannel(this); // nasty in-place construction
-        _reserved[i] = false;
+        _channels[i].x_channelIndex = i;
+        _chStatus[i] = ALCHAN_FREE;
     }
 
     ALenum err = alGetError();
@@ -159,6 +160,11 @@ bool OpenALDevice::_allocateChannels()
 
 void OpenALDevice::update()
 {
+    MutexGuard guard(_channelLock);
+
+    for(unsigned int i = 0; i < _fmt.channels; ++i)
+        if(_chStatus[i] == ALCHAN_INUSE)
+            _channels[i].update();
 }
 
 ChannelBase *OpenALDevice::reserveChannel()
@@ -169,13 +175,23 @@ ChannelBase *OpenALDevice::reserveChannel()
 
     for(unsigned int i = 0; i < _fmt.channels; ++i)
     {
-        if(!_reserved[i])
+        if(_chStatus[i] == ALCHAN_FREE)
         {
-            _reserved[i] = true;
+            _chStatus[i] = ALCHAN_RESERVED;
             return &_channels[i];
         }
     }
     return NULL;
+}
+
+void OpenALDevice::acquireChannel(ChannelBase *chan)
+{
+    MutexGuard guard(_channelLock);
+    if(!guard)
+        breakpoint();
+
+    OpenALChannel *alchan = (OpenALChannel*)chan;
+    _chStatus[alchan->x_channelIndex] = ALCHAN_INUSE;
 }
 
 void OpenALDevice::retainChannel(ChannelBase *chan)
@@ -184,15 +200,8 @@ void OpenALDevice::retainChannel(ChannelBase *chan)
     if(!guard)
         breakpoint();
 
-    // TODO: change this to O(1) lookup
-    for(unsigned int i = 0; i < _fmt.channels; ++i)
-    {
-        if(&_channels[i] == chan)
-        {
-            _reserved[i] = false;
-            break;
-        }
-    }
+    OpenALChannel *alchan = (OpenALChannel*)chan;
+    _chStatus[alchan->x_channelIndex] = ALCHAN_FREE;
 }
 
 tyrsound_Error OpenALDevice::setSpeed(float speed)
