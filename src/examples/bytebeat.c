@@ -12,7 +12,7 @@ static char getByte(unsigned int t)
 {
     /* by mu6k */
     int x, y;
-    return char((((int)(3e3/(y=t&16383))&1)*35) +
+    return (char)((((int)(3e3/(y=t&16383))&1)*35) +
     (x=t*("6689"[t>>16&3]&15)/24&127)*y/4e4 +
     ((t>>8^t>>10|t>>14|x)&63));
 }

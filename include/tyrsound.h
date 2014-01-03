@@ -32,6 +32,7 @@ struct tyrsound_Format
     unsigned int signedSamples;
     unsigned int numBuffers;
 };
+typedef struct tyrsound_Format tyrsound_Format;
 
 typedef unsigned int tyrsound_Handle;
 #define TYRSOUND_NULLHANDLE 0
@@ -66,7 +67,10 @@ struct tyrsound_Stream
     /* Returns number of bytes remaining in the stream. NULL if unknown.
      * Returns < 0 if unknown or failed. */
     tyrsound_int64 (*remain)(void *user);
+
 };
+typedef struct tyrsound_Stream tyrsound_Stream;
+
 
 /* Error values */
 enum tyrsound_Error
@@ -88,8 +92,10 @@ enum tyrsound_Error
     TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8, /* The passed tyrsound_Format was not suitable to complete the action */
     TYRSOUND_ERR_NOT_READY             = -9, /* Action can't be done right now (but possibly later) */
     TYRSOUND_ERR_CHANNELS_FULL         =-10, /* An attempt was made to reserve a channel but none was free */
-};
 
+    TYRSOUND_ERR_PAD32BIT = 0x7fffffff
+};
+typedef enum tyrsound_Error tyrsound_Error;
 
 /********************
 * Function pointers *
@@ -180,12 +186,12 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
  * and it will be deleted together with the sound. */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_fromDecoder(void *decoder);
 
-/* Play a raw stream directly, with format fmt.
+/* Load a raw stream directly, with format fmt.
  * If fmt is NULL, use the format currently used by the output device.
  * (As this is probably wrong, just don't do it except for testing.) */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawStream(tyrsound_Stream, const tyrsound_Format *fmt);
 
-/* Play a raw memory buffer, like tyrsound_playRawStream().
+/* Load a raw memory buffer, like tyrsound_loadRawStream().
  * Makes an internal copy of the memory buffer. */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawBuffer(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
