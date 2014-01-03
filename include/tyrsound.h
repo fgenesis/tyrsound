@@ -92,6 +92,7 @@ enum tyrsound_Error
     TYRSOUND_ERR_UNSUPPORTED_FORMAT    = -8, /* The passed tyrsound_Format was not suitable to complete the action */
     TYRSOUND_ERR_NOT_READY             = -9, /* Action can't be done right now (but possibly later) */
     TYRSOUND_ERR_CHANNELS_FULL         =-10, /* An attempt was made to reserve a channel but none was free */
+    TYRSOUND_ERR_INFINITE              =-11, /* This action would result in an endless loop, decode forever, etc*/
 
     TYRSOUND_ERR_PAD32BIT = 0x7fffffff
 };
@@ -120,8 +121,9 @@ typedef void *(*tyrsound_Alloc)(void *ptr, size_t size, void *user);
  * fmt: Sets the format that should be used by tyrsound_init().
  *      Pass NULL to use default parameters (might not work).
  * output: Space-separated list of output devices to try, in that order.
-           If "" or NULL is passed, try a default output device
-           (Note: Currently only "openal" is supported) */
+           If "" or NULL is passed, try a default output device.
+           Currently supported: openal null
+*/
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output);
 
 /* Shuts down the sound system and resets the internal state.
@@ -313,12 +315,16 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst,
  * If dstfmt is not NULL, write format info to it.
  * The optional dstfmt parameter may be set to the desired output format;
  * if it is NULL, use the format currently used by the output device.
- * If tryHard is true, skip header checks (as in tyrsound_loadTryHarder()) */
+ * If tryHard is true, skip header checks (as in tyrsound_loadTryHarder()).
+ * Pass maxSeconds > 0 to limit the resulting audio stream.
+ *   For streams that contain repeating audio this is mandatory,
+ *   otherwise it will fail with TYRSOUND_ERR_INFINITE. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst,
                                                          tyrsound_Format *dstfmt,
                                                          tyrsound_Stream src,
                                                          tyrsound_Format *srcfmt,
-                                                         int tryHard);
+                                                         int tryHard,
+                                                         float maxSeconds);
 
 #ifdef __cplusplus
 } /* end extern "C" */

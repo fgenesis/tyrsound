@@ -133,9 +133,9 @@ tyrsound_Handle tyrsound_fromDecoder(void *decoder)
     return tyrsound::createSoundObjectWithDecoder((tyrsound::DecoderBase*)decoder);
 }
 
-tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt, int tryHard)
+tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt, int tryHard, float maxSeconds)
 {
-    if(!src.read || !dst.write)
+    if(!src.read || !dst.write || !dstfmt)
         return TYRSOUND_ERR_INVALID_VALUE;
 
     if(!src.seek)
@@ -155,17 +155,24 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
     if(!decoder)
         TYRSOUND_ERR_UNSUPPORTED;
 
+    if(decoder->getLength() < 0 && !maxSeconds)
+    {
+        decoder->destroy();
+        return TYRSOUND_ERR_INFINITE;
+    }
+
     char buf[2048];
     while(!decoder->isEOF())
     {
+        if(maxSeconds > 0 && decoder->tell() >= maxSeconds)
+            break;
         decoder->fillBuffer(buf, sizeof(buf));
         tyrsound_int64 written = dst.write(buf, 1, sizeof(buf), dst.user);
         if(written != sizeof(buf))
             return TYRSOUND_ERR_NOT_READY;
     }
 
-    if(dstfmt)
-        decoder->getFormat(dstfmt);
+    decoder->getFormat(dstfmt);
 
     decoder->destroy();
 

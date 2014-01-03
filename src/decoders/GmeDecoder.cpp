@@ -23,26 +23,8 @@ GmeDecoder::GmeDecoder(void *emu, const tyrsound_Format& fmt)
 , _eof(false)
 , _loopCount(0)
 , _totaltime(-1.0f)
+, _fmt(fmt)
 {
-    /*
-    // 16 bits if not specified
-    unsigned int bits = fmt.sampleBits == 0 ? 16 : fmt.sampleBits;
-    _sampleWordSize = (bits <= 8 ? 1 : 2);
-    _totaltime = (float)ov_time_total(&((GmeDecoderState*)state)->vf, -1);
-    _seekable = ov_seekable(&((GmeDecoderState*)state)->vf) != 0;
-    _fmt = fmt;
-    vorbis_info *vi = ov_info(&((GmeDecoderState*)state)->vf, -1);
-    _fmt.channels = vi->channels;
-    _fmt.hz = vi->rate;
-    _fmt.sampleBits = bits;
-    */
-
-    _fmt = fmt;
-    _fmt.bigendian = 0;
-    _fmt.signedSamples = 1;
-    _fmt.sampleBits = 16;
-    _fmt.channels = 2;
-
     gme_info_t *info = NULL;
     gme_track_info(EMU, &info, 0);
     if(info)
@@ -72,7 +54,7 @@ bool GmeDecoder::checkMagic(const char *magic, size_t size)
     return file_type != NULL;
 }
 
-GmeDecoder *GmeDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
+GmeDecoder *GmeDecoder::create(const tyrsound_Format& infmt, tyrsound_Stream strm)
 {
     char header[4];
     if(strm.read(header, 1, 4, strm.user) != 4)
@@ -80,6 +62,14 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     gme_type_t file_type = gme_identify_extension(gme_identify_header(header));
     if(!file_type)
         return NULL;
+
+    tyrsound_Format fmt = infmt;
+    if(!fmt.hz)
+        fmt.hz = 32000;
+    fmt.bigendian = 0;
+    fmt.signedSamples = 1;
+    fmt.sampleBits = 16;
+    fmt.channels = 2;
 
     gme_t *emu = gme_new_emu(file_type, fmt.hz);
     if(!emu)

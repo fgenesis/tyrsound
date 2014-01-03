@@ -12,20 +12,23 @@ int main(int argc, char **argv)
     char hdr[44];
     tyrsound_Format fmt;
     unsigned dataend;
+    float maxtime = 0;
 
     if(argc < 3)
     {
-        printf("./%s INFILE OUTFILE\n", argv[0]);
+        printf("./%s INFILE OUTFILE [MAXTIME]\n", argv[0]);
         return 0;
     }
 
+    if(argc >= 4)
+        maxtime = (float)strtod(argv[3], NULL);
+
     /* Don't need an actual audio device, use the nulldevice */
-    /*if(tyrsound_init(NULL, "null") != TYRSOUND_ERR_OK)
+    if(tyrsound_init(NULL, "null") != TYRSOUND_ERR_OK)
     {
         printf("Failed to init tyrsound.\n");
         return 1;
-    }*/
-    /* ... but for decoding, the sound system doesn't even need to be started up */
+    }
 
     if(tyrsound_createFileNameStream(&in, argv[1], "rb") != TYRSOUND_ERR_OK)
     {
@@ -49,7 +52,12 @@ int main(int argc, char **argv)
     fmt.sampleBits = 16;
     fmt.signedSamples = 1;
 
-    err = tyrsound_decodeStream(out, &fmt, in, &fmt, 0);
+    err = tyrsound_decodeStream(out, &fmt, in, &fmt, 0, maxtime);
+    if(err == TYRSOUND_ERR_INFINITE)
+    {
+        printf("Refusing to decode %s - This is an infinite stream, must supply max. time!\n", argv[1]);
+        return 5;
+    }
     if(err != TYRSOUND_ERR_OK)
     {
         printf("Failed to decode %s (error: %d)\n", argv[1], err);
