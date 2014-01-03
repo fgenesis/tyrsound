@@ -49,7 +49,7 @@ struct OggDecoderState
 };
 
 
-bool OggDecoder::checkMagic(const char *magic, size_t size)
+bool OggDecoder::checkMagic(const unsigned char *magic, size_t size)
 {
     return !memcmp(magic, "OggS", 4);
 }

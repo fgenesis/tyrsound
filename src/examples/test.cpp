@@ -51,6 +51,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    playSecs("test2.mp3", 2);
     playSecs("test.mp3", 1);
     playSecs("test.ogg", 1);
     playSecs("test2.ogg", 1);

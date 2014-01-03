@@ -67,7 +67,7 @@ OpusDecoder::~OpusDecoder()
     op_free(OPUS);
 }
 
-bool OpusDecoder::checkMagic(const char *magic, size_t size)
+bool OpusDecoder::checkMagic(const unsigned char *magic, size_t size)
 {
     return op_test(NULL, (const unsigned char*)magic, size) >= 0;
 }

@@ -30,7 +30,7 @@ public:
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) const = 0;
     virtual void staticInit() const = 0;
     virtual void staticShutdown() const = 0;
-    virtual bool checkMagic(const char *magic, size_t size) const = 0;
+    virtual bool checkMagic(const unsigned char *magic, size_t size) const = 0;
 };
 
 template<class T> class DecoderFactory : public DecoderFactoryBase
@@ -49,7 +49,7 @@ template<class T> class DecoderFactory : public DecoderFactoryBase
     {
         K::staticShutdown();
     }
-    virtual bool checkMagic(const char *magic, size_t size) const
+    virtual bool checkMagic(const unsigned char *magic, size_t size) const
     {
         return K::checkMagic(magic, size);
     }

@@ -22,6 +22,7 @@ typedef int (*mpg123_encsizef)(int encoding);
 typedef int (*mpg123_format_nonef)(mpg123_handle *mh);
 typedef int (*mpg123_formatf)(mpg123_handle *mh, long rate, int channels, int encodings);
 typedef int (*mpg123_getformatf)(mpg123_handle *mh, long *rate, int *channels, int *encoding);
+typedef int (*mpg123_paramf)(mpg123_handle *mh, enum mpg123_parms type, long value, double fvalue);
 
 #define ALLFUNCS \
     /* 0 */ FUNC(mpg123_init) \
@@ -39,9 +40,10 @@ typedef int (*mpg123_getformatf)(mpg123_handle *mh, long *rate, int *channels, i
     /*12 */ FUNC(mpg123_encsize) \
     /*13 */ FUNC(mpg123_format_none) \
     /*14 */ FUNC(mpg123_format) \
-    /*15 */ FUNC(mpg123_getformat)
+    /*15 */ FUNC(mpg123_getformat) \
+    /*16 */ FUNC(mpg123_param)
 
-#define NUMFUNCS 16 // Do not forget to adjust this to the define above!
+#define NUMFUNCS 17 // Do not forget to adjust this to the define above!
 
 #define FUNC(name) name##f name;
 union mpg123Funcs
@@ -180,7 +182,7 @@ Mp3Decoder::~Mp3Decoder()
     Free(_state);
 }
 
-bool Mp3Decoder::checkMagic(const char *magic, size_t size)
+bool Mp3Decoder::checkMagic(const unsigned char *magic, size_t size)
 {
     return (magic[0] == 0xFF && (magic[1] & 0xF0) == 0xF0)
         || (tolower(magic[0]) == 'i' && tolower(magic[1]) == 'd' && magic[2] == '3');
@@ -208,8 +210,11 @@ Mp3Decoder *Mp3Decoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
         return NULL;
     }
 
-    void *mem = NULL;
-    
+#if !TYRSOUND_IS_DEBUG
+    funcs.mpg123_param(state->mh, MPG123_ADD_FLAGS, MPG123_QUIET, 0);
+#endif
+
+    funcs.mpg123_param(state->mh, MPG123_RESYNC_LIMIT, -1, 0);
 
     // Supply stream reading functions, but prevent it from closing the stream, for now (state->close == false).
     // seek_wrap() requires the stream to have seek() and tell() functions.
@@ -259,6 +264,9 @@ Mp3Decoder *Mp3Decoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
     }
     if(err == MPG123_OK)
         err = funcs.mpg123_scan(state->mh);
+
+    void *mem = NULL;
+
     if(err == MPG123_OK)
         mem = Alloc(sizeof(Mp3Decoder));
     if(err != MPG123_OK || !mem)

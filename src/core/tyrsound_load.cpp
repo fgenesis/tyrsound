@@ -38,7 +38,7 @@ static DecoderBase *createDecoder(const tyrsound_Stream& strm, const tyrsound_Fo
         return NULL;
 
     tyrsound_int64 pos = strm.tell ? strm.tell(strm.user) : 0;
-    char magic[513];
+    unsigned char magic[513];
     size_t magicsize = 0;
     if(!skipMagic)
     {
