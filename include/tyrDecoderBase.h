@@ -27,26 +27,31 @@ public:
 class DecoderFactoryBase
 {
 public:
-    virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) = 0;
-    virtual void staticInit() = 0;
-    virtual void staticShutdown() = 0;
+    virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) const = 0;
+    virtual void staticInit() const = 0;
+    virtual void staticShutdown() const = 0;
+    virtual bool checkMagic(const char *magic, size_t size) const = 0;
 };
 
 template<class T> class DecoderFactory : public DecoderFactoryBase
 {
     typedef T K;
-    virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm)
+    virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) const
     {
         T *decoder = K::create(fmt, strm);
         return static_cast<DecoderBase*>(decoder);
     }
-    virtual void staticInit()
+    virtual void staticInit() const
     {
         K::staticInit();
     }
-    virtual void staticShutdown()
+    virtual void staticShutdown() const
     {
         K::staticShutdown();
+    }
+    virtual bool checkMagic(const char *magic, size_t size) const
+    {
+        return K::checkMagic(magic, size);
     }
 };
 

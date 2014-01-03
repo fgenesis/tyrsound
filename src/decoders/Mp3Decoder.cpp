@@ -3,6 +3,7 @@
 #define MPG123_NO_LARGENAME
 #include <mpg123.h>
 #include <stdio.h>
+#include <ctype.h>
 
 // Functions used from mpg123.h
 typedef int  (*mpg123_initf)(void);
@@ -172,13 +173,12 @@ Mp3Decoder::~Mp3Decoder()
     Free(_state);
 }
 
-// TODO: add static checking function to check first 4 or 8 bytes before attempting to malloc decoder
-//char magic[5];
-//magic[4] = 0;
-/*
-(magic[0] == 0xFF && (magic[1] & 0xF0) == 0xF0) ||
-(strncmp((char *)magic, "ID3", 3) == 0) ) {
-*/
+bool Mp3Decoder::checkMagic(const char *magic, size_t size)
+{
+    return (magic[0] == 0xFF && (magic[1] & 0xF0) == 0xF0)
+        || (tolower(magic[0]) == 'i' && tolower(magic[1]) == 'd' && magic[2] == '3');
+}
+
 
 Mp3Decoder *Mp3Decoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
 {

@@ -10,7 +10,7 @@ static int playSecs(const char *name, float secs)
         return 2;
     }
 
-    tyrsound_Handle handle = tyrsound_load(strm, NULL);
+    tyrsound_Handle handle = tyrsound_load(strm);
     if(handle == TYRSOUND_NULLHANDLE)
     {
         printf("Format not recognized / no suitable decoder.\n");
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    playSecs("test.mp3", 10);
+    playSecs("test.mp3", 1);
     playSecs("test.ogg", 1);
     playSecs("test2.ogg", 1);
     playSecs("test3.ogg", 1);

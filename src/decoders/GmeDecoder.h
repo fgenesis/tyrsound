@@ -16,6 +16,7 @@ public:
     static GmeDecoder *create(const tyrsound_Format& fmt, tyrsound_Stream strm);
     static void staticInit() {}
     static void staticShutdown() {}
+    static bool checkMagic(const char *magic, size_t size);
 
     virtual size_t fillBuffer(void *buf, size_t size);
     virtual float getLength();

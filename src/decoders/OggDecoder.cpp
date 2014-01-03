@@ -2,6 +2,7 @@
 #include "OggDecoder.h"
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
+#include <string.h>
 
 #include "tyrsound_begin.h"
 
@@ -46,6 +47,13 @@ struct OggDecoderState
     OggVorbis_File vf;
     tyrsound_Stream strm;
 };
+
+
+bool OggDecoder::checkMagic(const char *magic, size_t size)
+{
+    return !memcmp(magic, "OggS", 4);
+}
+
 
 OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
 : _state(state)

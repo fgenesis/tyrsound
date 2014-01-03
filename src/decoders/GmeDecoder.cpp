@@ -66,6 +66,12 @@ GmeDecoder::~GmeDecoder()
     gme_delete(EMU);
 }
 
+bool GmeDecoder::checkMagic(const char *magic, size_t size)
+{
+    gme_type_t file_type = gme_identify_extension(gme_identify_header(magic));
+    return file_type != NULL;
+}
+
 GmeDecoder *GmeDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
 {
     char header[4];

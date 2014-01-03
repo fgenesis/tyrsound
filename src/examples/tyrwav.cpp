@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     fmt.sampleBits = 16;
     fmt.signedSamples = 1;
 
-    err = tyrsound_decodeStream(out, &fmt, in, &fmt);
+    err = tyrsound_decodeStream(out, &fmt, in, &fmt, 0);
     if(err != TYRSOUND_ERR_OK)
     {
         printf("Failed to decode %s (error: %d)\n", argv[1], err);

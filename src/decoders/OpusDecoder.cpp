@@ -59,7 +59,7 @@ OpusDecoder::OpusDecoder(void *state, const tyrsound_Format& fmt)
     // TODO: check whether hardware/output device really supports 48k playback
     _fmt.sampleBits = 16;
     _fmt.signedSamples = 1;
-    // TODO: make sure native endian (as returned) doesn't screw up
+    _fmt.bigendian = isBigEndian();
 }
 
 OpusDecoder::~OpusDecoder()
@@ -67,31 +67,22 @@ OpusDecoder::~OpusDecoder()
     op_free(OPUS);
 }
 
+bool OpusDecoder::checkMagic(const char *magic, size_t size)
+{
+    return op_test(NULL, (const unsigned char*)magic, size) >= 0;
+}
+
 OpusDecoder *OpusDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
 {
-    unsigned char minibuf[512];
-    tyrsound_int64 oldpos = strm.tell(strm.user);
-    if(oldpos >= 0)
-    {
-        tyrsound_uint64 readbytes = strm.read(minibuf, 1, sizeof(minibuf), strm.user);
-        if(readbytes)
-        {
-            strm.seek(strm.user, oldpos, SEEK_SET);
-            int res = op_test(NULL, minibuf, (size_t)readbytes);
-            if(res < 0)
-                return NULL;
-        }
-    }
-
     tyrsound_Stream *streamp = (tyrsound_Stream*)Alloc(sizeof(tyrsound_Stream));
     if(!streamp)
         return NULL;
     // Stream is closed + deleted by op_free() in dtor
     *streamp = strm;
 
-    int derp = 0;
-    OggOpusFile *state = op_test_callbacks(streamp, &stream_callbacks, NULL, 0, &derp);
-    if(!state)
+    int err = 0;
+    OggOpusFile *state = op_test_callbacks(streamp, &stream_callbacks, NULL, 0, &err);
+    if(!state || err < 0)
     {
         Free(streamp);
         return NULL;

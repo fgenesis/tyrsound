@@ -170,9 +170,16 @@ TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 *****************************/
 
 /* Load a sound using a stream loader. Returns TYRSOUND_NULLHANDLE on failure.
+ * Uses the output format currently used by the output device. */
+TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream);
+
+/* More configurable version of tyrsound_load().
  * The optional format parameter may be set to the desired output format;
- * if it is NULL, use the format currently used by the output device. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream, const tyrsound_Format *fmt);
+ * if it is NULL, use the format currently used by the output device.
+ * Setting tryHard to true disables quick header checks. While this might be able to open files that
+ * tyrsound_load() rejects, this can involve a bunch more memory allocations / reads
+ * depending on how long each decoder takes to figure out whether it can decode the stream or not. */
+TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadEx(tyrsound_Stream stream, const tyrsound_Format *fmt, int tryHard);
 
 /* Stops a sound, and frees all related resources. 
  * The actual deletion is delayed and performed in the next update() call.
@@ -305,11 +312,13 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst,
 /* Decodes data from one stream and writes the result to the 2nd stream.
  * If dstfmt is not NULL, write format info to it.
  * The optional dstfmt parameter may be set to the desired output format;
- * if it is NULL, use the format currently used by the output device. */
+ * if it is NULL, use the format currently used by the output device.
+ * If tryHard is true, skip header checks (as in tyrsound_loadTryHarder()) */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst,
                                                          tyrsound_Format *dstfmt,
                                                          tyrsound_Stream src,
-                                                         tyrsound_Format *srcfmt);
+                                                         tyrsound_Format *srcfmt,
+                                                         int tryHard);
 
 #ifdef __cplusplus
 } /* end extern "C" */

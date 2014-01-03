@@ -11,7 +11,7 @@ int playFile(const char *name)
         return 2;
     }
 
-    tyrsound_Handle handle = tyrsound_load(strm, NULL);
+    tyrsound_Handle handle = tyrsound_load(strm);
     if(handle == TYRSOUND_NULLHANDLE)
     {
         printf("Format not recognized / no suitable decoder.\n");
