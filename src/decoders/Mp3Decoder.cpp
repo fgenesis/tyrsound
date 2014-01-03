@@ -51,9 +51,10 @@ TYRSOUND_REGISTER_DECODER(Mp3Decoder);
 
 static mpg123Funcs funcs;
 
-static void *loadFunction(void *library, const char *name)
+template <class T> static void *loadFunction(void *library, T *& dst, const char *name)
 {
     void *f = tyrsound_ex_loadFunction(library, name);
+    dst = (T*)f;
 #if TYRSOUND_IS_DEBUG
     if(!f)
         printf("Failed to load function: %s\n", name);
@@ -79,7 +80,7 @@ void Mp3Decoder::staticInit()
 
     bool good = true;
     // Load pointers from dynamic library
-#define FUNC(name) good = (funcs.##name = (name##f)loadFunction(s_dynHandle, (#name))) && good;
+#define FUNC(name) good = (loadFunction(s_dynHandle, funcs. ## name, (#name))) && good;
     ALLFUNCS;
 #undef FUNC
 
