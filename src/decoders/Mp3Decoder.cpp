@@ -24,25 +24,31 @@ typedef int (*mpg123_formatf)(mpg123_handle *mh, long rate, int channels, int en
 typedef int (*mpg123_getformatf)(mpg123_handle *mh, long *rate, int *channels, int *encoding);
 
 #define ALLFUNCS \
-    FUNC(mpg123_init) \
-    FUNC(mpg123_exit) \
-    FUNC(mpg123_new) \
-    FUNC(mpg123_delete) \
-    FUNC(mpg123_open_handle) \
-    FUNC(mpg123_close) \
-    FUNC(mpg123_read) \
-    FUNC(mpg123_tell) \
-    FUNC(mpg123_seek) \
-    FUNC(mpg123_scan) \
-    FUNC(mpg123_length) \
-    FUNC(mpg123_replace_reader_handle) \
-    FUNC(mpg123_encsize) \
-    FUNC(mpg123_format_none) \
-    FUNC(mpg123_format) \
-    FUNC(mpg123_getformat)
+    /* 0 */ FUNC(mpg123_init) \
+    /* 1 */ FUNC(mpg123_exit) \
+    /* 2 */ FUNC(mpg123_new) \
+    /* 3 */ FUNC(mpg123_delete) \
+    /* 4 */ FUNC(mpg123_open_handle) \
+    /* 5 */ FUNC(mpg123_close) \
+    /* 6 */ FUNC(mpg123_read) \
+    /* 7 */ FUNC(mpg123_tell) \
+    /* 8 */ FUNC(mpg123_seek) \
+    /* 9 */ FUNC(mpg123_scan) \
+    /*10 */ FUNC(mpg123_length) \
+    /*11 */ FUNC(mpg123_replace_reader_handle) \
+    /*12 */ FUNC(mpg123_encsize) \
+    /*13 */ FUNC(mpg123_format_none) \
+    /*14 */ FUNC(mpg123_format) \
+    /*15 */ FUNC(mpg123_getformat)
+
+#define NUMFUNCS 16 // Do not forget to adjust this to the define above!
 
 #define FUNC(name) name##f name;
-struct mpg123Funcs { ALLFUNCS };
+union mpg123Funcs
+{
+    struct { ALLFUNCS };
+    void *rawptr[NUMFUNCS];
+};
 #undef FUNC
 
 #include "tyrsound_begin.h"
@@ -51,10 +57,9 @@ TYRSOUND_REGISTER_DECODER(Mp3Decoder);
 
 static mpg123Funcs funcs;
 
-template <class T> static void *loadFunction(void *library, T *& dst, const char *name)
+static void *loadFunction(void *library, const char *name)
 {
     void *f = tyrsound_ex_loadFunction(library, name);
-    dst = (T*)f;
 #if TYRSOUND_IS_DEBUG
     if(!f)
         printf("Failed to load function: %s\n", name);
@@ -79,8 +84,9 @@ void Mp3Decoder::staticInit()
     memset(&funcs, 0, sizeof(funcs));
 
     bool good = true;
-    // Load pointers from dynamic library
-#define FUNC(name) good = (loadFunction(s_dynHandle, funcs. ## name, (#name))) && good;
+    int idx = 0;
+    // Load pointers from dynamic library.
+#define FUNC(name) good = (funcs.rawptr[idx++] = loadFunction(s_dynHandle, (#name))) && good;
     ALLFUNCS;
 #undef FUNC
 
