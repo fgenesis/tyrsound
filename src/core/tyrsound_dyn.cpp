@@ -21,7 +21,7 @@ void *dynopen(const char *fn)
     h =  LoadLibrary(s);
 #else
     memcpy(s + len, ".so\0", 4);
-    h = *dlopen(s, RTLD_NOW | RTLD_LOCAL);
+    h = (void*)dlopen(s, RTLD_NOW | RTLD_LOCAL);
 #endif
     Free(s);
     return h;
