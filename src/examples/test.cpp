@@ -28,10 +28,11 @@ static int playSecs(const char *name, float secs)
     const float len = tyrsound_getLength(handle);
 
     /* This hogs the CPU, don't do it this way in a real program :)*/
-    while(tyrsound_isPlaying(handle) && tyrsound_getPlayPosition(handle) < secs)
+    float playpos = 0;
+    while(tyrsound_isPlaying(handle) && ((playpos = tyrsound_getPlayPosition(handle)) < secs))
     {
         tyrsound_update();
-        printf("[At %.3f / %.3f]\r", len);
+        printf("[At %.3f / %.3f]\r", playpos, len);
     }
 
     printf("Done playing '%s'\n", name);
@@ -50,6 +51,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    playSecs("test.mp3", 10);
     playSecs("test.ogg", 1);
     playSecs("test2.ogg", 1);
     playSecs("test3.ogg", 1);

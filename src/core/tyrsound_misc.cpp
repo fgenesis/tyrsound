@@ -21,6 +21,12 @@ void breakpoint()
 #endif
 }
 
+bool isBigEndian()
+{
+    union { int i; char c; } endian;
+    endian.i = 1;
+    return !endian.c;
+}
 
 Mutex *Mutex::create()
 {

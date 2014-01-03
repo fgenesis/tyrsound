@@ -28,6 +28,8 @@ class DecoderFactoryBase
 {
 public:
     virtual DecoderBase *create(const tyrsound_Format& fmt, tyrsound_Stream strm) = 0;
+    virtual void staticInit() = 0;
+    virtual void staticShutdown() = 0;
 };
 
 template<class T> class DecoderFactory : public DecoderFactoryBase
@@ -37,6 +39,14 @@ template<class T> class DecoderFactory : public DecoderFactoryBase
     {
         T *decoder = K::create(fmt, strm);
         return static_cast<DecoderBase*>(decoder);
+    }
+    virtual void staticInit()
+    {
+        K::staticInit();
+    }
+    virtual void staticShutdown()
+    {
+        K::staticShutdown();
     }
 };
 

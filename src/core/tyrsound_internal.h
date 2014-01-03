@@ -24,8 +24,18 @@ tyrsound_Error initSounds();
 void shutdownSounds();
 tyrsound_Error updateSounds();
 
+// in tyrsound_load.cpp
+void initDecoders();
+void shutdownDecoders();
+
 // in tyrsound_misc.cpp
 void breakpoint();
+bool isBigEndian();
+
+// in tyrsound_dyn.cpp
+void *dynopen(const char *fn);
+void dynclose(void *);
+void *dynsym(void *, const char *name);
 
 // Helper for static initialization
 template <typename T, int SZ> class RegistrationHolder

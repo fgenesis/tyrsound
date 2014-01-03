@@ -49,6 +49,21 @@ TYRSOUND_DLL_EXPORT void tyrsound_ex_unlockMutex(void *mtx)
         s_unlockMutexFunc(mtx);
 }
 
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name)
+{
+    return dynopen(name);
+}
+
+TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)
+{
+    return dynclose(h);
+}
+
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *h, const char *name)
+{
+    return dynsym(h, name);
+}
+
 #include "tyrsound_end.h"
 
 
@@ -90,6 +105,8 @@ tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
     if(!haveDevice)
         return TYRSOUND_ERR_NO_DEVICE;
 
+    tyrsound::initDecoders();
+
     return tyrsound::initSounds();
 }
 
@@ -97,6 +114,7 @@ tyrsound_Error tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
     tyrsound::shutdownDevice();
+    tyrsound::shutdownDecoders();
     tyrsound_setAlloc(NULL, NULL);
     return TYRSOUND_ERR_OK;
 }

@@ -7,7 +7,7 @@ option(TYRSOUND_BUILD_DYNAMIC "Build as DLL/Shared object?" TRUE)
 
 option(TYRSOUND_SUPPORT_OGG "Support OGG format?" TRUE)
 option(TYRSOUND_SUPPORT_OPUS "Support OPUS format?" TRUE)
-#option(TYRSOUND_SUPPORT_MP3 "Support MP3 format?" TRUE)
+option(TYRSOUND_SUPPORT_MP3 "Support MP3 format?" TRUE)
 #option(TYRSOUND_SUPPORT_MOD "Support various tracker formats?" TRUE)
 option(TYRSOUND_SUPPORT_GME "Support various console formats (using GameMusicEmu)?" TRUE)
 

@@ -29,6 +29,10 @@ extern "C"
 
     TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo&);
     TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDecoder(DecoderFactoryBase *);
+
+    TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *);
+    TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *, const char *name);
 }
 
 inline void *Realloc(void *ptr, size_t size) { return tyrsound_ex_alloc(ptr, size); }

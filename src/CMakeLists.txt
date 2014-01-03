@@ -21,6 +21,7 @@ set(src_core
     core/tyrsound_device.cpp
     core/tyrsound_sound.cpp
     core/tyrsound_misc.cpp
+    core/tyrsound_dyn.cpp
     core/SoundObject.h
     core/SoundObject.cpp
     "${TYRSOUND_SRC_ROOT}/include/tyrsound.h"
@@ -57,6 +58,14 @@ if(TYRSOUND_SUPPORT_OGG)
         decoders/OggDecoder.h
     )
     list(APPEND libs ogg vorbis)
+endif()
+
+if(TYRSOUND_SUPPORT_MP3)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/mpg123")
+    list(APPEND src_decoders
+        decoders/Mp3Decoder.cpp
+        decoders/Mp3Decoder.h
+    )
 endif()
 
 if(TYRSOUND_SUPPORT_GME)

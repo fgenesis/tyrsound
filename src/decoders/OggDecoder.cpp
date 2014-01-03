@@ -75,6 +75,9 @@ OggDecoder::~OggDecoder()
 OggDecoder *OggDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
 {
     OggDecoderState *state = (OggDecoderState*)Alloc(sizeof(OggDecoderState));
+    if(!state)
+        return NULL;
+
     state->strm = strm;
     
     if(ov_test_callbacks(&state->strm, &state->vf, NULL, 0, stream_callbacks))

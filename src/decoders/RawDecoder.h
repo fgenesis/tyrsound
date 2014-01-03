@@ -14,6 +14,8 @@ protected:
 
 public:
     static RawDecoder *create(const tyrsound_Format& fmt, const tyrsound_Stream& strm);
+    static void staticInit() {}
+    static void staticShutdown() {}
 
     virtual size_t fillBuffer(void *buf, size_t size);
     virtual float getLength();

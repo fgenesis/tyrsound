@@ -1,21 +1,21 @@
-#ifndef TYRSOUND_GME_DECODER_H
-#define TYRSOUND_GME_DECODER_H
+#ifndef TYRSOUND_MP3_DECODER_H
+#define TYRSOUND_MP3_DECODER_H
 
 #include "tyrDecoderBase.h"
 
 #include "tyrsound_begin.h"
 
 
-class GmeDecoder : public DecoderBase
+class Mp3Decoder : public DecoderBase
 {
 protected:
-    GmeDecoder(void *state, const tyrsound_Format& fmt);
-    virtual ~GmeDecoder();
+    Mp3Decoder(void *state, const tyrsound_Format& fmt, bool seekable);
+    virtual ~Mp3Decoder();
 
 public:
-    static GmeDecoder *create(const tyrsound_Format& fmt, tyrsound_Stream strm);
-    static void staticInit() {}
-    static void staticShutdown() {}
+    static Mp3Decoder *create(const tyrsound_Format& fmt, tyrsound_Stream strm);
+    static void staticInit();
+    static void staticShutdown();
 
     virtual size_t fillBuffer(void *buf, size_t size);
     virtual float getLength();
@@ -28,12 +28,16 @@ public:
 
 private:
 
-    void *_emu;
+    void *_state;
+    float _totaltime;
     tyrsound_Format _fmt;
     float _loopPoint;
     int _loopCount;
-    float _totaltime;
+    bool _seekable;
     bool _eof;
+
+    static void *s_dynHandle;
+    static bool s_enabled;
 };
 
 

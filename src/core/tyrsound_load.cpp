@@ -16,6 +16,20 @@ void tyrsound_ex_registerDecoder(DecoderFactoryBase *f)
     TYRSOUND_DECODER_HOLDER::Register(f);
 }
 
+void initDecoders()
+{
+    const unsigned int numDecoders = TYRSOUND_DECODER_HOLDER::Size();
+    for(unsigned int i = 0; i < numDecoders; ++i)
+        TYRSOUND_DECODER_HOLDER::Get(i)->staticInit();
+}
+
+void shutdownDecoders()
+{
+    const unsigned int numDecoders = TYRSOUND_DECODER_HOLDER::Size();
+    for(unsigned int i = 0; i < numDecoders; ++i)
+        TYRSOUND_DECODER_HOLDER::Get(i)->staticShutdown();
+}
+
 
 static DecoderBase *createDecoder(tyrsound_Stream strm, const tyrsound_Format& fmt)
 {
