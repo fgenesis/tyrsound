@@ -20,21 +20,25 @@ static char getByte(unsigned int t)
 
 int main(int argc, char **argv)
 {
+    const unsigned int samples = 3000000;
+    tyrsound_Format fmt;
+    unsigned int t;
+    char *buf;
+    tyrsound_Handle handle;
+
     if(tyrsound_init(NULL, NULL) != TYRSOUND_ERR_OK)
         return 1;
 
-    tyrsound_Format fmt;
     fmt.sampleBits = 8;
     fmt.signedSamples = 0;
     fmt.hz = 32000;
     fmt.channels = 1;
 
-    const unsigned int samples = 3000000;
-    char *buf = (char*)malloc(samples * fmt.channels);
-    for(unsigned int t = 0; t < samples; ++t)
+    buf = (char*)malloc(samples * fmt.channels);
+    for(t = 0; t < samples; ++t)
         buf[t] = getByte(t);
 
-    tyrsound_Handle handle = tyrsound_loadRawBuffer(buf, samples * fmt.channels, &fmt);
+    handle = tyrsound_loadRawBuffer(buf, samples * fmt.channels, &fmt);
     free(buf); /* No longer needed */
 
     if(handle == TYRSOUND_NULLHANDLE)
@@ -44,7 +48,7 @@ int main(int argc, char **argv)
 
     while(tyrsound_isPlaying(handle))
     {
-        int t = int(tyrsound_getPlayPosition(handle) * fmt.hz);
+        t = (int)(tyrsound_getPlayPosition(handle) * fmt.hz);
         printf("t = %d\r", t);
         tyrsound_update();
     }
