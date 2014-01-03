@@ -4,7 +4,8 @@
 
 #include "tyrsound_begin.h"
 
-TYRSOUND_REGISTER_DECODER(RawDecoder);
+// Do NOT register this decoder! It's instantiated manually if required.
+//TYRSOUND_REGISTER_DECODER(RawDecoder);
 
 RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 : _strm(strm)
