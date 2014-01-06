@@ -10,17 +10,17 @@ endif()
 
 # private includes
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/include")
-#add_definitions(-DFLAC__NO_ASM)
+add_definitions(-DFLAC__NO_ASM)
 #add_definitions(-DFLAC_API_EXPORTS)
 add_definitions(-DFLAC__NO_DLL)
 add_definitions(-DFLAC__HAS_OGG)
 add_definitions(-DVERSION="1.3.0")
 
-add_definitions(-DFLAC__CPU_IA32)
+#add_definitions(-DFLAC__CPU_IA32)
 #add_definitions(-DFLAC__HAS_NASM)
-add_definitions(-DFLAC__HAS_X86INTRIN)
-add_definitions(-DFLAC__USE_3DNOW)
-add_definitions(-DFLAC__ALIGN_MALLOC_DATA)
+#add_definitions(-DFLAC__HAS_X86INTRIN)
+#add_definitions(-DFLAC__USE_3DNOW)
+#add_definitions(-DFLAC__ALIGN_MALLOC_DATA)
 add_definitions(-DFLaC__INLINE=inline)
 
 set(FLAC_src
