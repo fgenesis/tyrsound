@@ -1,3 +1,10 @@
+
+/* This file exposes API for extensions.
+ * It does not need to be included if you just want to use the library.
+ * If you plan to add decoders or output devices, include it where necessary.
+ * Note that this is a C++ header.
+*/
+
 #ifndef TYRSOUND_EX_H
 #define TYRSOUND_EX_H
 
@@ -35,6 +42,7 @@ extern "C"
     TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *, const char *name);
 }
 
+// Memory related functions, using the allocator set via tyrsound_setAlloc()
 inline void *Realloc(void *ptr, size_t size) { return tyrsound_ex_alloc(ptr, size); }
 inline void  Free(void *ptr)                 { tyrsound_ex_alloc(ptr, 0); }
 inline void *Alloc(size_t size)              { return tyrsound_ex_alloc(NULL, size); }

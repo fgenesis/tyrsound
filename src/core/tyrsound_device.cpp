@@ -19,7 +19,7 @@ static void _applyDefaultFormat(tyrsound_Format& fmt)
     fmt.channels = 0;
     fmt.hz = 44100;
     fmt.numBuffers = 8;
-    fmt.bigendian = 0;
+    fmt.bigendian = isBigEndian();
     fmt.signedSamples = 1;
 }
 

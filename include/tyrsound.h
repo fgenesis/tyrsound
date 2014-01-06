@@ -1,3 +1,8 @@
+
+/* As a library user, this is the only file you need to include.
+ * This is a plain C header and is compatible with C and C++.
+*/
+
 #ifndef TYRSOUND_H
 #define TYRSOUND_H
 
@@ -192,7 +197,9 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
 /* Create a sound and attach an already configured decoder.
  * The decoder is a C++ pointer to a valid class derived from DecoderBase.
  * Ownership of the decoder is transferred to the sound,
- * and it will be deleted together with the sound. */
+ * and it will be deleted together with the sound.
+ * Warning: Only pass decoders allocated with tyrsound_ex_alloc() or any of
+ * the shortcut functions in the tyrsound namespace, otherwise it will crash! */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_fromDecoder(void *decoder);
 
 /* Load a raw stream directly, with format fmt.
