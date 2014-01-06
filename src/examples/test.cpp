@@ -1,5 +1,9 @@
 #include "tyrsound.h"
 #include <stdio.h>
+#include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 static int playSecs(const char *name, float secs)
 {
@@ -31,8 +35,11 @@ static int playSecs(const char *name, float secs)
     float playpos = 0;
     while(tyrsound_isPlaying(handle) && ((playpos = tyrsound_getPlayPosition(handle)) < secs))
     {
+#ifdef _WIN32
+        Sleep(10);
+#endif
         tyrsound_update();
-        printf("[At %.3f / %.3f]\r", playpos, len);
+        //printf("[At %.3f / %.3f]\r", playpos, len);
     }
 
     printf("Done playing '%s'\n", name);
@@ -45,12 +52,26 @@ static int playSecs(const char *name, float secs)
 
 int main(int argc, char **argv)
 {
-    if(tyrsound_init(NULL, NULL) != TYRSOUND_ERR_OK)
+    tyrsound_Format fmt;
+    memset(&fmt, 0, sizeof(fmt));
+
+    fmt.sampleBits = 16;
+    fmt.bufferSize = 16 * 1024 + 1 * 1024; // use some weird buffer size
+    fmt.channels = 0;
+    fmt.hz = 44100;
+    fmt.numBuffers = 8;
+    fmt.bigendian = 0;
+    fmt.signedSamples = 1;
+
+    if(tyrsound_init(&fmt, NULL) != TYRSOUND_ERR_OK)
     {
         printf("Failed to init tyrsound.\n");
         return 1;
     }
 
+    tyrsound_getFormat(&fmt);
+
+    playSecs("test.flac", 999);
     playSecs("test2.mp3", 2);
     playSecs("test.mp3", 1);
     playSecs("test.ogg", 1);
