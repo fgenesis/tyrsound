@@ -24,6 +24,9 @@ set(src_core
     core/tyrsound_dyn.cpp
     core/SoundObject.h
     core/SoundObject.cpp
+)
+
+set(src_headers
     "${TYRSOUND_SRC_ROOT}/include/tyrsound.h"
     "${TYRSOUND_SRC_ROOT}/include/tyrsound_ex.h"
     "${TYRSOUND_SRC_ROOT}/include/tyrsound_begin.h"
@@ -44,11 +47,16 @@ set(src_output
 
 set(src_decoders
     decoders/DecoderBase.cpp
-    decoders/WavDecoder.cpp
-    decoders/WavDecoder.h
     decoders/RawDecoder.cpp
     decoders/RawDecoder.h
 )
+
+if(TYRSOUND_SUPPORT_WAV)
+    list(APPEND src_decoders
+        decoders/WavDecoder.cpp
+        decoders/WavDecoder.h
+    )
+endif()
 
 if(TYRSOUND_SUPPORT_OGG)
     include_directories("${TYRSOUND_SRC_ROOT}/dep/libogg/include")
@@ -89,6 +97,16 @@ if(TYRSOUND_SUPPORT_OPUS)
     list(APPEND libs opus opusfile)
 endif()
 
+if(TYRSOUND_SUPPORT_FLAC)
+    add_definitions(-DFLAC__NO_DLL) # FIXME: this is a hack for proper static linking with MSVC. Remove later.
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libFLAC/include")
+    list(APPEND src_decoders
+        decoders/FlacDecoder.cpp
+        decoders/FlacDecoder.h
+    )
+    list(APPEND libs FLAC)
+endif()
+
 if(TYRSOUND_OUTPUT_OPENAL)
     include_directories("${TYRSOUND_SRC_ROOT}/dep/AL/include")
     list(APPEND src_output
@@ -100,14 +118,17 @@ if(TYRSOUND_OUTPUT_OPENAL)
     list(APPEND libs "${OPENAL_LIBRARY}")
 endif()
 
-set(src ${src_core} ${src_output} ${src_decoders})
+set(src ${src_headers} ${src_core} ${src_output} ${src_decoders})
 
+source_group("headers" FILES ${src_headers})
 source_group("core" FILES ${src_core})
 source_group("output" FILES ${src_output})
 source_group("decoders" FILES ${src_decoders})
 
 
 add_library(tyrsound ${LIB_TYPE} ${src})
+
+message(STATUS "Linking libs: ${libs}")
 
 target_link_libraries(tyrsound ${libs})
 
