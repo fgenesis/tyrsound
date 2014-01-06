@@ -25,10 +25,11 @@ struct FlacDecoderState
     char *writebuf; // temp. storage for the pointer supplied via FlacDecoder::fillBuffer()
     size_t todosize; // size of the remaining sound buffer (writebuf)
     size_t writtensize; // bytes written to writebuf, per decode call
-    size_t decodedsize; // total bytes decoded, per decode call
 
+    char *samplebuf; // Excess samples that don't fit into writebuf will go here.
     size_t buffered; // bytes readable from samplebuf
-    tyrsound_Stream samplebuf; // Excess samples that don't fit into writebuf will go here.
+    size_t samplebufsize; // total samplebuf size, in bytes
+    size_t samplebufpos; // current read position in samplebuf
 
     // set via flac metadata
     unsigned int maxFrameSize;
@@ -104,8 +105,8 @@ static void s_metadataCallback(const FLAC__StreamDecoder *, const FLAC__StreamMe
         // "FLAC specifies a minimum block size of 16 and a maximum block size of 65535,
         // meaning the bit patterns corresponding to the numbers 0-15 in the minimum blocksize
         // and maximum blocksize fields are invalid."
-        // -- So we just assume the worst and keep it at the pre-set spec maximum.
-        if(metadata->data.stream_info.max_framesize < 16)
+        // -- So we just assume the worst and keep it at the pre-set spec maximum if the values are derp.
+        if(metadata->data.stream_info.max_framesize >= 16)
             state->maxFrameSize = metadata->data.stream_info.max_framesize;
 
         state->sampleBitSize = metadata->data.stream_info.bits_per_sample;
@@ -141,14 +142,14 @@ FlacDecoder::FlacDecoder(void *pstate, const tyrsound_Format& fmt)
     FlacDecoderState *state = (FlacDecoderState*)pstate;
 
     _seekable = state->strm.seek && state->strm.remain && state->strm.tell;
-    _totaltime = !state->totalSamples ? -1.0f : (state->totalSamples / float(fmt.hz * fmt.channels));
+    _totaltime = !state->totalSamples ? -1.0f : (state->totalSamples / float(fmt.hz));
 }
 
 FlacDecoder::~FlacDecoder()
 {
     FlacDecoderState *state = (FlacDecoderState*)_state;
     state->strm.close(state->strm.user);
-    state->samplebuf.close(state->samplebuf.user);
+    Free(state->samplebuf);
 
     FLAC__StreamDecoder *flac = state->flac;
     FLAC__stream_decoder_finish(flac);
@@ -157,52 +158,45 @@ FlacDecoder::~FlacDecoder()
     Free(_state);
 }
 
-template <typename T, unsigned SH> static size_t s_decodeToBuffer(T *outbuf, size_t size, const FLAC__int32 *const buffer[], unsigned int channels, unsigned int *blocksize, unsigned int bytesPerSample)
+template <typename T, unsigned SH> static size_t s_decodeToBuffer(T *outbuf, size_t size, const FLAC__int32 *const buffer[], unsigned int channels, unsigned int blocksize, unsigned int bytesPerSample, unsigned int *blocksDone)
 {
+    const unsigned int offs = *blocksDone;
+    const unsigned int remainblocks = blocksize - offs;
     unsigned int i;
-    for(i = 0; size && i < *blocksize; ++i, size -= bytesPerSample)
+    for(i = 0; size && i < remainblocks; ++i, size -= bytesPerSample)
         for(unsigned int c = 0; c < channels; ++c)
-            *outbuf++ = static_cast<T>(buffer[c][i] >> SH); // signed shift
+            *outbuf++ = static_cast<T>(buffer[c][i+offs] >> SH); // signed shift
 
-    *blocksize -= i;
+    *blocksDone = i + offs;
     size_t written = i * bytesPerSample;
     return written;
 }
 
 template <typename T, unsigned SH> static size_t s_decodeMain(FlacDecoderState *state, const FLAC__int32 *const buffer[], unsigned int blocksize)
 {
+    if(state->samplebufpos || state->buffered)
+        breakpoint();
+
     size_t written = 0;
+    unsigned int blocksDone = 0;
     // First, fill the audio buffer as much as possible.
     if(state->todosize)
     {
-        written = s_decodeToBuffer<T, SH>((T*)state->writebuf, state->todosize, buffer, state->channels, &blocksize, state->bytesPerSample);
+        written = s_decodeToBuffer<T, SH>((T*)state->writebuf, state->todosize, buffer, state->channels, blocksize, state->bytesPerSample, &blocksDone);
         state->todosize -= written;
-        //if(state->todosize < state->bytesPerSample)
-        //    state->todosize = 0; // Won't fit in a full sample for each channel anymore, stop trying to fit in more and prevent more decode loops.
-        printf("A %u\n", written);
-        state->writtensize = written;
-        if(!blocksize) // If the whole frame was done, we can exit now
+        state->writtensize += written;
+        if(blocksDone == blocksize) // If the whole frame was done, we can exit now
             return written;
     }
 
-    tyrsound_Stream &samplebuf = state->samplebuf;
-    //samplebuf.seek(samplebuf.user, 0, SEEK_SET);
-    T tmp[512];
-    
-    while(true)
-    {
-        size_t decoded = s_decodeToBuffer<T, SH>(&tmp[0], sizeof(tmp), buffer, state->channels, &blocksize, state->bytesPerSample);
-        printf("b %u  sz %u\n", (unsigned)decoded, sizeof(tmp));
-        if(!decoded)
-            break;
-        size_t w = (size_t)samplebuf.write(&tmp[0], 1, decoded, samplebuf.user);
-        if(decoded != w)
-            breakpoint();
-        written += w;
-        state->buffered += w;
-    }
-    // Start reading at the beginning.
-    //samplebuf.seek(samplebuf.user, 0, SEEK_SET);
+
+    size_t buffered = s_decodeToBuffer<T, SH>((T*)state->samplebuf, state->samplebufsize, buffer, state->channels, blocksize, state->bytesPerSample, &blocksDone);
+    if(blocksize != blocksDone)
+        breakpoint();
+
+    written += buffered;
+    state->buffered += buffered;
+
     return written;
 }
 
@@ -236,8 +230,6 @@ static FLAC__StreamDecoderWriteStatus s_writeCallback(const FLAC__StreamDecoder 
             return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
     }
 
-    state->decodedsize = done;
-
     return done ? FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE : FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 
 }
@@ -257,7 +249,7 @@ FlacDecoder *FlacDecoder::create(const tyrsound_Format& /*not used*/, tyrsound_S
 
     memset(state, 0, sizeof(*state));
 
-    state->maxFrameSize = 65535; // by FLAC specification
+    state->maxFrameSize = 65535; // By FLAC specification. Changed when reading metadata.
     state->strm = strm;
     state->flac = flac;
 
@@ -274,9 +266,11 @@ FlacDecoder *FlacDecoder::create(const tyrsound_Format& /*not used*/, tyrsound_S
 
     // Because of libFLAC's purely callback-oriented API, we need to be able to buffer whatever comes in.
     // Therefore reserve a large blob of memory up front so we won't run into trouble later.
+    // FIXME: this calculation is not correct, the buffer is too large
+    state->samplebufsize = state->maxFrameSize * state->channels * (state->sampleBitSize / 8);
     if(!state->sampleRate
         || !metadataDone
-        || tyrsound_createGrowingBuffer(&state->samplebuf, state->maxFrameSize * state->channels * (state->sampleBitSize / 8)) < TYRSOUND_ERR_OK)
+        || !(state->samplebuf = (char*)Alloc(state->samplebufsize)))
     {
         FLAC__stream_decoder_delete(state->flac);
         Free(state);
@@ -286,7 +280,7 @@ FlacDecoder *FlacDecoder::create(const tyrsound_Format& /*not used*/, tyrsound_S
     void *mem = Alloc(sizeof(FlacDecoder));
     if(!mem)
     {
-        state->samplebuf.close(state->samplebuf.user);
+        Free(state->samplebuf);
         FLAC__stream_decoder_delete(state->flac);
         Free(state);
         return NULL;
@@ -315,33 +309,19 @@ size_t FlacDecoder::fillBuffer(void *buf, size_t size)
     // Make sure the buffer end is sample aligned for all channels
     size -= size % state->bytesPerSample;
 
-    tyrsound_Stream& samplebuf = state->samplebuf;
-    printf("R %u  S %u\n", unsigned(state->buffered), unsigned(size));
-
     // Copy whatever is in the decoded buffer to the output buffer, up to size.
     // Might not be able to supply size bytes, in that case we'll continue below.
-    size_t readable = Min(size, (size_t)state->buffered);
-    printf("r %u\n", readable);
-    if(readable)
+    size_t copysize = Min(size, (size_t)state->buffered);
+    if(copysize % state->bytesPerSample)
+        breakpoint();
+    if(copysize)
     {
-        unsigned int pos = samplebuf.tell(samplebuf.user);
-        size_t done = (size_t)samplebuf.read(dstbuf, 1, readable, samplebuf.user);
-        state->buffered -= done;
-        totalWritten += done;
-        printf("a %u  pos %u\n", unsigned(done), pos);
-        if(done != readable || done > size)
-        {
-            breakpoint(); // what?!
-            goto end;
-        }
-        if(done == size)
-        {
-            printf("---\n");
-            goto end;
-        }
-        
-        size -= done;
-        dstbuf += done;
+        memcpy(dstbuf, &state->samplebuf[state->samplebufpos], copysize);
+        state->buffered -= copysize;
+        state->samplebufpos += copysize;
+        totalWritten += copysize;
+        size -= copysize;
+        dstbuf += copysize;
     }
 
     // If we're here, samplebuf is used up.
@@ -349,11 +329,14 @@ size_t FlacDecoder::fillBuffer(void *buf, size_t size)
     {
         state->writebuf = dstbuf;
         state->todosize = size;
+        state->samplebufpos = 0; // start reading at beginning
+
         if(state->buffered)
             breakpoint();
-        //samplebuf.seek(samplebuf.user, 0, SEEK_SET);
         do
         {
+            state->writtensize = 0;
+
             // Buffer wasn't enough, need to decode more.
             // The rest of the logic happens in s_writeCallback().
             int proc = FLAC__stream_decoder_process_single(state->flac);
@@ -361,54 +344,51 @@ size_t FlacDecoder::fillBuffer(void *buf, size_t size)
             state->writebuf += state->writtensize;
             totalWritten += state->writtensize;
 
-            if(!proc)
+            FLAC__StreamDecoderState s = FLAC__stream_decoder_get_state(state->flac);
+            switch(s)
             {
-                FLAC__StreamDecoderState s = FLAC__stream_decoder_get_state(state->flac);
-                switch(s)
-                {
-                    case FLAC__STREAM_DECODER_END_OF_STREAM:
-                    {
-                        if(!_loopCount)
-                        {
-                            _eof = true;
-                            goto end;
-                        }
-
-                        if(_loopPoint >= 0)
-                        {
-                            if(seek(_loopPoint) < TYRSOUND_ERR_OK)
-                            {
-                                _eof = true;
-                                goto end;
-                            }
-                            if(_loopCount > 0)
-                                --_loopCount;
-                        }
-                        else
-                        {
-                            _eof = true;
-                            goto end;
-                        }
-                    }
+                case FLAC__STREAM_DECODER_SEARCH_FOR_FRAME_SYNC:
+                case FLAC__STREAM_DECODER_READ_FRAME:
                     break;
 
-                    default:
+                case FLAC__STREAM_DECODER_END_OF_STREAM:
+                {
+                    if(!_loopCount)
                     {
                         _eof = true;
                         goto end;
                     }
-                    break;
+
+                    if(_loopPoint >= 0)
+                    {
+                        if(seek(_loopPoint) < TYRSOUND_ERR_OK)
+                        {
+                            _eof = true;
+                            goto end;
+                        }
+                        if(_loopCount > 0)
+                            --_loopCount;
+                    }
+                    else
+                    {
+                        _eof = true;
+                        goto end;
+                    }
                 }
+                break;
+
+                default:
+                {
+                    _eof = true;
+                    goto end;
+                }
+                break;
             }
         }
         while(state->todosize);
     }
 
 end:
-
-    samplebuf.seek(samplebuf.user, 0, SEEK_SET);
-
-    printf("w %u\n---\n", totalWritten);
 
     return totalWritten;
 }

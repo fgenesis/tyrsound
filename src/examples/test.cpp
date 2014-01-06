@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
     tyrsound_getFormat(&fmt);
 
-    playSecs("test.flac", 999);
+    playSecs("test.flac", 2);
     playSecs("test2.mp3", 2);
     playSecs("test.mp3", 1);
     playSecs("test.ogg", 1);
@@ -80,6 +80,6 @@ int main(int argc, char **argv)
 
     tyrsound_shutdown();
 
-	return 0;
+    return 0;
 }
 
