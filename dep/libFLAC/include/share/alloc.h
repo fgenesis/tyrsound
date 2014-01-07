@@ -41,6 +41,9 @@
  * before #including this file,  otherwise SIZE_MAX might not be defined
  */
 
+/* HACK -- fg */
+#include "../FLAC/ordinals.h"
+
 #include <limits.h> /* for SIZE_MAX */
 #if HAVE_STDINT_H
 #include <stdint.h> /* for SIZE_MAX in case limits.h didn't get it */

@@ -53,6 +53,7 @@ typedef unsigned __int64 FLAC__uint64;
 
 /* For MSVC 2010 and everything else which provides <stdint.h>. */
 
+#define HAVE_STDINT_H 1
 #include <stdint.h>
 
 typedef int8_t FLAC__int8;
