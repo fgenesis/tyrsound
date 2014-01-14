@@ -44,7 +44,7 @@ void *dynsym(void *h, const char *name)
 {
     void *func = NULL;
 #ifdef _WIN32
-    func = GetProcAddress((HMODULE)h, name);
+    func = (void*)GetProcAddress((HMODULE)h, name);
 #else
     func = dlsym(h, name);
 #endif

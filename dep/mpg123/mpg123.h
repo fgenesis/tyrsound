@@ -9,6 +9,7 @@
 
 #ifdef _MSC_VER
 #  include <stdlib.h>
+#  include <stdio.h>
 #  include <sys/types.h>
 
    typedef long ssize_t;

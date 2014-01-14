@@ -258,8 +258,8 @@ struct blargg_callback
 	#undef BLARGG_UTF8_PATHS
 #endif
 
-BLARGG_DEPRECATED( typedef signed   int blargg_long; )
-BLARGG_DEPRECATED( typedef unsigned int blargg_ulong; )
+//BLARGG_DEPRECATED( typedef signed   int blargg_long; )
+//BLARGG_DEPRECATED( typedef unsigned int blargg_ulong; )
 #if BLARGG_LEGACY
 	#define BOOST_STATIC_ASSERT BLARGG_STATIC_ASSERT
 #endif
