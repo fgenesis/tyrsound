@@ -75,7 +75,7 @@ if(TYRSOUND_SUPPORT_MP3)
     )
     if(LINUX)
         list(APPEND libs dl)
-    end()
+    endif()
 endif()
 
 if(TYRSOUND_SUPPORT_GME)
