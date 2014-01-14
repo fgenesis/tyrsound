@@ -64,7 +64,7 @@ if(TYRSOUND_SUPPORT_OGG)
         decoders/OggDecoder.cpp
         decoders/OggDecoder.h
     )
-    list(APPEND libs ogg vorbis)
+    list(APPEND libs vorbis ogg)
 endif()
 
 if(TYRSOUND_SUPPORT_MP3)
@@ -96,7 +96,7 @@ if(TYRSOUND_SUPPORT_OPUS)
         decoders/OpusDecoder.cpp
         decoders/OpusDecoder.h
     )
-    list(APPEND libs opus opusfile)
+    list(APPEND libs opusfile opus)
 endif()
 
 if(TYRSOUND_SUPPORT_FLAC)
