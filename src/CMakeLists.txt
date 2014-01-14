@@ -1,4 +1,3 @@
-
 set(LIB_TYPE STATIC)
 if(TYRSOUND_BUILD_DYNAMIC)
     set(LIB_TYPE SHARED)
@@ -74,7 +73,9 @@ if(TYRSOUND_SUPPORT_MP3)
         decoders/Mp3Decoder.cpp
         decoders/Mp3Decoder.h
     )
-    list(APPEND libs dl)
+    if(LINUX)
+        list(APPEND libs dl)
+    end()
 endif()
 
 if(TYRSOUND_SUPPORT_GME)
