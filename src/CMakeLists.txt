@@ -74,6 +74,7 @@ if(TYRSOUND_SUPPORT_MP3)
         decoders/Mp3Decoder.cpp
         decoders/Mp3Decoder.h
     )
+    list(APPEND libs dl)
 endif()
 
 if(TYRSOUND_SUPPORT_GME)

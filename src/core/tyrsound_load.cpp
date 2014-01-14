@@ -161,14 +161,14 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
         return TYRSOUND_ERR_INFINITE;
     }
 
-    char buf[2048];
+    char buf[4096];
     while(!decoder->isEOF())
     {
         if(maxSeconds > 0 && decoder->tell() >= maxSeconds)
             break;
-        decoder->fillBuffer(buf, sizeof(buf));
-        tyrsound_int64 written = dst.write(buf, 1, sizeof(buf), dst.user);
-        if(written != sizeof(buf))
+        size_t filled = decoder->fillBuffer(buf, sizeof(buf));
+        tyrsound_int64 written = dst.write(buf, 1, filled, dst.user);
+        if(!written)
             return TYRSOUND_ERR_NOT_READY;
     }
 
