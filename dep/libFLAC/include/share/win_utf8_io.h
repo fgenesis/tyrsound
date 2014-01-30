@@ -43,6 +43,11 @@ extern "C" {
 #include <stdarg.h>
 #include <windows.h>
 
+// HACK: fix for msvc2008's lack of C99 compatibility -- FG
+#if !defined(_MSC_VER) || _MSC_VER >= 1600
+#  include <stdint.h>
+#endif
+
 int get_utf8_argv(int *argc, char ***argv);
 
 int printf_utf8(const char *format, ...);
