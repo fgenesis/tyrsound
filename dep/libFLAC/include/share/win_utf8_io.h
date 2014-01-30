@@ -42,7 +42,6 @@ extern "C" {
 #include <sys/stat.h>
 #include <stdarg.h>
 #include <windows.h>
-#include <stdint.h>
 
 int get_utf8_argv(int *argc, char ***argv);
 
