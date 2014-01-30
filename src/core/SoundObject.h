@@ -35,6 +35,7 @@ public:
 
     unsigned int _idxInStore;
     bool _dead;
+    bool _update; // CHEAP FIX: might want to remove this again and use a proper list instead...
 
 protected:
     void _decode();

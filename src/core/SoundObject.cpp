@@ -29,6 +29,7 @@ SoundObject::SoundObject(DecoderBase *decoder)
 , _decoder(decoder)
 , _channel(NULL)
 , _dead(false)
+, _update(false)
 , _volume(1.0f)
 , _speed(1.0f)
 , _posX(0.0f)
@@ -63,6 +64,9 @@ void SoundObject::_decode()
 
 void SoundObject::update()
 {
+    if(!_update)
+        return;
+
     _decode();
 }
 
@@ -112,8 +116,13 @@ tyrsound_Error SoundObject::play()
     err = _channel->play();
     if(err < TYRSOUND_ERR_OK)
         stop();
-    else if(reserved)
-        getDevice()->acquireChannel(_channel);
+    else
+    {
+        if(reserved)
+            getDevice()->acquireChannel(_channel);
+
+        registerUpdate(this);
+    }
 
     return err;
 }
@@ -122,6 +131,8 @@ tyrsound_Error SoundObject::stop()
 {
     if(!_channel)
         return TYRSOUND_ERR_OK;
+
+    unregisterUpdate(this);
 
     tyrsound_Error err = _channel->stop();
     getDevice()->retainChannel(_channel);

@@ -13,6 +13,7 @@ struct ObjectData
 static ObjectData *objectStore = NULL;
 static unsigned int objectStoreCapacity = 0;
 static Mutex *updateMutex = NULL;
+static SoundObject *updateObjRoot = NULL;
 
 static bool getFreeIdx(unsigned int *idxp)
 {
@@ -98,6 +99,18 @@ static tyrsound_Error unregisterSoundObject(SoundObject *sound)
     return TYRSOUND_ERR_OK;
 }
 
+void registerUpdate(SoundObject *sound)
+{
+    MutexGuard guard(updateMutex);
+    sound->_update = true;
+}
+
+void unregisterUpdate(SoundObject *sound)
+{
+    MutexGuard guard(updateMutex);
+    sound->_update = false;
+}
+
 static tyrsound_Error destroySoundObject(SoundObject *sound)
 {
     tyrsound_Error err = unregisterSoundObject(sound);
@@ -138,7 +151,10 @@ tyrsound_Error updateSounds()
             if(sound->_dead)
                 destroySoundObject(sound);
             else
+            {
+                MutexGuard guard(updateMutex);
                 sound->update();
+            }
         }
 
     return TYRSOUND_ERR_OK;
