@@ -42,8 +42,15 @@ void SoundObject::_decode()
 {
     while(_channel->wantData())
     {
+        tyrsound_Format fmt;
+
         if(_decoder->isEOF())
-            return;
+        {
+            // notify channel that we're at EOF
+            // leave fmt uninitialized, is not supposed to be used with zero size
+            _channel->filledBuffer(0, fmt);
+            break;
+        }
 
         void *buf = NULL;
         size_t size = 0;
@@ -51,7 +58,6 @@ void SoundObject::_decode()
         if(buf && size)
         {
             size_t filled = _decoder->fillBuffer(buf, size);
-            tyrsound_Format fmt;
             _decoder->getFormat(&fmt);
             tyrsound_Error err = _channel->filledBuffer(filled, fmt);
             if(err != TYRSOUND_ERR_OK)

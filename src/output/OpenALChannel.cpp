@@ -190,18 +190,17 @@ tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& f
     if(size > _pcmbufsize)
         return TYRSOUND_ERR_SHIT_HAPPENED;
 
-    unsigned int bytesPerSample = 0;
-    ALenum alformat = getALFormat(fmt, &bytesPerSample);
-    if(alformat < 0)
-    {
-        breakpoint();
-        return TYRSOUND_ERR_UNSUPPORTED_FORMAT;
-    }
-
-    _hz = fmt.hz;
-
     if (size > 0)
     {
+        unsigned int bytesPerSample = 0;
+        ALenum alformat = getALFormat(fmt, &bytesPerSample);
+        if(alformat < 0)
+        {
+            breakpoint();
+            return TYRSOUND_ERR_UNSUPPORTED_FORMAT;
+        }
+
+        _hz = fmt.hz;
         ALuint bid = 0;
 
         if(_initial)
