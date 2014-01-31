@@ -99,8 +99,10 @@ tyrsound_Handle loadStream(tyrsound_Stream stream, const tyrsound_Format *fmt, b
         return TYRSOUND_ERR_INVALID_VALUE;
     }
 
+    // FIXME: This should go at some point.
     if(!stream.seek)
     {
+        tyrsound_ex_message(TYRSOUND_MSG_INFO, "Stream is not seekable, prebuffering");
         tyrsound_Stream srcbuf;
         tyrsound_Error err = tyrsound_bufferStream(&srcbuf, NULL, stream);
         if(err != TYRSOUND_ERR_OK)

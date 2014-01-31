@@ -17,8 +17,12 @@ RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 {
     if(strm.remain)
     {
-        _totaltime = (_strm.remain(_strm.user) / fmt.channels) / (float)fmt.hz;
-        _totaltime /= (fmt.sampleBits / 8);
+        tyrsound_int64 rem = _strm.remain(_strm.user);
+        if(rem >= 0)
+        {
+            _totaltime = (rem / fmt.channels) / (float)fmt.hz;
+            _totaltime /= (fmt.sampleBits / 8);
+        }
     }
 }
 

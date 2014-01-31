@@ -111,6 +111,7 @@ enum tyrsound_MessageSeverity
     TYRSOUND_MSG_WARNING      = 1,
     TYRSOUND_MSG_ERROR        = 2,
 
+    TYRSOUND_MSG_INTERNAL_ERROR = 100,
     TYRSOUND_MSG_PAD32BIT = 0x7fffffff
 };
 typedef enum tyrsound_MessageSeverity tyrsound_MessageSeverity;

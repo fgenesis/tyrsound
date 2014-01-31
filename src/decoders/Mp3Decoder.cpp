@@ -91,7 +91,7 @@ void Mp3Decoder::staticInit()
 
     if(!good)
     {
-        tyrsound_ex_message(TYRSOUND_MSG_WARNING, "MP3 support not enabled, one or more library function is missing");
+        tyrsound_ex_message(TYRSOUND_MSG_WARNING, "MP3 support not enabled, one or more libmpg123 function is missing");
         staticShutdown();
     }
 
@@ -102,7 +102,7 @@ void Mp3Decoder::staticInit()
         return;
     }
 
-    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Mp3Decoder: Initialized successfully");
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Mp3Decoder: Initialized successfully. MP3 support enabled.");
     s_enabled = true;
 }
 

@@ -82,6 +82,11 @@ int main(int argc, char **argv)
         ret = 1;
         goto end;
     }
+    /* Better don't use these functions on stdin... */
+    strm.remain = NULL;
+    strm.seek = NULL;
+    strm.tell = NULL;
+    strm.close = NULL;
 
     /* Create sound from stream */
     handle = tyrsound_loadRawStream(strm, &fmt);

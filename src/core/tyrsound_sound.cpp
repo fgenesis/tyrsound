@@ -45,6 +45,7 @@ static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp,
     unsigned int idx = (handle & 0xFFFFFF); // mask out generation
     if(!idx)
     {
+        *soundp = NULL;
         tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Invalid/Malformed handle");
         return TYRSOUND_ERR_INVALID_HANDLE;
     }
@@ -95,7 +96,10 @@ static tyrsound_Error unregisterSoundObject(SoundObject *sound)
     sound->_idxInStore = unsigned(-1);
 
     if(objectStore[idx].obj != sound)
+    {
+        tyrsound_ex_messagef(TYRSOUND_MSG_INTERNAL_ERROR, "unregisterSoundObject(): objectStore[idx].obj != sound. idx = %u", idx);
         return TYRSOUND_ERR_SHIT_HAPPENED;
+    }
 
     objectStore[idx].obj = NULL;
     objectStore[idx].generation++;
@@ -134,9 +138,22 @@ tyrsound_Error initSounds()
 
 void shutdownSounds()
 {
+    // Cleanup all dead sounds that are still there in case update() stopped earlier
     for(unsigned int i = 0; i < objectStoreCapacity; ++i)
         if(SoundObject *sound = objectStore[i].obj)
+            if(sound->_dead)
+                destroySoundObject(sound);
+
+    // Now clean all that are still playing
+    unsigned soundsActive = 0;
+    for(unsigned int i = 0; i < objectStoreCapacity; ++i)
+        if(SoundObject *sound = objectStore[i].obj)
+        {
+            ++soundsActive;
             sound->destroy();
+        }
+    if(soundsActive)
+        tyrsound_ex_messagef(TYRSOUND_MSG_WARNING, "Shutting down while %u sounds are still active. Deleted.");
     Free(objectStore);
     objectStore = NULL;
     objectStoreCapacity = 0;
