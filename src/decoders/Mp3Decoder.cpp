@@ -149,6 +149,8 @@ static ssize_t read_wrap(void *src, void *dst, size_t size)
 static off_t seek_wrap(void *src, off_t offset, int whence)
 {
     Mp3DecoderState *state = (Mp3DecoderState*)src;
+
+    // seek_wrap() will only be set if stream is actually seekable, no need to check here
     if(state->strm.seek(state->strm.user, offset, whence))
     {
         // error
@@ -369,7 +371,6 @@ float Mp3Decoder::getLength()
 float Mp3Decoder::tell()
 {
     tyrsound_int64 samplePos = funcs.mpg123_tell(((Mp3DecoderState*)_state)->mh);
-    printf("samplePos: %u      \r", (unsigned)samplePos);
     return samplePos < 0 ? -1.0f : samplePos / float(_fmt.hz);
 }
 

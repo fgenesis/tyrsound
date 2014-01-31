@@ -75,12 +75,19 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& infmt, tyrsound_Stream str
     if(!emu)
         return NULL;
 
+    bool prebuffer = false;
+    tyrsound_int64 totalsize = 0;
+
+    if(!strm.seek)
+        goto prebuffer;
+
     strm.seek(strm.user, 0, SEEK_SET);
 
     // Because GME wants to know the actual file size, we need to preload the buffer if it's not known.
-    tyrsound_int64 totalsize = strm.remain ? strm.remain(strm.user) : -1;
+    totalsize = strm.remain ? strm.remain(strm.user) : -1;
     if(totalsize < 0)
     {
+        prebuffer:
         tyrsound_Stream sbuf;
         if(tyrsound_createGrowingBuffer(&sbuf, 128) != TYRSOUND_ERR_OK)
             return NULL;
@@ -88,7 +95,8 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& infmt, tyrsound_Stream str
         if(tyrsound_bufferStream(&sbuf, &totalsizeu, strm) != TYRSOUND_ERR_OK)
             return NULL;
         totalsize = totalsizeu;
-        strm.close(strm.user);
+        if(strm.close)
+            strm.close(strm.user);
         strm = sbuf;
     }
 

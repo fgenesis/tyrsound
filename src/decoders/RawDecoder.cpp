@@ -17,14 +17,15 @@ RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 {
     if(strm.remain)
     {
-        _totaltime = (float)(_strm.remain(_strm.user) / fmt.channels);
+        _totaltime = (_strm.remain(_strm.user) / fmt.channels) / (float)fmt.hz;
         _totaltime /= (fmt.sampleBits / 8);
     }
 }
 
 RawDecoder::~RawDecoder()
 {
-    _strm.close(_strm.user);
+    if(_strm.close)
+        _strm.close(_strm.user);
 }
 
 RawDecoder *RawDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
@@ -35,7 +36,7 @@ RawDecoder *RawDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream
 size_t RawDecoder::fillBuffer(void *buf, size_t size)
 {
     tyrsound_uint64 total = 0;
-    while(total < size)
+    while(!_eof && total < size)
     {
         tyrsound_uint64 rd = _strm.read(buf, 1, size, _strm.user);
         if(!rd)

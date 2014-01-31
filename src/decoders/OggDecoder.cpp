@@ -18,19 +18,19 @@ static size_t read_wrap(void *dst, size_t size, size_t nmemb, void *datasource)
 static int seek_wrap(void *datasource, ogg_int64_t offset, int whence)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-    return strm->seek(strm->user, offset, whence);
+    return strm->seek ? strm->seek(strm->user, offset, whence) : -1;
 }
 
 static int close_wrap(void *datasource)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-    return strm->close(strm->user);
+    return strm->close ? strm->close(strm->user) : 0;
 }
 
 static long tell_wrap(void *datasource)
 {
      tyrsound_Stream *strm = (tyrsound_Stream*)datasource;
-     return (long)strm->tell(strm->user);
+     return strm->tell ? (long)strm->tell(strm->user) : -1;
 }
 
 static const ov_callbacks stream_callbacks =

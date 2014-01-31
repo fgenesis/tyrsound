@@ -16,13 +16,13 @@ static int read_wrap(void *streamp, unsigned char *out, int size)
 static int seek_wrap(void *streamp, opus_int64 offset, int whence)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)streamp;
-    return strm->seek(strm->user, offset, whence);
+    return strm->seek ? strm->seek(strm->user, offset, whence) : -1;
 }
 
 static int close_wrap(void *streamp)
 {
     tyrsound_Stream *strm = (tyrsound_Stream*)streamp;
-    int res = strm->close(strm->user);
+    int res = strm->close ? strm->close(strm->user) : 0;
     Free(strm);
     return res;
 }
@@ -30,7 +30,7 @@ static int close_wrap(void *streamp)
 static opus_int64 tell_wrap(void *streamp)
 {
      tyrsound_Stream *strm = (tyrsound_Stream*)streamp;
-     return strm->tell(strm->user);
+     return strm->tell ? strm->tell(strm->user) : -1;
 }
 
 static const OpusFileCallbacks stream_callbacks =

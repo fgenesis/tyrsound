@@ -55,7 +55,7 @@ static FLAC__StreamDecoderSeekStatus seek_wrap(const FLAC__StreamDecoder *, FLAC
     FlacDecoderState *state = (FlacDecoderState*)client_data;
     tyrsound_Stream& strm = state->strm;
 
-    int res = strm.seek(strm.user, absolute_byte_offset, SEEK_SET);
+    int res = strm.seek ? strm.seek(strm.user, absolute_byte_offset, SEEK_SET) : -1;
     return res < 0 ? FLAC__STREAM_DECODER_SEEK_STATUS_ERROR : FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
@@ -64,7 +64,7 @@ static FLAC__StreamDecoderTellStatus tell_wrap(const FLAC__StreamDecoder *, FLAC
     FlacDecoderState *state = (FlacDecoderState*)client_data;
     tyrsound_Stream& strm = state->strm;
 
-    tyrsound_int64 pos = strm.tell(strm.user);
+    tyrsound_int64 pos = strm.tell ? strm.tell(strm.user) : -1;
     if(pos >= 0)
     {
         *absolute_byte_offset = (FLAC__uint64)pos;
@@ -78,13 +78,16 @@ static FLAC__bool eof_wrap(const FLAC__StreamDecoder *, void *client_data)
     FlacDecoderState *state = (FlacDecoderState*)client_data;
     tyrsound_Stream& strm = state->strm;
 
-    return !strm.remain(strm.user);
+    return strm.remain ? !strm.remain(strm.user) : 0; // if remain() isn't present, we don't know if we're at EOF, so just keep reading until that fails
 }
 
 static FLAC__StreamDecoderLengthStatus length_wrap(const FLAC__StreamDecoder *, FLAC__uint64 *stream_length, void *client_data)
 {
     FlacDecoderState *state = (FlacDecoderState*)client_data;
     tyrsound_Stream& strm = state->strm;
+
+    if(!(strm.remain && strm.tell))
+        return FLAC__STREAM_DECODER_LENGTH_STATUS_UNSUPPORTED;
 
     tyrsound_int64 remain = strm.remain(strm.user);
     tyrsound_int64 done = strm.tell(strm.user);
