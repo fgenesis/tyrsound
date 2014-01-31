@@ -103,6 +103,16 @@ enum tyrsound_Error
 };
 typedef enum tyrsound_Error tyrsound_Error;
 
+enum tyrsound_MessageSeverity
+{
+    TYRSOUND_MSG_INFO         = 0,
+    TYRSOUND_MSG_WARNING      = 1,
+    TYRSOUND_MSG_ERROR        = 2,
+
+    TYRSOUND_MSG_PAD32BIT = 0x7fffffff
+};
+typedef enum tyrsound_MessageSeverity tyrsound_MessageSeverity;
+
 /********************
 * Function pointers *
 ********************/
@@ -116,6 +126,9 @@ typedef tyrsound_Error (*tyrsound_positionCallback)(tyrsound_Handle, float posit
    * (ptr, size) -> reallocate
 */
 typedef void *(*tyrsound_Alloc)(void *ptr, size_t size, void *user);
+
+/* Message reporting callback if the library has something to say */
+typedef void (*tyrsound_MessageCallback)(tyrsound_MessageSeverity severity, const char *str, void *user);
 
 
 /*****************************
@@ -171,6 +184,12 @@ TYRSOUND_DLL_EXPORT void tyrsound_getFormat(tyrsound_Format *fmt);
    See tyrsound_Alloc description. Passing NULL uses the default allocator (realloc()).
    Do not call this between tyrsound_init() and tyrsound_shutdown() !! */
 TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user);
+
+/* Set a custom error/message reporting function. All errors will go here.
+   If this function is not set, errors will not be reported.
+   (Only return values indicate failure)
+   The user pointer will be passed along with the message. */
+TYRSOUND_DLL_EXPORT void tyrsound_setMessageCallback(tyrsound_MessageCallback msgFunc, void *user);
 
 /*****************************
 * Sound creation/destruction *

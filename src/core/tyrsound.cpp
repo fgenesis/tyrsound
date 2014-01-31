@@ -13,6 +13,9 @@ static void (*s_deleteMutexFunc)(void*)= NULL;
 static int (*s_lockMutexFunc)(void*) = NULL;
 static void (*s_unlockMutexFunc)(void*) = NULL;
 
+static void *s_msgPtr = NULL;
+static tyrsound_MessageCallback s_msgCallback = NULL;
+
 
 void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
@@ -62,6 +65,12 @@ TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)
 TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *h, const char *name)
 {
     return dynsym(h, name);
+}
+
+TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
+{
+    if(s_msgCallback)
+        s_msgCallback(severity, str, s_msgPtr);
 }
 
 #include "tyrsound_end.h"
