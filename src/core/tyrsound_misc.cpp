@@ -88,4 +88,32 @@ void Mutex::unlock()
         tyrsound_ex_unlockMutex(_mtx);
 }
 
+unsigned int readLE32(const void *buf)
+{
+    unsigned char *x = (unsigned char*)buf;
+    return x[0] | (x[1] << 8) | (x[2] << 16) | (x[3] << 24);
+}
+
+unsigned short readLE16(const void *buf)
+{
+    unsigned char *x = (unsigned char*)buf;
+    return x[0] | (x[1] << 8);
+}
+
+void writeLE32(void *buf, unsigned int i)
+{
+    unsigned char *x = (unsigned char*)buf;
+    x[0] = i >> 0;
+    x[1] = i >> 8;
+    x[2] = i >> 16;
+    x[3] = i >> 24;
+}
+
+void writeLE16(void *buf, unsigned short i)
+{
+    unsigned char *x = (unsigned char*)buf;
+    x[0] = i >> 0;
+    x[1] = i >> 8;
+}
+
 #include "tyrsound_end.h"

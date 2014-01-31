@@ -71,6 +71,7 @@ int main(int argc, char **argv)
 
     tyrsound_getFormat(&fmt);
 
+    playSecs("test.wav", 2);
     playSecs("test.flac", 2);
     playSecs("test2.mp3", 2);
     playSecs("test.mp3", 1);

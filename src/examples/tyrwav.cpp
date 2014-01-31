@@ -3,10 +3,25 @@
 #include <stdio.h>
 #include <string.h>
 
+static void writeLE32(void *buf, unsigned int i)
+{
+    unsigned char *x = (unsigned char*)buf;
+    x[0] = i >> 0;
+    x[1] = i >> 8;
+    x[2] = i >> 16;
+    x[3] = i >> 24;
+}
+
+static void writeLE16(void *buf, unsigned short i)
+{
+    unsigned char *x = (unsigned char*)buf;
+    x[0] = i >> 0;
+    x[1] = i >> 8;
+}
+
 int main(int argc, char **argv)
 {
-    int ret = 0, val;
-    short i2;
+    int ret = 0;
     tyrsound_Error err;
     tyrsound_Stream in, out;
     char hdr[44];
@@ -70,8 +85,8 @@ int main(int argc, char **argv)
     out.seek(out.user, 0, SEEK_SET);
 
     /* Write WAV/RIFF header */
-#define WRITE_INT4(x) do { val = (x); out.write(&val, 4, 1, out.user); } while(0)
-#define WRITE_INT2(x) do { i2 = (x); out.write(&i2, 2, 1, out.user); } while(0)
+#define WRITE_INT4(x) do { char buf[4]; writeLE32(buf, (x)); out.write(&buf, 4, 1, out.user); } while(0)
+#define WRITE_INT2(x) do { char buf[2]; writeLE16(buf, (x)); out.write(&buf, 2, 1, out.user); } while(0)
 
     out.write("RIFF", 4, 1, out.user);
     WRITE_INT4(((int)out.tell(out.user)) + sizeof(hdr) - 8);

@@ -33,6 +33,10 @@ void shutdownDecoders();
 // in tyrsound_misc.cpp
 void breakpoint();
 bool isBigEndian();
+unsigned int readLE32(const void *buf);
+unsigned short readLE16(const void *buf);
+void writeLE32(void *buf, unsigned int i);
+void writeLE16(void *buf, unsigned short i);
 
 // in tyrsound_dyn.cpp
 void *dynopen(const char *fn);
