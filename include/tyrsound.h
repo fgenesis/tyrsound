@@ -187,11 +187,10 @@ TYRSOUND_DLL_EXPORT void tyrsound_getFormat(tyrsound_Format *fmt);
    Do not call this between tyrsound_init() and tyrsound_shutdown() !! */
 TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user);
 
-/* Set a custom error/message reporting function. All errors will go here.
-   If this function is not set, errors will not be reported.
-   (Only return values indicate failure)
-   The user pointer will be passed along with the message.
-   This function can be called anytime. */
+/* Set a custom error/message reporting function. Pass NULL to disable.
+   All errors will be passed to the callback, along with a message of what went wrong.
+   This is very useful to catch oversights such as invalid handles, etc.
+   The user pointer will be passed along with the message. */
 TYRSOUND_DLL_EXPORT void tyrsound_setMessageCallback(tyrsound_MessageCallback msgFunc, void *user);
 
 /*****************************
@@ -233,6 +232,9 @@ TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawStream(tyrsound_Stream, cons
  * Makes an internal copy of the memory buffer. */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawBuffer(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
+/* Load a raw memory buffer, like tyrsound_loadRawStream().
+   Does NOT make in internal copy, so make sure the pointer stays alive while accessed. */
+TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
 /**********************
  * Sound manipulation *

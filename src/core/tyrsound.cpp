@@ -21,7 +21,8 @@ static tyrsound_MessageCallback s_msgCallback = NULL;
 #else
 static void _debugMsg(tyrsound_MessageSeverity severity, const char *str, void *user)
 {
-    printf("tyrsound[%d]: %s\n", severity, str);
+    if(severity >= TYRSOUND_MSG_DEBUG)
+        printf("tyrsound[%d]: %s\n", severity, str);
 }
 static tyrsound_MessageCallback s_msgCallback = _debugMsg;
 #endif
@@ -107,7 +108,10 @@ void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ..
 tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
     if(tyrsound::getDevice())
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Already initialized");
         return TYRSOUND_ERR_UNSPECIFIED;
+    }
 
 #if TYRSOUND_IS_DEBUG
     tyrsound_ex_message(TYRSOUND_MSG_INFO, "This is a debug build");

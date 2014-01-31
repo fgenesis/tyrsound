@@ -1,5 +1,4 @@
 #include <stdio.h> // for SEEK_SET
-#include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
 #include "tyrDecoderBase.h"
@@ -95,7 +94,10 @@ static tyrsound_Handle createSoundObject(const tyrsound_Stream& strm, const tyrs
 tyrsound_Handle loadStream(tyrsound_Stream stream, const tyrsound_Format *fmt, bool skipMagic)
 {
     if(!stream.read)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Stream needs a read function");
         return TYRSOUND_ERR_INVALID_VALUE;
+    }
 
     if(!stream.seek)
     {
@@ -116,6 +118,7 @@ tyrsound_Handle loadStream(tyrsound_Stream stream, const tyrsound_Format *fmt, b
 
 #include "tyrsound_end.h"
 
+using namespace tyrsound;
 
 
 tyrsound_Handle tyrsound_load(tyrsound_Stream stream)
@@ -136,8 +139,17 @@ tyrsound_Handle tyrsound_fromDecoder(void *decoder)
 
 tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt, int tryHard, float maxSeconds)
 {
-    if(!src.read || !dst.write || !dstfmt)
+    if(!src.read)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "src stream needs read function");
         return TYRSOUND_ERR_INVALID_VALUE;
+    }
+    if(!dst.write)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR,  "dst stream needs write function");
+        return TYRSOUND_ERR_INVALID_VALUE;
+    }
+
 
     if(!src.seek)
     {
@@ -159,6 +171,7 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
     if(decoder->getLength() < 0 && !maxSeconds)
     {
         decoder->destroy();
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Stream is infinite and would decode forever");
         return TYRSOUND_ERR_INFINITE;
     }
 
@@ -173,7 +186,8 @@ tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfm
             return TYRSOUND_ERR_NOT_READY;
     }
 
-    decoder->getFormat(dstfmt);
+    if(dstfmt)
+        decoder->getFormat(dstfmt);
 
     decoder->destroy();
 
@@ -198,6 +212,13 @@ tyrsound_Handle tyrsound_loadRawBuffer(void *buf, size_t bytes, const tyrsound_F
     tyrsound_Stream strm;
     tyrsound_createMemStream(&strm, p, bytes, _deleteMem, 0);
 
+    return tyrsound_loadRawStream(strm, fmt);
+}
+
+tyrsound_Handle tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt)
+{
+    tyrsound_Stream strm;
+    tyrsound_createMemStream(&strm, buf, bytes, NULL, 0);
     return tyrsound_loadRawStream(strm, fmt);
 }
 

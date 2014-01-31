@@ -109,7 +109,9 @@ int main(int argc, char **argv)
 
 end:
 
-    tyrsound_unload(handle); /* No problem if the handle is null */
+    if(handle != TYRSOUND_NULLHANDLE)
+        tyrsound_unload(handle);
+
     tyrsound_shutdown();
 
     return ret;

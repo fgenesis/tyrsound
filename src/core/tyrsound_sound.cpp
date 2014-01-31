@@ -40,11 +40,14 @@ static bool enlargeStore(unsigned int *idxp)
     return true;
 }
 
-static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp)
+static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp, bool allowNull = false)
 {
     unsigned int idx = (handle & 0xFFFFFF); // mask out generation
     if(!idx)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Invalid/Malformed handle");
         return TYRSOUND_ERR_INVALID_HANDLE;
+    }
 
     --idx;
     unsigned int generation = handle >> 24;
@@ -53,6 +56,7 @@ static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp)
     if(data.generation != generation || data.obj->_idxInStore != idx || data.obj->_dead)
     {
         *soundp = NULL;
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Invalid handle (already deleted?)");
         return TYRSOUND_ERR_INVALID_HANDLE;
     }
 
@@ -178,7 +182,6 @@ static tyrsound_Error enqueueDeletion(SoundObject *sound)
     } while(0)
 
 #define LOOKUP(var, h) LOOKUP_RET(var, h, _err)
-
 
 tyrsound_Error tyrsound_unload(tyrsound_Handle handle)
 {
