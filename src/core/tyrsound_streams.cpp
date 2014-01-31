@@ -7,6 +7,13 @@
 #    define _FILE_OFFSET_BITS 64
 #endif
 
+#ifdef _MSC_VER
+     // shut it and stop complaining about ISO C.
+#    define _CRT_SECURE_NO_WARNINGS
+#    define _CRT_SECURE_NO_DEPRECATE
+#endif
+
+
 #include <cstdio>
 
 // Compile time assertion to make sure things work as expected

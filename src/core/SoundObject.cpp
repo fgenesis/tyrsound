@@ -42,6 +42,9 @@ void SoundObject::_decode()
 {
     while(_channel->wantData())
     {
+        if(_decoder->isEOF())
+            return;
+
         void *buf = NULL;
         size_t size = 0;
         _channel->getBuffer(&buf, &size);
@@ -57,8 +60,6 @@ void SoundObject::_decode()
                 return;
             }
         }
-        if(_decoder->isEOF())
-            return;
     }
 }
 
