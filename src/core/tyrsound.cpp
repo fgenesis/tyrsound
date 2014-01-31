@@ -22,7 +22,7 @@ static tyrsound_MessageCallback s_msgCallback = NULL;
 #else
 static void _debugMsg(tyrsound_MessageSeverity severity, const char *str, void *user)
 {
-    printf("[%d] %s\n", severity, str);
+    printf("tyrsound[%d]: %s\n", severity, str);
 }
 static tyrsound_MessageCallback s_msgCallback = _debugMsg;
 #endif
@@ -52,39 +52,39 @@ void tyrsound_ex_deleteMutex(void *mtx)
         s_deleteMutexFunc(mtx);
 }
 
-TYRSOUND_DLL_EXPORT int tyrsound_ex_lockMutex(void *mtx)
+int tyrsound_ex_lockMutex(void *mtx)
 {
     return s_lockMutexFunc ? s_lockMutexFunc(mtx) : (mtx ? TYRSOUND_ERR_NOT_READY : TYRSOUND_ERR_INVALID_HANDLE);
 }
 
-TYRSOUND_DLL_EXPORT void tyrsound_ex_unlockMutex(void *mtx)
+void tyrsound_ex_unlockMutex(void *mtx)
 {
     if(s_unlockMutexFunc)
         s_unlockMutexFunc(mtx);
 }
 
-TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name)
+void *tyrsound_ex_loadLibrary(const char *name)
 {
     return dynopen(name);
 }
 
-TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)
+void tyrsound_ex_unloadLibrary(void *h)
 {
     return dynclose(h);
 }
 
-TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *h, const char *name)
+void *tyrsound_ex_loadFunction(void *h, const char *name)
 {
     return dynsym(h, name);
 }
 
-TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
+void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
 {
     if(s_msgCallback)
         s_msgCallback(severity, str, s_msgPtr);
 }
 
-TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
+void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
 {
     if(s_msgCallback)
     {
