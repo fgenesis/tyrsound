@@ -188,7 +188,8 @@ TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 /* Set a custom error/message reporting function. All errors will go here.
    If this function is not set, errors will not be reported.
    (Only return values indicate failure)
-   The user pointer will be passed along with the message. */
+   The user pointer will be passed along with the message.
+   This function can be called anytime. */
 TYRSOUND_DLL_EXPORT void tyrsound_setMessageCallback(tyrsound_MessageCallback msgFunc, void *user);
 
 /*****************************

@@ -9,7 +9,6 @@
 #include "FlacDecoder.h"
 #include <FLAC/all.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "tyrsound_begin.h"
 
@@ -123,9 +122,7 @@ static void s_metadataCallback(const FLAC__StreamDecoder *, const FLAC__StreamMe
 
 static void s_errorCallback(const FLAC__StreamDecoder *, FLAC__StreamDecoderErrorStatus status, void *)
 {
-#if TYRSOUND_IS_DEBUG
-    printf("FLAC decoder error: %s\n", FLAC__StreamDecoderErrorStatusString[status]);
-#endif
+    tyrsound_ex_message(TYRSOUND_MSG_WARNING, FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 

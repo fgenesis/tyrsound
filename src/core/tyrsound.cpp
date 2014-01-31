@@ -1,3 +1,6 @@
+#include <cstdarg>
+#include <cstdio>
+
 #include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "tyrDeviceBase.h"
@@ -14,7 +17,15 @@ static int (*s_lockMutexFunc)(void*) = NULL;
 static void (*s_unlockMutexFunc)(void*) = NULL;
 
 static void *s_msgPtr = NULL;
+#if !TYRSOUND_IS_DEBUG
 static tyrsound_MessageCallback s_msgCallback = NULL;
+#else
+static void _debugMsg(tyrsound_MessageSeverity severity, const char *str, void *user)
+{
+    printf("[%d] %s\n", severity, str);
+}
+static tyrsound_MessageCallback s_msgCallback = _debugMsg;
+#endif
 
 
 void *tyrsound_ex_alloc(void *ptr, size_t size)
@@ -71,6 +82,24 @@ TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity severity, 
 {
     if(s_msgCallback)
         s_msgCallback(severity, str, s_msgPtr);
+}
+
+TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
+{
+    if(s_msgCallback)
+    {
+        const int BUFSIZE = 1024;
+        char buf[BUFSIZE];
+        va_list va;
+        va_start(va, fmt);
+#ifdef _MSC_VER
+        vsnprintf_s(&buf[0], BUFSIZE-1, _TRUNCATE, fmt, va);
+#else
+        vsnprintf(&buf[0], BUFSIZE-1, fmt, va);
+#endif
+        va_end(va);
+        s_msgCallback(severity, buf, s_msgPtr);
+    }
 }
 
 #include "tyrsound_end.h"

@@ -42,6 +42,7 @@ extern "C"
     TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *, const char *name);
 
     TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity, const char *);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity, const char *, ...);
 }
 
 // Memory related functions, using the allocator set via tyrsound_setAlloc()

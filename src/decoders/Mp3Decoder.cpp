@@ -2,7 +2,6 @@
 #include "Mp3Decoder.h"
 #define MPG123_NO_LARGENAME
 #include <mpg123.h>
-#include <stdio.h>
 #include <ctype.h>
 
 // Functions used from mpg123.h
@@ -64,7 +63,7 @@ static void *loadFunction(void *library, const char *name)
     void *f = tyrsound_ex_loadFunction(library, name);
 #if TYRSOUND_IS_DEBUG
     if(!f)
-        printf("Failed to load function: %s\n", name);
+        tyrsound_ex_messagef(TYRSOUND_MSG_WARNING, "Mp3Decoder: Failed to load function: %s\n", name);
 #endif
     return f;
 }
@@ -77,9 +76,7 @@ void Mp3Decoder::staticInit()
     s_dynHandle = tyrsound_ex_loadLibrary("libmpg123");
     if(!s_dynHandle)
     {
-#if TYRSOUND_IS_DEBUG
-        puts("MP3 support not enabled, failed to load libmpg123 dynamic library");
-#endif
+        tyrsound_ex_message(TYRSOUND_MSG_INFO, "MP3 support not enabled, failed to load libmpg123 dynamic library");
         return;
     }
 
@@ -94,25 +91,18 @@ void Mp3Decoder::staticInit()
 
     if(!good)
     {
-#if TYRSOUND_IS_DEBUG
-        puts("MP3 support not enabled, one or more library function is missing");
-#endif
+        tyrsound_ex_message(TYRSOUND_MSG_WARNING, "MP3 support not enabled, one or more library function is missing");
         staticShutdown();
     }
 
     int err = funcs.mpg123_init();
     if(err != MPG123_OK)
     {
-#if TYRSOUND_IS_DEBUG
-        puts("Mp3Decoder: Failed to init libmpg123");
-#endif
+        tyrsound_ex_message(TYRSOUND_MSG_WARNING, "Mp3Decoder: Failed to init libmpg123");
         return;
     }
 
-#if TYRSOUND_IS_DEBUG
-        puts("Mp3Decoder: Initialized successfully");
-#endif
-
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Mp3Decoder: Initialized successfully");
     s_enabled = true;
 }
 
@@ -125,6 +115,7 @@ void Mp3Decoder::staticShutdown()
     tyrsound_ex_unloadLibrary(s_dynHandle);
     s_dynHandle = NULL;
     s_enabled = false;
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Mp3Decoder: Unloaded dynamic library");
 }
 
 

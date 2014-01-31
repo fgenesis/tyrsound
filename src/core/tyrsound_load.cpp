@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio.h> // for SEEK_SET
 #include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
@@ -60,6 +60,7 @@ static DecoderBase *createDecoder(const tyrsound_Stream& strm, const tyrsound_Fo
             strm.seek(strm.user, pos, SEEK_SET);
         }
     }
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Stream format not recognized");
     return NULL;
 }
 
