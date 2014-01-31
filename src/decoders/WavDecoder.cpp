@@ -10,18 +10,16 @@ TYRSOUND_REGISTER_DECODER(WavDecoder);
 
 bool WavDecoder::checkMagic(const unsigned char *magic, size_t size)
 {
-    unsigned int filesize, datasize;
-    return size >= 44
+    return size > 44
         && !memcmp(magic, "RIFF", 4)        // RIFF header
-        && (filesize = readLE32(magic+4)) > (44-8) // size of data+header-8
+        && readLE32(magic+4) > (44-8) // size of data+header-8
         && !memcmp(magic+8, "WAVEfmt ", 8)  // WAV+format header
         && readLE32(magic+16) == 16         // format header size, usually 16
         && readLE16(magic+20) == 1          // type format (1 = uncompressed). others not supported.
         && readLE16(magic+22)               // number of channels (must be at least 1)
         // ...some more data...
         && !memcmp(magic+36, "data", 4)     // start of data
-        && (datasize = readLE32(magic+40))  // size of data
-        && filesize == (datasize + (44-8)); // size of data must correspond to file size
+        && readLE32(magic+40);              // size of data
 }
 
 
@@ -67,8 +65,10 @@ WavDecoder *WavDecoder::create(const tyrsound_Format& /*unused*/, const tyrsound
 
     switch(fmt.sampleBits)
     {
-        case 8: case 16: break;
-        default: return NULL;
+        case 8: case 16:
+            break;
+        default:
+            return NULL;
     }
 
     fmt.signedSamples = fmt.sampleBits <= 8;
