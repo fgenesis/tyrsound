@@ -30,7 +30,11 @@ RawDecoder::~RawDecoder()
 
 RawDecoder *RawDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
 {
-    return new RawDecoder(strm, fmt);
+    void *mem = Alloc(sizeof(RawDecoder));
+    if(!mem)
+        return NULL;
+
+    return new(mem) RawDecoder(strm, fmt);
 }
 
 size_t RawDecoder::fillBuffer(void *buf, size_t size)
