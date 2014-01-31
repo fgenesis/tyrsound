@@ -59,7 +59,10 @@ bool initDevice(const char *name, const tyrsound_Format *fmt)
         {
             s_device = di.factory->create(s_format);
             if(s_device)
+            {
+                tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "Using device: %s", di.name);
                 return true;
+            }
             if(name) // when requesting a device by name and it failed, bail out
                 return false;
         }

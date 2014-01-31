@@ -1,7 +1,6 @@
 #include <cstdarg>
 #include <cstdio>
 
-#include "tyrsound.h"
 #include "tyrsound_internal.h"
 #include "tyrDeviceBase.h"
 
@@ -27,66 +26,69 @@ static void _debugMsg(tyrsound_MessageSeverity severity, const char *str, void *
 static tyrsound_MessageCallback s_msgCallback = _debugMsg;
 #endif
 
+#include "tyrsound_end.h"
+
+extern "C" {
 
 void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
-    if(s_alloc)
-        return s_alloc(ptr, size, s_alloc_user);
+    if(tyrsound::s_alloc)
+        return tyrsound::s_alloc(ptr, size, tyrsound::s_alloc_user);
 
     return realloc(ptr, size);
 }
 
 int tyrsound_ex_hasMT()
 {
-    return s_newMutexFunc && s_deleteMutexFunc && s_lockMutexFunc && s_unlockMutexFunc;
+    return tyrsound::s_newMutexFunc && tyrsound::s_deleteMutexFunc && tyrsound::s_lockMutexFunc && tyrsound::s_unlockMutexFunc;
 }
 
 void *tyrsound_ex_newMutex()
 {
-    return s_newMutexFunc ? s_newMutexFunc() : NULL;
+    return tyrsound::s_newMutexFunc ? tyrsound::s_newMutexFunc() : NULL;
 }
 
 void tyrsound_ex_deleteMutex(void *mtx)
 {
-    if(s_deleteMutexFunc)
-        s_deleteMutexFunc(mtx);
+    if(tyrsound::s_deleteMutexFunc)
+        tyrsound::s_deleteMutexFunc(mtx);
 }
 
 int tyrsound_ex_lockMutex(void *mtx)
 {
-    return s_lockMutexFunc ? s_lockMutexFunc(mtx) : (mtx ? TYRSOUND_ERR_NOT_READY : TYRSOUND_ERR_INVALID_HANDLE);
+    return tyrsound::s_lockMutexFunc ? tyrsound::s_lockMutexFunc(mtx) : (mtx ? TYRSOUND_ERR_NOT_READY : TYRSOUND_ERR_INVALID_HANDLE);
 }
 
 void tyrsound_ex_unlockMutex(void *mtx)
 {
-    if(s_unlockMutexFunc)
-        s_unlockMutexFunc(mtx);
+    if(tyrsound::s_unlockMutexFunc)
+        tyrsound::s_unlockMutexFunc(mtx);
 }
 
 void *tyrsound_ex_loadLibrary(const char *name)
 {
-    return dynopen(name);
+    return tyrsound::dynopen(name);
 }
 
 void tyrsound_ex_unloadLibrary(void *h)
 {
-    return dynclose(h);
+    return tyrsound::dynclose(h);
 }
 
 void *tyrsound_ex_loadFunction(void *h, const char *name)
 {
-    return dynsym(h, name);
+    return tyrsound::dynsym(h, name);
 }
 
 void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
 {
-    if(s_msgCallback)
-        s_msgCallback(severity, str, s_msgPtr);
+    if(tyrsound::s_msgCallback)
+        tyrsound::s_msgCallback(severity, str, tyrsound::s_msgPtr);
 }
 
 void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
 {
-    if(s_msgCallback)
+    if(tyrsound::s_msgCallback)
     {
         const int BUFSIZE = 1024;
         char buf[BUFSIZE];
@@ -98,18 +100,18 @@ void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ..
         vsnprintf(&buf[0], BUFSIZE-1, fmt, va);
 #endif
         va_end(va);
-        s_msgCallback(severity, buf, s_msgPtr);
+        tyrsound::s_msgCallback(severity, buf, tyrsound::s_msgPtr);
     }
 }
-
-#include "tyrsound_end.h"
-
-
 
 tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
     if(tyrsound::getDevice())
         return TYRSOUND_ERR_UNSPECIFIED;
+
+#if TYRSOUND_IS_DEBUG
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "This is a debug build");
+#endif
 
     bool haveDevice = false;
 
@@ -141,7 +143,10 @@ tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
     }
 
     if(!haveDevice)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "No usable device");
         return TYRSOUND_ERR_NO_DEVICE;
+    }
 
     tyrsound::initDecoders();
 
@@ -186,3 +191,4 @@ tyrsound_Error tyrsound_update(void)
     return err;
 }
 
+} // end extern "C"

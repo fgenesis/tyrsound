@@ -58,6 +58,7 @@ void SoundObject::_decode()
         if(buf && size)
         {
             size_t filled = _decoder->fillBuffer(buf, size);
+            tyrsound_ex_messagef(TYRSOUND_MSG_SPAM, "Decoded %u bytes", (unsigned int)filled);
             _decoder->getFormat(&fmt);
             tyrsound_Error err = _channel->filledBuffer(filled, fmt);
             if(err != TYRSOUND_ERR_OK)

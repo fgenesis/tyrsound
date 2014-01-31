@@ -105,6 +105,8 @@ typedef enum tyrsound_Error tyrsound_Error;
 
 enum tyrsound_MessageSeverity
 {
+    TYRSOUND_MSG_SPAM         = -2,
+    TYRSOUND_MSG_DEBUG        = -1,
     TYRSOUND_MSG_INFO         = 0,
     TYRSOUND_MSG_WARNING      = 1,
     TYRSOUND_MSG_ERROR        = 2,

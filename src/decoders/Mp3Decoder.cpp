@@ -115,7 +115,7 @@ void Mp3Decoder::staticShutdown()
     tyrsound_ex_unloadLibrary(s_dynHandle);
     s_dynHandle = NULL;
     s_enabled = false;
-    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Mp3Decoder: Unloaded dynamic library");
+    tyrsound_ex_message(TYRSOUND_MSG_DEBUG, "Mp3Decoder: Unloaded dynamic library");
 }
 
 

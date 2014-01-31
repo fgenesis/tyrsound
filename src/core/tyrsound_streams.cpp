@@ -89,7 +89,7 @@ static tyrsound_int64 wrap_fremain(void *fh)
     return tyrsound_int64(end - pos);
 }
 
-tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, FILE *fh, int closeWhenDone)
+tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, void *fh, int closeWhenDone)
 {
     if(!fh)
         return TYRSOUND_ERR_INVALID_VALUE;
