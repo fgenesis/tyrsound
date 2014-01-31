@@ -148,8 +148,9 @@ typedef void (*tyrsound_MessageCallback)(tyrsound_MessageSeverity severity, cons
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output);
 
 /* Shuts down the sound system and resets the internal state.
- * Clears everything including the the custom allocator,
- * but NOT the custom mutex and related functions. */
+ * Stops & clears all sounds still playing (but emits a warning if it does so).
+ * Does NOT clear the custom mutex and related functions, nor the memory allocator.
+ * Do not call this while having a background thread active that calls tyrsound_update()! */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown(void);
 
 /* Sets up the library for multithreading,
@@ -166,6 +167,14 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown(void);
                (causing any action that triggered the call to fail),
                any other value to indicate success.
  *   unlockFunc: Function pointer that unlocks a mutex. Expected not to fail.
+ *****
+ * The general multithreading protocol is as follows:
+    tyrsound_setupMT()
+    tyrsound_init()
+    spawn background thread calling tyrsound_update()
+    ... do things ...
+    kill background thread
+    tyrsound_shutdown() <-- do not call this while the thread calling tyrsound_update() is still running!
  */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void),
                                                     void (*deleteMutexFunc)(void*),

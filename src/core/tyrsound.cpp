@@ -162,7 +162,6 @@ tyrsound_Error tyrsound_shutdown()
     tyrsound::shutdownSounds();
     tyrsound::shutdownDevice();
     tyrsound::shutdownDecoders();
-    tyrsound_setAlloc(NULL, NULL);
     return TYRSOUND_ERR_OK;
 }
 
