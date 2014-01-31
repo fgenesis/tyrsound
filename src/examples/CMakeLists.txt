@@ -10,5 +10,8 @@ target_link_libraries(tyrwav tyrsound)
 add_executable(bytebeat bytebeat.c)
 target_link_libraries(bytebeat tyrsound)
 
+add_executable(bytebeat2 bytebeat2.c)
+target_link_libraries(bytebeat2 tyrsound)
+
 add_executable(test test.cpp)
 target_link_libraries(test tyrsound)
