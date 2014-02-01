@@ -3,6 +3,7 @@
 #define MPG123_NO_LARGENAME
 #include <mpg123.h>
 #include <ctype.h>
+#include <stdio.h> // for SEEK_SET
 
 // Functions used from mpg123.h
 typedef int  (*mpg123_initf)(void);
