@@ -17,7 +17,7 @@ void breakpoint()
 #elif defined(__GNUC__) && ((__i386__) || (__x86_64__))
     __asm__ __volatile__ ( "int $3\n\t" );
 #else
-    signal(SIGTRAP);
+    raise(SIGTRAP);
 #endif
 }
 
