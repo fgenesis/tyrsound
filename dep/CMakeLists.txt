@@ -7,8 +7,11 @@ set(OPUSFILE_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/opusfile/include")
 set(FLAC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libFLAC/include")
 set(GME_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/gme/include")
 # MP3 is dynamically loaded and not required here
+set(MINIZ_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/miniz")
+set(OPENMPT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libopenmpt/libopenmpt")
 
 set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/AL/include")
+
 
 if(TYRSOUND_SUPPORT_OGG)
     add_subdirectory(libvorbis)
@@ -32,8 +35,15 @@ if(TYRSOUND_SUPPORT_GME)
     list(APPEND INCLUDE_LIST "${GME_INCLUDE_DIR}")
 endif()
 
+if(TYRSOUND_SUPPORT_MOD)
+    add_subdirectory(miniz)
+    add_subdirectory(libopenmpt)
+    list(APPEND INCLUDE_LIST "${MINIZ_INCLUDE_DIR}" "${OPENMPT_INCLUDE_DIR}")
+endif()
+
 if(TYRSOUND_OUTPUT_OPENAL)
     list(APPEND INCLUDE_LIST "${OPENAL_INCLUDE_DIR}")
 endif()
+
 
 set(INCLUDE_LIST "${INCLUDE_LIST}" PARENT_SCOPE)

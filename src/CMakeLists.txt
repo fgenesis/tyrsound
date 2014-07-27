@@ -3,6 +3,10 @@ if(TYRSOUND_BUILD_DYNAMIC)
     set(LIB_TYPE SHARED)
 endif()
 
+if(TYRSOUND_LARGEFILE_SUPPORT)
+    add_definitions(-DTYRSOUND_LARGEFILE_SUPPORT)
+endif()
+
 message(STATUS "Including external dirs: ${INCLUDE_LIST}")
 include_directories("${INCLUDE_LIST}")
 
@@ -107,6 +111,15 @@ if(TYRSOUND_SUPPORT_FLAC)
         decoders/FlacDecoder.h
     )
     list(APPEND libs FLAC)
+endif()
+
+if(TYRSOUND_SUPPORT_MOD)
+    include_directories("${TYRSOUND_SRC_ROOT}/dep/libopenmpt/include")
+    list(APPEND src_decoders
+        decoders/ModDecoder.cpp
+        decoders/ModDecoder.h
+    )
+    list(APPEND libs openmpt)
 endif()
 
 if(TYRSOUND_OUTPUT_OPENAL)

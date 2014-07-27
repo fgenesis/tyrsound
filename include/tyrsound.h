@@ -36,6 +36,7 @@ struct tyrsound_Format
     unsigned int bigendian;
     unsigned int signedSamples;
     unsigned int numBuffers;
+    unsigned int isfloat;
 };
 typedef struct tyrsound_Format tyrsound_Format;
 
@@ -55,7 +56,7 @@ struct tyrsound_Stream
      * Can be NULL if stream is unseekable. */
     int (*seek)(void *user, tyrsound_int64 offset, int whence);
 
-    /* Stream poisition query function. Same semantics as ftell().
+    /* Stream position query function. Same semantics as ftell().
     Can be NULL if unknown. Returns < 0 if unknown or failed. */
     tyrsound_int64 (*tell)(void *user);
 
@@ -219,7 +220,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream);
  * depending on how long each decoder takes to figure out whether it can decode the stream or not. */
 TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadEx(tyrsound_Stream stream, const tyrsound_Format *fmt, int tryHard);
 
-/* Stops a sound, and frees all related resources. 
+/* Stops a sound, and frees all related resources.
  * The actual deletion is delayed and performed in the next update() call.
  * (This avoids some multithreading issues; don't call tyrsound_update() right after
  * deleting a sound when a second thread is involved. You have been warned.) */
@@ -340,7 +341,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream
                                                                  const char *mode);
 
 /* Creates an empty buffer that will dynamically grow as more data are added.
- * Supports reading and writing (but note that reading an writing advance the same
+ * Supports reading and writing (but note that reading and writing advance the same
  * internal pointer, so you need to seek). */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createGrowingBuffer(tyrsound_Stream *dst,
                                                                 tyrsound_uint64 prealloc);
@@ -356,7 +357,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst,
  * If dstfmt is not NULL, write format info to it.
  * The optional dstfmt parameter may be set to the desired output format;
  * if it is NULL, use the format currently used by the output device.
- * If tryHard is true, skip header checks (as in tyrsound_loadTryHarder()).
+ * If tryHard is true, skip header checks (as in tyrsound_loadEx()).
  * Pass maxSeconds > 0 to limit the resulting audio stream.
  *   For streams that contain repeating audio this is mandatory,
  *   otherwise it will fail with TYRSOUND_ERR_INFINITE. */

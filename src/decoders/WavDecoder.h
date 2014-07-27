@@ -14,6 +14,7 @@ protected:
 
 public:
     static WavDecoder *create(const tyrsound_Format& fmt, const tyrsound_Stream& strm);
+    static const char *getName() { return "WAV"; }
     static void staticInit() {}
     static void staticShutdown() {}
     static bool checkMagic(const unsigned char *magic, size_t size);

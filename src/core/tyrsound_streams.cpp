@@ -1,6 +1,3 @@
-// Undef this to disable support for files > 4 GB
-// (For maximum portability)
-//#define TYRSOUND_LARGEFILE_SUPPORT
 
 // Define this before <stdio.h> for 64 bit file-IO
 #if defined(TYRSOUND_LARGEFILE_SUPPORT) && !defined(_MSC_VER)
@@ -89,7 +86,7 @@ static tyrsound_int64 wrap_fremain(void *fh)
     return tyrsound_int64(end - pos);
 }
 
-tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, void *fh, int closeWhenDone)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, void *fh, int closeWhenDone)
 {
     if(!fh)
         return TYRSOUND_ERR_INVALID_VALUE;
@@ -104,7 +101,7 @@ tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, void *fh, int cl
     return TYRSOUND_ERR_OK;
 }
 
-tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream *strm, const char *filename, const char *mode)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileNameStream(tyrsound_Stream *strm, const char *filename, const char *mode)
 {
     FILE *fh = fopen(filename, (mode && *mode) ? mode : "rb");
     return tyrsound_createFileStream(strm, fh, 1);
@@ -190,7 +187,7 @@ static tyrsound_int64 wrap_memremain(void *memp)
     return m->size - tyrsound_uint64(diff);
 }
 
-tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t size, void (*closeFunc)(void *), int allowWrite)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t size, void (*closeFunc)(void *), int allowWrite)
 {
     if(!ptr)
         return TYRSOUND_ERR_INVALID_VALUE;
@@ -214,7 +211,7 @@ tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *strm, void *ptr, size_t
     return TYRSOUND_ERR_OK;
 }
 
-tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size, tyrsound_Stream src)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size, tyrsound_Stream src)
 {
     tyrsound_int64 remain = 0;
     if(src.remain)
@@ -286,7 +283,7 @@ static tyrsound_uint64 wrap_memwriteGrow(const void *src, tyrsound_uint64 size, 
     return writeBytes;
 }
 
-tyrsound_Error tyrsound_createGrowingBuffer(tyrsound_Stream *strm, tyrsound_uint64 prealloc)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createGrowingBuffer(tyrsound_Stream *strm, tyrsound_uint64 prealloc)
 {
     char *ptr = NULL;
     if(prealloc)

@@ -200,74 +200,74 @@ static tyrsound_Error enqueueDeletion(SoundObject *sound)
 
 #define LOOKUP(var, h) LOOKUP_RET(var, h, _err)
 
-tyrsound_Error tyrsound_unload(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle handle)
 {
     LOOKUP(sound, handle);
     sound->stop();
     return tyrsound::enqueueDeletion(sound);
 }
 
-tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)
 {
     LOOKUP(sound, handle);
     return sound->setVolume(vol);
 }
 
-tyrsound_Error tyrsound_setSpeed(tyrsound_Handle handle, float speed)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Handle handle, float speed)
 {
     LOOKUP(sound, handle);
     return sound->setSpeed(speed);
 }
 
-tyrsound_Error tyrsound_seek(tyrsound_Handle handle, float seconds)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle handle, float seconds)
 {
     LOOKUP(sound, handle);
     return sound->seek(seconds);
 }
 
-tyrsound_Error tyrsound_setPosition(tyrsound_Handle handle, float x, float y, float z)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle handle, float x, float y, float z)
 {
     LOOKUP(sound, handle);
     return sound->setPosition(x, y, z);
 }
 
-tyrsound_Error tyrsound_setLoop(tyrsound_Handle handle, float seconds, int loops)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Handle handle, float seconds, int loops)
 {
     LOOKUP(sound, handle);
     return sound->setLoop(seconds, loops);
 }
 
-float tyrsound_getLength(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle handle)
 {
     LOOKUP_RET(sound, handle, -1.0f);
     return sound->getLength();
 }
 
-tyrsound_Error tyrsound_play(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_play(tyrsound_Handle handle)
 {
     LOOKUP(sound, handle);
     return sound->play();
 }
 
-tyrsound_Error tyrsound_pause(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_pause(tyrsound_Handle handle)
 {
     LOOKUP(sound, handle);
     return sound->pause();
 }
 
-tyrsound_Error tyrsound_stop(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_stop(tyrsound_Handle handle)
 {
     LOOKUP(sound, handle);
     return sound->stop();
 }
 
-int tyrsound_isPlaying(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle handle)
 {
     LOOKUP_RET(sound, handle, 0);
     return sound->isPlaying();
 }
 
-float tyrsound_getPlayPosition(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Handle handle)
 {
     LOOKUP_RET(sound, handle, 0);
     return sound->getPlayPosition();

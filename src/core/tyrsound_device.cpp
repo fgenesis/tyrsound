@@ -21,9 +21,10 @@ static void _applyDefaultFormat(tyrsound_Format& fmt)
     fmt.numBuffers = 8;
     fmt.bigendian = isBigEndian();
     fmt.signedSamples = 1;
+    fmt.isfloat = 0; // -1: use float if possible
 }
 
-void tyrsound_ex_registerDevice(const DeviceInfo& di)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo& di)
 {
     TYRSOUND_DEVICE_HOLDER::Register(di);
 }
@@ -75,22 +76,22 @@ bool initDevice(const char *name, const tyrsound_Format *fmt)
 #include "tyrsound_end.h"
 
 
-void tyrsound_getFormat(tyrsound_Format *fmt)
+TYRSOUND_DLL_EXPORT void tyrsound_getFormat(tyrsound_Format *fmt)
 {
     *fmt = tyrsound::s_format;
 }
 
-tyrsound_Error tyrsound_setListenerPosition(float x, float y, float z)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setListenerPosition(float x, float y, float z)
 {
     return tyrsound::s_device->setPosition(x, y, z);
 }
 
-tyrsound_Error tyrsound_setMasterVolume(float vol)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterVolume(float vol)
 {
     return tyrsound::s_device->setVolume(vol);
 }
 
-tyrsound_Error tyrsound_setMasterSpeed(float speed)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterSpeed(float speed)
 {
     return tyrsound::s_device->setSpeed(speed);
 }

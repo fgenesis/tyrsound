@@ -31,7 +31,7 @@ static tyrsound_MessageCallback s_msgCallback = _debugMsg;
 
 extern "C" {
 
-void *tyrsound_ex_alloc(void *ptr, size_t size)
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
     if(tyrsound::s_alloc)
         return tyrsound::s_alloc(ptr, size, tyrsound::s_alloc_user);
@@ -39,55 +39,55 @@ void *tyrsound_ex_alloc(void *ptr, size_t size)
     return realloc(ptr, size);
 }
 
-int tyrsound_ex_hasMT()
+TYRSOUND_DLL_EXPORT int tyrsound_ex_hasMT()
 {
     return tyrsound::s_newMutexFunc && tyrsound::s_deleteMutexFunc && tyrsound::s_lockMutexFunc && tyrsound::s_unlockMutexFunc;
 }
 
-void *tyrsound_ex_newMutex()
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_newMutex()
 {
     return tyrsound::s_newMutexFunc ? tyrsound::s_newMutexFunc() : NULL;
 }
 
-void tyrsound_ex_deleteMutex(void *mtx)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_deleteMutex(void *mtx)
 {
     if(tyrsound::s_deleteMutexFunc)
         tyrsound::s_deleteMutexFunc(mtx);
 }
 
-int tyrsound_ex_lockMutex(void *mtx)
+TYRSOUND_DLL_EXPORT int tyrsound_ex_lockMutex(void *mtx)
 {
     return tyrsound::s_lockMutexFunc ? tyrsound::s_lockMutexFunc(mtx) : (mtx ? TYRSOUND_ERR_NOT_READY : TYRSOUND_ERR_INVALID_HANDLE);
 }
 
-void tyrsound_ex_unlockMutex(void *mtx)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_unlockMutex(void *mtx)
 {
     if(tyrsound::s_unlockMutexFunc)
         tyrsound::s_unlockMutexFunc(mtx);
 }
 
-void *tyrsound_ex_loadLibrary(const char *name)
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name)
 {
     return tyrsound::dynopen(name);
 }
 
-void tyrsound_ex_unloadLibrary(void *h)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)
 {
     return tyrsound::dynclose(h);
 }
 
-void *tyrsound_ex_loadFunction(void *h, const char *name)
+TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadFunction(void *h, const char *name)
 {
     return tyrsound::dynsym(h, name);
 }
 
-void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity severity, const char *str)
 {
     if(tyrsound::s_msgCallback)
         tyrsound::s_msgCallback(severity, str, tyrsound::s_msgPtr);
 }
 
-void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
+TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ...)
 {
     if(tyrsound::s_msgCallback)
     {
@@ -105,7 +105,7 @@ void tyrsound_ex_messagef(tyrsound_MessageSeverity severity, const char *fmt, ..
     }
 }
 
-tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
 {
     if(tyrsound::getDevice())
     {
@@ -157,7 +157,7 @@ tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
     return tyrsound::initSounds();
 }
 
-tyrsound_Error tyrsound_shutdown()
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
     tyrsound::shutdownDevice();
@@ -165,7 +165,7 @@ tyrsound_Error tyrsound_shutdown()
     return TYRSOUND_ERR_OK;
 }
 
-tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void), void (*deleteMutexFunc)(void*), int (*lockFunc)(void*), void (*unlockFunc)(void*))
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void), void (*deleteMutexFunc)(void*), int (*lockFunc)(void*), void (*unlockFunc)(void*))
 {
     tyrsound::s_newMutexFunc = newMutexFunc;
     tyrsound::s_deleteMutexFunc = deleteMutexFunc;
@@ -175,7 +175,7 @@ tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void), void (*deleteMutexF
     return TYRSOUND_ERR_OK;
 }
 
-void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
+TYRSOUND_DLL_EXPORT void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 {
     tyrsound::s_alloc = allocFunc;
     tyrsound::s_alloc_user = user;
@@ -183,7 +183,7 @@ void tyrsound_setAlloc(tyrsound_Alloc allocFunc, void *user)
 
 
 
-tyrsound_Error tyrsound_update(void)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_update(void)
 {
     tyrsound::DeviceBase *device = tyrsound::getDevice();
     if(!device)

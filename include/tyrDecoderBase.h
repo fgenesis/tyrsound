@@ -31,6 +31,7 @@ public:
     virtual void staticInit() const = 0;
     virtual void staticShutdown() const = 0;
     virtual bool checkMagic(const unsigned char *magic, size_t size) const = 0;
+    virtual const char *getName() const  = 0;
 };
 
 template<class T> class DecoderFactory : public DecoderFactoryBase
@@ -52,6 +53,10 @@ template<class T> class DecoderFactory : public DecoderFactoryBase
     virtual bool checkMagic(const unsigned char *magic, size_t size) const
     {
         return K::checkMagic(magic, size);
+    }
+    virtual const char *getName() const
+    {
+        return K::getName();
     }
 };
 

@@ -4,12 +4,13 @@ project(tyrsound)
 option(TYRSOUND_BUILD_EXAMPLES "Build examples?" TRUE)
 option(TYRSOUND_BUILD_DYNAMIC "Build as DLL/Shared object?" TRUE)
 
+option(TYRSOUND_LARGEFILE_SUPPORT "Support files > 4 GB?" FALSE)
 
 option(TYRSOUND_SUPPORT_WAV "Support uncompressed WAV format?" TRUE)
 option(TYRSOUND_SUPPORT_OGG "Support OGG format?" TRUE)
 option(TYRSOUND_SUPPORT_OPUS "Support OPUS format?" TRUE)
 option(TYRSOUND_SUPPORT_MP3 "Support MP3 format?" TRUE)
-#option(TYRSOUND_SUPPORT_MOD "Support various tracker formats?" TRUE)
+option(TYRSOUND_SUPPORT_MOD "Support various tracker formats?" TRUE)
 option(TYRSOUND_SUPPORT_GME "Support various console formats (using GameMusicEmu)?" TRUE)
 option(TYRSOUND_SUPPORT_FLAC "Support FLAC format?" TRUE)
 
@@ -32,27 +33,6 @@ if(TYRSOUND_OUTPUT_OPENAL)
         endif()
     endif()
 endif()
-
-# compiler specific things
-#if(MSVC)
-    #add_definitions("/GR-") # run-time type info (RTTI) not required
-    #add_definitions("/GS-") # no buffer security check
-    #add_definitions("/GF") # string pooling on
-    #add_definitions("/Oi") # use intrinsics
-    #add_definitions("/Os") # favor small code
-    
-    # FIXME: this adds #define EBUG instead... huh?
-    #add_definitions("/DEBUG") # linker should always output debug info
-    
-    # No exceptions (this is ugly - hackfix compiler flags)
-    #foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
-    #                 CMAKE_C_FLAGS   CMAKE_C_FLAGS_DEBUG   CMAKE_C_FLAGS_RELEASE   CMAKE_C_FLAGS_MINSIZEREL   CMAKE_C_FLAGS_RELWITHDEBINFO)
-    #    if(${flag_var} MATCHES "/EHsc")
-    #        string(REGEX REPLACE "/EHsc" "" "${flag_var}" "${${flag_var}}")
-    #        set("${flag_var}" "${${flag_var}}" CACHE STRING "" FORCE)
-    #    endif()
-    #endforeach()
-#endif()
 
 # non-msvc needs build type - if no build type was provided, set a default one
 if(NOT MSVC)

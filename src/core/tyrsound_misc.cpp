@@ -37,7 +37,10 @@ Mutex *Mutex::create()
         return NULL;
     void *mem = Alloc(sizeof(Mutex));
     if(!mem)
+    {
+        tyrsound_ex_deleteMutex(mtx);
         return NULL;
+    }
     return new(mem) Mutex(mtx);
 }
 
