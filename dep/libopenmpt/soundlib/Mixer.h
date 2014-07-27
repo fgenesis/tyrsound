@@ -15,7 +15,7 @@ OPENMPT_NAMESPACE_BEGIN
 #define MPT_INTMIXER
 
 #ifdef MPT_INTMIXER
-typedef int32 mixsample_t;
+typedef int mixsample_t;
 enum { MIXING_FILTER_PRECISION = 13 };	// Fixed point resonant filter bits
 #else
 typedef float mixsample_t;

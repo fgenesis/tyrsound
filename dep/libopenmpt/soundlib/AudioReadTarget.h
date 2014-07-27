@@ -77,7 +77,7 @@ template<typename Tsample>
 void ApplyGainBeforeConversionIfAppropriate(int *MixSoundBuffer, std::size_t channels, std::size_t countChunk, float gainFactor)
 {
 	// Apply final output gain for non floating point output
-	ApplyGain(MixSoundBuffer, channels, countChunk, Util::Round<int32>(gainFactor * (1<<16)));
+	ApplyGain((int32*)MixSoundBuffer, channels, countChunk, Util::Round<int32>(gainFactor * (1<<16)));
 }
 template<>
 void ApplyGainBeforeConversionIfAppropriate<float>(int * /*MixSoundBuffer*/, std::size_t /*channels*/, std::size_t /*countChunk*/, float /*gainFactor*/)

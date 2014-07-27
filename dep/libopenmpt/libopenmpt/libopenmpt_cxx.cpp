@@ -77,7 +77,7 @@ bool is_extension_supported( const std::string & extension ) {
 }
 
 double could_open_propability( std::istream & stream, double effort, std::ostream & log ) {
-	return openmpt::module_impl::could_open_propability( stream, effort, std::make_shared<std_ostream_log>( log ) );
+	return openmpt::module_impl::could_open_propability( stream, effort, new std_ostream_log( log ) );
 }
 
 module::module( const module & ) {
@@ -97,35 +97,35 @@ void module::set_impl( module_impl * i ) {
 }
 
 module::module( std::istream & stream, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( stream, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( stream, new std_ostream_log( log ), ctls );
 }
 
 module::module( const std::vector<std::uint8_t> & data, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( data, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( data, new std_ostream_log( log ), ctls );
 }
 
 module::module( const std::uint8_t * beg, const std::uint8_t * end, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( beg, end - beg, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( beg, end - beg, new std_ostream_log( log ), ctls );
 }
 
 module::module( const std::uint8_t * data, std::size_t size, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( data, size, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( data, size, new std_ostream_log( log ), ctls );
 }
 
 module::module( const std::vector<char> & data, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( data, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( data, new std_ostream_log( log ), ctls );
 }
 
 module::module( const char * beg, const char * end, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( beg, end - beg, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( beg, end - beg, new std_ostream_log( log ), ctls );
 }
 
 module::module( const char * data, std::size_t size, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( data, size, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( data, size, new std_ostream_log( log ), ctls );
 }
 
 module::module( const void * data, std::size_t size, std::ostream & log, const std::map< std::string, std::string > & ctls ) : impl(0) {
-	impl = new module_impl( data, size, std::make_shared<std_ostream_log>( log ), ctls );
+	impl = new module_impl( data, size, new std_ostream_log( log ), ctls );
 }
 
 module::~module() {

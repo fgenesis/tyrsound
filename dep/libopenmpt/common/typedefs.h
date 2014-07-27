@@ -289,7 +289,7 @@ OPENMPT_NAMESPACE_BEGIN
 #if MPT_COMPILER_MSVC && MPT_MSVC_BEFORE(2010,0)
 
 OPENMPT_NAMESPACE_END
-#include "stdint.h"
+#include "pstdint.h"
 OPENMPT_NAMESPACE_BEGIN
 
 typedef int8_t   int8;
@@ -426,11 +426,11 @@ STATIC_ASSERT(sizeof(float32) == 4);
 // openmpt assumes these type have exact WIN32 semantics
 
 namespace mpt { namespace Legacy {
-typedef std::uint8_t  BYTE;
-typedef std::uint16_t WORD;
-typedef std::uint32_t DWORD;
-typedef std::int32_t  LONG;
-typedef std::uint32_t UINT;
+typedef uint8_t  BYTE;
+typedef uint16_t WORD;
+typedef uint32_t DWORD;
+typedef int32_t  LONG;
+typedef uint32_t UINT;
 } } // namespace mpt::Legacy
 using namespace mpt::Legacy;
 

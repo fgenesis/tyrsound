@@ -12,7 +12,7 @@
 
 #include "libopenmpt_config.h"
 #include <stddef.h>
-#include <stdint.h>
+#include "pstdint.h"
 
 /*!
  * \page libopenmpt_c_overview C API

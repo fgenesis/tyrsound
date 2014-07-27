@@ -430,11 +430,11 @@ struct Convert<float, double>
 };
 
 
-template <typename Tdst, typename Tsrc, int fractionalBits, bool clipOutput>
+template <int fractionalBits, bool clipOutput, typename Tdst, typename Tsrc>
 struct ConvertFixedPoint;
 
 template <int fractionalBits, bool clipOutput>
-struct ConvertFixedPoint<uint8, int32, fractionalBits, clipOutput>
+struct ConvertFixedPoint<fractionalBits, clipOutput, uint8, int32>
 {
 	typedef int32 input_t;
 	typedef uint8 output_t;
@@ -451,7 +451,7 @@ struct ConvertFixedPoint<uint8, int32, fractionalBits, clipOutput>
 };
 
 template <int fractionalBits, bool clipOutput>
-struct ConvertFixedPoint<int16, int32, fractionalBits, clipOutput>
+struct ConvertFixedPoint<fractionalBits, clipOutput, int16, int32>
 {
 	typedef int32 input_t;
 	typedef int16 output_t;
@@ -468,7 +468,7 @@ struct ConvertFixedPoint<int16, int32, fractionalBits, clipOutput>
 };
 
 template <int fractionalBits, bool clipOutput>
-struct ConvertFixedPoint<int24, int32, fractionalBits, clipOutput>
+struct ConvertFixedPoint<fractionalBits, clipOutput, int24, int32>
 {
 	typedef int32 input_t;
 	typedef int24 output_t;
@@ -485,7 +485,7 @@ struct ConvertFixedPoint<int24, int32, fractionalBits, clipOutput>
 };
 
 template <int fractionalBits, bool clipOutput>
-struct ConvertFixedPoint<int32, int32, fractionalBits, clipOutput>
+struct ConvertFixedPoint<fractionalBits, clipOutput, int32, int32>
 {
 	typedef int32 input_t;
 	typedef int32 output_t;
@@ -497,7 +497,7 @@ struct ConvertFixedPoint<int32, int32, fractionalBits, clipOutput>
 };
 
 template <int fractionalBits, bool clipOutput>
-struct ConvertFixedPoint<float32, int32, fractionalBits, clipOutput>
+struct ConvertFixedPoint<fractionalBits, clipOutput, float32, int32>
 {
 	typedef int32 input_t;
 	typedef float32 output_t;
@@ -879,7 +879,7 @@ template<int fractionalBits, bool clipOutput, typename Tsample, typename Tfixed>
 void ConvertInterleavedFixedPointToInterleaved(Tsample * MPT_RESTRICT p, const Tfixed * MPT_RESTRICT mixbuffer, std::size_t channels, std::size_t count)
 //------------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	SC::ConvertFixedPoint<Tsample, int, fractionalBits, clipOutput> conv;
+	SC::ConvertFixedPoint<fractionalBits, clipOutput, Tsample, int32> conv;
 	count *= channels;
 	for(std::size_t i = 0; i < count; ++i)
 	{
@@ -891,7 +891,7 @@ template<int fractionalBits, bool clipOutput, typename Tsample, typename Tfixed>
 void ConvertInterleavedFixedPointToNonInterleaved(Tsample * const * const MPT_RESTRICT buffers, const Tfixed * MPT_RESTRICT mixbuffer, std::size_t channels, std::size_t count)
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	SC::ConvertFixedPoint<Tsample, int, fractionalBits, clipOutput> conv;
+	SC::ConvertFixedPoint<fractionalBits, clipOutput, Tsample, int32> conv;
 	for(std::size_t i = 0; i < count; ++i)
 	{
 		for(std::size_t channel = 0; channel < channels; ++channel)

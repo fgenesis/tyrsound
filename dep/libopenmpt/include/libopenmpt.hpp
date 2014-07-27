@@ -20,7 +20,17 @@
 #include <string>
 #include <vector>
 
-#include <cstdint>
+//#include <cstdint>
+#include "pstdint.h"
+typedef int8_t   int8;
+typedef int16_t  int16;
+typedef int32_t  int32;
+typedef int64_t  int64;
+typedef uint8_t  uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
 
 /*!
  * \page libopenmpt_cpp_overview C++ API
@@ -76,14 +86,14 @@ public:
   Returns the libopenmpt version number.
   \return The value represents (major << 24 + minor << 16 + revision).
 */
-LIBOPENMPT_CXX_API std::uint32_t get_library_version();
+LIBOPENMPT_CXX_API uint32 get_library_version();
 
 //! Get the core version number
 /*!
   Return the OpenMPT core version number.
   \return The value represents (majormajor << 24 + major << 16 + minor << 8 + minorminor).
 */
-LIBOPENMPT_CXX_API std::uint32_t get_core_version();
+LIBOPENMPT_CXX_API uint32 get_core_version();
 
 namespace string {
 
@@ -231,7 +241,7 @@ public:
 	  \return Throw an exception derived from openmpt::exception in case the provided file cannot be opened.
 	  \remarks The input data can be discarded after an openmpt::module has been constructed succesfully.
 	*/
-	module( const std::vector<std::uint8_t> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	module( const std::vector<uint8> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
 	/*!
 	  \param beg Begin of data to load the module from.
 	  \param end End of data to load the module from.
@@ -240,7 +250,7 @@ public:
 	  \return Throw an exception derived from openmpt::exception in case the provided file cannot be opened.
 	  \remarks The input data can be discarded after an openmpt::module has been constructed succesfully.
 	*/
-	module( const std::uint8_t * beg, const std::uint8_t * end, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	module( const uint8 * beg, const uint8 * end, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
 	/*!
 	  \param data Data to load the module from.
 	  \param size Amount of data available.
@@ -249,7 +259,7 @@ public:
 	  \return Throw an exception derived from openmpt::exception in case the provided file cannot be opened.
 	  \remarks The input data can be discarded after an openmpt::module has been constructed succesfully.
 	*/
-	module( const std::uint8_t * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	module( const uint8 * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
 	/*!
 	  \param data Data to load the module from.
 	  \param log Log where any warnings or errors are printed to. The lifetime of the reference has to be as long as the lifetime of the module instance.
@@ -293,7 +303,7 @@ public:
 	  \param subsong Index of the subsong.
 	  \return Throws an exception derived from openmpt::exception if subsong is not in range [0,openmpt::module::get_num_subsongs()]
 	*/
-	void select_subsong( std::int32_t subsong );
+	void select_subsong( int32 subsong );
 	//! Set Repeat Count
 	/*!
 	  \param repeat_count Repeat Count
@@ -302,7 +312,7 @@ public:
 	    - n>0: play once and repeat n times after that
 	  \sa openmpt::module::get_repeat_count
 	*/
-	void set_repeat_count( std::int32_t repeat_count );
+	void set_repeat_count( int32 repeat_count );
 	//! Get Repeat Count
 	/*!
 	  \return Repeat Count
@@ -311,7 +321,7 @@ public:
 	    - n>0: play once and repeat n times after that
 	  \sa openmpt::module::set_repeat_count
 	*/
-	std::int32_t get_repeat_count() const;
+	int32 get_repeat_count() const;
 
 	//! Get approximate song duration
 	/*!
@@ -342,7 +352,7 @@ public:
 	  \sa openmpt::module::set_position_seconds
 	  \sa openmpt::module::get_position_seconds
 	*/
-	double set_position_order_row( std::int32_t order, std::int32_t row );
+	double set_position_order_row( int32 order, int32 row );
 
 	//! Get render parameter
 	/*!
@@ -351,7 +361,7 @@ public:
 	  \sa openmpt::module::render_param
 	  \sa openmpt::module::set_render_param
 	*/
-	std::int32_t get_render_param( int param ) const;
+	int32 get_render_param( int param ) const;
 	//! Set render parameter
 	/*!
 	  \param param Parameter to set. See openmpt::module::render_param.
@@ -360,7 +370,7 @@ public:
 	  \sa openmpt::module::render_param
 	  \sa openmpt::module::get_render_param
 	*/
-	void set_render_param( int param, std::int32_t value );
+	void set_render_param( int param, int32 value );
 
 	/*@{*/
 	//! Render audio data
@@ -374,7 +384,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks It is recommended to use the floating point API because of the greater dynamic range and no implied clipping.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, std::int16_t * mono );
+	std::size_t read( int32 samplerate, std::size_t count, int16 * mono );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -387,7 +397,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks It is recommended to use the floating point API because of the greater dynamic range and no implied clipping.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, std::int16_t * left, std::int16_t * right );
+	std::size_t read( int32 samplerate, std::size_t count, int16 * left, int16 * right );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -402,7 +412,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks It is recommended to use the floating point API because of the greater dynamic range and no implied clipping.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, std::int16_t * left, std::int16_t * right, std::int16_t * rear_left, std::int16_t * rear_right );
+	std::size_t read( int32 samplerate, std::size_t count, int16 * left, int16 * right, int16 * rear_left, int16 * rear_right );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -414,7 +424,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks Floating point samples are in the [-1.0..1.0] nominal range. They are not clipped to that range though and thus might overshoot.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, float * mono );
+	std::size_t read( int32 samplerate, std::size_t count, float * mono );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -427,7 +437,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks Floating point samples are in the [-1.0..1.0] nominal range. They are not clipped to that range though and thus might overshoot.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, float * left, float * right );
+	std::size_t read( int32 samplerate, std::size_t count, float * left, float * right );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -442,7 +452,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks Floating point samples are in the [-1.0..1.0] nominal range. They are not clipped to that range though and thus might overshoot.
 	*/
-	std::size_t read( std::int32_t samplerate, std::size_t count, float * left, float * right, float * rear_left, float * rear_right );
+	std::size_t read( int32 samplerate, std::size_t count, float * left, float * right, float * rear_left, float * rear_right );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -454,7 +464,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks It is recommended to use the floating point API because of the greater dynamic range and no implied clipping.
 	*/
-	std::size_t read_interleaved_stereo( std::int32_t samplerate, std::size_t count, std::int16_t * interleaved_stereo );
+	std::size_t read_interleaved_stereo( int32 samplerate, std::size_t count, int16 * interleaved_stereo );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -466,7 +476,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks It is recommended to use the floating point API because of the greater dynamic range and no implied clipping.
 	*/
-	std::size_t read_interleaved_quad( std::int32_t samplerate, std::size_t count, std::int16_t * interleaved_quad );
+	std::size_t read_interleaved_quad( int32 samplerate, std::size_t count, int16 * interleaved_quad );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -478,7 +488,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks Floating point samples are in the [-1.0..1.0] nominal range. They are not clipped to that range though and thus might overshoot.
 	*/
-	std::size_t read_interleaved_stereo( std::int32_t samplerate, std::size_t count, float * interleaved_stereo );
+	std::size_t read_interleaved_stereo( int32 samplerate, std::size_t count, float * interleaved_stereo );
 	//! Render audio data
 	/*!
 	  \param samplerate Samplerate to render output. Should be in [8000,192000], but this is not enforced.
@@ -490,7 +500,7 @@ public:
 	  \remarks You can freely switch between any of these function if you see a need to do so. libopenmpt tries to introduce as little switching annoyances as possible. Normally, you would only use a single one of these functions for rendering a particular module.
 	  \remarks Floating point samples are in the [-1.0..1.0] nominal range. They are not clipped to that range though and thus might overshoot.
 	*/
-	std::size_t read_interleaved_quad( std::int32_t samplerate, std::size_t count, float * interleaved_quad );
+	std::size_t read_interleaved_quad( int32 samplerate, std::size_t count, float * interleaved_quad );
 	/*@}*/
 
 	//! Get the list of supported metadata item keys
@@ -507,25 +517,25 @@ public:
 	*/
 	std::string get_metadata( const std::string & key ) const;
 
-	std::int32_t get_current_speed() const;
-	std::int32_t get_current_tempo() const;
-	std::int32_t get_current_order() const;
-	std::int32_t get_current_pattern() const;
-	std::int32_t get_current_row() const;
-	std::int32_t get_current_playing_channels() const;
+	int32 get_current_speed() const;
+	int32 get_current_tempo() const;
+	int32 get_current_order() const;
+	int32 get_current_pattern() const;
+	int32 get_current_row() const;
+	int32 get_current_playing_channels() const;
 
-	float get_current_channel_vu_mono( std::int32_t channel ) const;
-	float get_current_channel_vu_left( std::int32_t channel ) const;
-	float get_current_channel_vu_right( std::int32_t channel ) const;
-	float get_current_channel_vu_rear_left( std::int32_t channel ) const;
-	float get_current_channel_vu_rear_right( std::int32_t channel ) const;
+	float get_current_channel_vu_mono( int32 channel ) const;
+	float get_current_channel_vu_left( int32 channel ) const;
+	float get_current_channel_vu_right( int32 channel ) const;
+	float get_current_channel_vu_rear_left( int32 channel ) const;
+	float get_current_channel_vu_rear_right( int32 channel ) const;
 
-	std::int32_t get_num_subsongs() const;
-	std::int32_t get_num_channels() const;
-	std::int32_t get_num_orders() const;
-	std::int32_t get_num_patterns() const;
-	std::int32_t get_num_instruments() const;
-	std::int32_t get_num_samples() const;
+	int32 get_num_subsongs() const;
+	int32 get_num_channels() const;
+	int32 get_num_orders() const;
+	int32 get_num_patterns() const;
+	int32 get_num_instruments() const;
+	int32 get_num_samples() const;
 
 	std::vector<std::string> get_subsong_names() const;
 	std::vector<std::string> get_channel_names() const;
@@ -534,17 +544,17 @@ public:
 	std::vector<std::string> get_instrument_names() const;
 	std::vector<std::string> get_sample_names() const;
 
-	std::int32_t get_order_pattern( std::int32_t order ) const;
+	int32 get_order_pattern( int32 order ) const;
 
-	std::int32_t get_pattern_num_rows( std::int32_t pattern ) const;
+	int32 get_pattern_num_rows( int32 pattern ) const;
 
-	std::uint8_t get_pattern_row_channel_command( std::int32_t pattern, std::int32_t row, std::int32_t channel, int command ) const;
+	uint8 get_pattern_row_channel_command( int32 pattern, int32 row, int32 channel, int command ) const;
 
-	std::string format_pattern_row_channel_command( std::int32_t pattern, std::int32_t row, std::int32_t channel, int command ) const;
-	std::string highlight_pattern_row_channel_command( std::int32_t pattern, std::int32_t row, std::int32_t channel, int command ) const;
+	std::string format_pattern_row_channel_command( int32 pattern, int32 row, int32 channel, int command ) const;
+	std::string highlight_pattern_row_channel_command( int32 pattern, int32 row, int32 channel, int command ) const;
 
-	std::string format_pattern_row_channel( std::int32_t pattern, std::int32_t row, std::int32_t channel, std::size_t width = 0, bool pad = true ) const;
-	std::string highlight_pattern_row_channel( std::int32_t pattern, std::int32_t row, std::int32_t channel, std::size_t width = 0, bool pad = true ) const;
+	std::string format_pattern_row_channel( int32 pattern, int32 row, int32 channel, std::size_t width = 0, bool pad = true ) const;
+	std::string highlight_pattern_row_channel( int32 pattern, int32 row, int32 channel, std::size_t width = 0, bool pad = true ) const;
 
 	std::vector<std::string> get_ctls() const;
 

@@ -263,9 +263,10 @@ void openmpt_log_func_silent( const char * /*message*/, void * /*user*/ ) {
 }
 
 double openmpt_could_open_propability( openmpt_stream_callbacks stream_callbacks, void * stream, double effort, openmpt_log_func logfunc, void * user ) {
+	openmpt::logfunc_logger logger( logfunc ? logfunc : openmpt_log_func_default, user );
 	try {
 		openmpt::callbacks_istream istream( stream_callbacks, stream );
-		return openmpt::module_impl::could_open_propability( istream, effort, std::make_shared<openmpt::logfunc_logger>( logfunc ? logfunc : openmpt_log_func_default, user ) );
+		return openmpt::module_impl::could_open_propability( istream, effort, &logger );
 	} OPENMPT_INTERFACE_CATCH_TO_LOG_FUNC;
 	return 0.0;
 }
@@ -279,6 +280,7 @@ openmpt_module * openmpt_module_create( openmpt_stream_callbacks stream_callback
 		mod->logfunc = logfunc ? logfunc : openmpt_log_func_default;
 		mod->user = user;
 		mod->impl = 0;
+		openmpt::logfunc_logger *logger = new openmpt::logfunc_logger( mod->logfunc, mod->user );
 		try {
 			std::map< std::string, std::string > ctls_map;
 			if ( ctls ) {
@@ -291,9 +293,10 @@ openmpt_module * openmpt_module_create( openmpt_stream_callbacks stream_callback
 				}
 			}
 			openmpt::callbacks_istream istream( stream_callbacks, stream );
-			mod->impl = new openmpt::module_impl( istream, std::make_shared<openmpt::logfunc_logger>( mod->logfunc, mod->user ), ctls_map );
+			mod->impl = new openmpt::module_impl( istream, logger, ctls_map );
 			return mod;
 		} OPENMPT_INTERFACE_CATCH_TO_MOD_LOG_FUNC;
+		delete logger;
 		delete mod->impl;
 		mod->impl = 0;
 		std::free( (void*)mod );
@@ -311,6 +314,7 @@ openmpt_module * openmpt_module_create_from_memory( const void * filedata, size_
 		mod->logfunc = logfunc ? logfunc : openmpt_log_func_default;
 		mod->user = user;
 		mod->impl = 0;
+		openmpt::logfunc_logger *logger = new openmpt::logfunc_logger( mod->logfunc, mod->user );
 		try {
 			std::map< std::string, std::string > ctls_map;
 			if ( ctls ) {
@@ -322,9 +326,10 @@ openmpt_module * openmpt_module_create_from_memory( const void * filedata, size_
 					}
 				}
 			}
-			mod->impl = new openmpt::module_impl( filedata, filesize, std::make_shared<openmpt::logfunc_logger>( mod->logfunc, mod->user ), ctls_map );
+			mod->impl = new openmpt::module_impl( filedata, filesize, logger, ctls_map );
 			return mod;
 		} OPENMPT_INTERFACE_CATCH_TO_MOD_LOG_FUNC;
+		delete logger;
 		delete mod->impl;
 		mod->impl = 0;
 		std::free( (void*)mod );

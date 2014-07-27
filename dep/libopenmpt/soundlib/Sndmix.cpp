@@ -1591,7 +1591,7 @@ void CSoundFile::ProcessRamping(ModChannel *pChn) const
 			if((pChn->leftVol | pChn->rightVol) && (pChn->newLeftVol | pChn->newRightVol) && !pChn->dwFlags[CHN_FASTVOLRAMP])
 			{
 				rampLength = m_PlayState.m_nBufferCount;
-				Limit(rampLength, globalRampLength, 1 << (VOLUMERAMPPRECISION - 1));
+				Limit(rampLength, globalRampLength, int32(1 << (VOLUMERAMPPRECISION - 1)));
 			}
 		}
 

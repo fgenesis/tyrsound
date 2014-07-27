@@ -55,7 +55,7 @@ void XMInstrument::ConvertEndianness()
 void XMInstrument::ConvertEnvelopeToXM(const InstrumentEnvelope &mptEnv, uint8 &numPoints, uint8 &flags, uint8 &sustain, uint8 &loopStart, uint8 &loopEnd, EnvType env)
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 {
-	numPoints = static_cast<uint8>(std::min(12u, mptEnv.nNodes));
+	numPoints = std::min<uint8>(12u, mptEnv.nNodes);
 
 	// Envelope Data
 	for(size_t i = 0; i < numPoints; i++)

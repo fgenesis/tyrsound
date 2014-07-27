@@ -135,7 +135,7 @@ static forceinline int32 BufferLengthToSamples(int32 mixBufferCount, const ModCh
 static forceinline int32 SamplesToBufferLength(int32 numSamples, const ModChannel &chn)
 //-------------------------------------------------------------------------------------
 {
-	return std::max(1, ((numSamples << 16)/* + static_cast<int32>(chn.nPosLo) + 0xFFFF*/) / abs(chn.nInc));
+	return std::max<int32>(1, ((numSamples << 16)/* + static_cast<int32>(chn.nPosLo) + 0xFFFF*/) / abs(chn.nInc));
 }
 
 
@@ -418,14 +418,14 @@ void CSoundFile::CreateStereoMix(int count)
 							? (chn.nPos - lookaheadStart)
 							: 2 * InterpolationMaxLookahead - (chn.nPos - lookaheadStart);
 						nSmpCount = SamplesToBufferLength(samplesToRead, chn);
-						Limit(nSmpCount, 1, oldCount);
+						Limit(nSmpCount, int32(1), oldCount);
 						chn.pCurrentSample = lookaheadPointer;
 					} else if(chn.nInc > 0 && chn.nPos + readLength >= lookaheadStart && nSmpCount > 1)
 					{
 						// We shouldn't read that far if we're not using the pre-computed wrap-around buffer.
 						const int32 oldCount = nSmpCount;
 						nSmpCount = SamplesToBufferLength(lookaheadStart - chn.nPos, chn);
-						Limit(nSmpCount, 1, oldCount - 1);
+						Limit(nSmpCount, int32(1), oldCount - 1);
 					}
 				}
 
@@ -505,7 +505,7 @@ void CSoundFile::ProcessPlugins(UINT nCount)
 			if (pState->dwFlags & SNDMIXPLUGINSTATE::psfMixReady)
 			{
 #ifdef MPT_INTMIXER
-				StereoMixToFloat(pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount, IntToFloat);
+				StereoMixToFloat((int32*)pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount, IntToFloat);
 #else
 				DeinterleaveStereo(pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount);
 #endif // MPT_INTMIXER
@@ -514,7 +514,7 @@ void CSoundFile::ProcessPlugins(UINT nCount)
 			{
 				StereoFill(pState->pMixBuffer, nCount, pState->nVolDecayR, pState->nVolDecayL);
 #ifdef MPT_INTMIXER
-				StereoMixToFloat(pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount, IntToFloat);
+				StereoMixToFloat((int32*)pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount, IntToFloat);
 #else
 				DeinterleaveStereo(pState->pMixBuffer, pState->pOutBufferL, pState->pOutBufferR, nCount);
 #endif // MPT_INTMIXER
@@ -528,7 +528,7 @@ void CSoundFile::ProcessPlugins(UINT nCount)
 	}
 	// Convert mix buffer
 #ifdef MPT_INTMIXER
-	StereoMixToFloat(MixSoundBuffer, MixFloatBuffer[0], MixFloatBuffer[1], nCount, IntToFloat);
+	StereoMixToFloat((int32*)MixSoundBuffer, MixFloatBuffer[0], MixFloatBuffer[1], nCount, IntToFloat);
 #else
 	DeinterleaveStereo(MixSoundBuffer, MixFloatBuffer[0], MixFloatBuffer[1], nCount);
 #endif // MPT_INTMIXER
@@ -618,7 +618,7 @@ void CSoundFile::ProcessPlugins(UINT nCount)
 		}
 	}
 #ifdef MPT_INTMIXER
-	FloatToStereoMix(pMixL, pMixR, MixSoundBuffer, nCount, FloatToInt);
+	FloatToStereoMix(pMixL, pMixR, (int32*)MixSoundBuffer, nCount, FloatToInt);
 #else
 	InterleaveStereo(pMixL, pMixR, MixSoundBuffer, nCount);
 #endif // MPT_INTMIXER

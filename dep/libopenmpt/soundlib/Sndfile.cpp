@@ -813,7 +813,11 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 		{
 			m_nType = MOD_TYPE_NONE;
 			m_ContainerType = MOD_CONTAINERTYPE_NONE;
+			if(loadFlags == onlyVerifyHeader)
+				return false;
 		}
+		if(loadFlags == onlyVerifyHeader)
+			return true;
 
 		if(packedContainerType != MOD_CONTAINERTYPE_NONE && m_ContainerType == MOD_CONTAINERTYPE_NONE)
 		{
@@ -835,6 +839,8 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 
 	} else
 	{
+		if(loadFlags == onlyVerifyHeader)
+			return false;
 		// New song
 		m_dwCreatedWithVersion = MptVersion::num;
 	}

@@ -72,6 +72,8 @@ inline int32  SwapBytesBE_(int32  value) { return bswap32be(value); }
 inline int16  SwapBytesBE_(int16  value) { return bswap16be(value); }
 inline int32  SwapBytesLE_(int32  value) { return bswap32le(value); }
 inline int16  SwapBytesLE_(int16  value) { return bswap16le(value); }
+inline uint32 SwapBytesBE_(int value) { return bswap32be(value); }
+inline uint32 SwapBytesLE_(int value) { return bswap32le(value); }
 
 // Do NOT remove these overloads, even if they seem useless.
 // We do not want risking to extend 8bit integers to int and then

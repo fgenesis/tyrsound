@@ -25,8 +25,7 @@
 
 #elif !defined(NO_MINIZ)
 
-#define MINIZ_HEADER_FILE_ONLY
-#include "miniz/miniz.c"
+#include "miniz.h"
 
 #endif
 

@@ -172,9 +172,9 @@ void std_ostream_log::log( const std::string & message ) const {
 
 class log_forwarder : public ILog {
 private:
-	std::shared_ptr<log_interface> destination;
+	log_interface *destination;
 public:
-	log_forwarder( std::shared_ptr<log_interface> dest ) : destination(dest) {
+	log_forwarder( log_interface *dest ) : destination(dest) {
 		return;
 	}
 	virtual ~log_forwarder() {
@@ -294,10 +294,10 @@ void module_impl::apply_libopenmpt_defaults() {
 	set_render_param( module::RENDER_STEREOSEPARATION_PERCENT, 100 );
 }
 void module_impl::init( const std::map< std::string, std::string > & ctls ) {
-	m_sndFile = std::unique_ptr<CSoundFile>(new CSoundFile());
-	m_Dither = std::unique_ptr<Dither>(new Dither());
-	m_LogForwarder = std::unique_ptr<log_forwarder>(new log_forwarder(m_Log));
-	m_sndFile->SetCustomLog( m_LogForwarder.get() );
+	m_LogForwarder = new log_forwarder(m_Log);
+	m_sndFile = new CSoundFile();
+	m_Dither = new Dither();
+	m_sndFile->SetCustomLog( m_LogForwarder );
 	m_currentPositionSeconds = 0.0;
 	m_Gain = 1.0f;
 	m_ctl_load_skip_samples = false;
@@ -322,7 +322,7 @@ void module_impl::load( const FileReader & file ) {
 	loader_log loaderlog;
 	m_sndFile->SetCustomLog( &loaderlog );
 	load( *m_sndFile, file );
-	m_sndFile->SetCustomLog( m_LogForwarder.get() );
+	m_sndFile->SetCustomLog( m_LogForwarder );
 	std::vector<std::pair<LogLevel,std::string> > loaderMessages = loaderlog.GetMessages();
 	for ( std::vector<std::pair<LogLevel,std::string> >::iterator i = loaderMessages.begin(); i != loaderMessages.end(); ++i ) {
 		PushToCSoundFileLog( i->first, i->second );
@@ -412,30 +412,30 @@ bool module_impl::is_extension_supported( const std::string & extension ) {
 	std::transform( lowercase_ext.begin(), lowercase_ext.end(), lowercase_ext.begin(), tolower );
 	return std::find( extensions.begin(), extensions.end(), lowercase_ext ) != extensions.end();
 }
-double module_impl::could_open_propability( std::istream & stream, double effort, std::shared_ptr<log_interface> log ) {
-	std::unique_ptr<CSoundFile> sndFile( new CSoundFile() );
-	std::unique_ptr<log_forwarder> logForwarder( new log_forwarder( log ) );
-	sndFile->SetCustomLog( logForwarder.get() );
+double module_impl::could_open_propability( std::istream & stream, double effort, log_interface *log ) {
+	CSoundFile sndFile;
+	log_forwarder logForwarder(log);
+	sndFile.SetCustomLog(&logForwarder);
 
 	try {
 
 		if ( effort >= 0.8 ) {
-			if ( !sndFile->Create( FileReader( &stream ), CSoundFile::loadCompleteModule ) ) {
+			if ( !sndFile.Create( FileReader( &stream ), CSoundFile::loadCompleteModule ) ) {
 				return 0.0;
 			}
-			sndFile->Destroy();
+			sndFile.Destroy();
 			return 1.0;
 		} else if ( effort >= 0.6 ) {
-			if ( !sndFile->Create( FileReader( &stream ), CSoundFile::loadNoPatternOrPluginData ) ) {
+			if ( !sndFile.Create( FileReader( &stream ), CSoundFile::loadNoPatternOrPluginData ) ) {
 				return 0.0;
 			}
-			sndFile->Destroy();
+			sndFile.Destroy();
 			return 0.8;
 		} else if ( effort >= 0.2 ) {
-			if ( !sndFile->Create( FileReader( &stream ), CSoundFile::onlyVerifyHeader ) ) {
+			if ( !sndFile.Create( FileReader( &stream ), CSoundFile::onlyVerifyHeader ) ) {
 				return 0.0;
 			}
-			sndFile->Destroy();
+			sndFile.Destroy();
 			return 0.6;
 		} else {
 			return 0.2;
@@ -447,38 +447,42 @@ double module_impl::could_open_propability( std::istream & stream, double effort
 
 }
 
-module_impl::module_impl( std::istream & stream, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+module_impl::module_impl( std::istream & stream, log_interface * log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
 	init( ctls );
 	load( FileReader( &stream ) );
 	apply_libopenmpt_defaults();
 }
-module_impl::module_impl( const std::vector<std::uint8_t> & data, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+module_impl::module_impl( const std::vector<std::uint8_t> & data, log_interface * log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
 	init( ctls );
-	load( FileReader( data.data(), data.size() ) );
+	load( FileReader( &data[0], data.size() ) );
 	apply_libopenmpt_defaults();
 }
-module_impl::module_impl( const std::vector<char> & data, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+module_impl::module_impl( const std::vector<char> & data, log_interface * log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
 	init( ctls );
-	load( FileReader( data.data(), data.size() ) );
+	load( FileReader( &data[0], data.size() ) );
 	apply_libopenmpt_defaults();
 }
-module_impl::module_impl( const std::uint8_t * data, std::size_t size, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
-	init( ctls );
-	load( FileReader( data, size ) );
-	apply_libopenmpt_defaults();
-}
-module_impl::module_impl( const char * data, std::size_t size, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+module_impl::module_impl( const std::uint8_t * data, std::size_t size, log_interface * log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
 	init( ctls );
 	load( FileReader( data, size ) );
 	apply_libopenmpt_defaults();
 }
-module_impl::module_impl( const void * data, std::size_t size, std::shared_ptr<log_interface> log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+module_impl::module_impl( const char * data, std::size_t size, log_interface * log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
+	init( ctls );
+	load( FileReader( data, size ) );
+	apply_libopenmpt_defaults();
+}
+module_impl::module_impl( const void * data, std::size_t size, log_interface *log, const std::map< std::string, std::string > & ctls ) : m_Log(log) {
 	init( ctls );
 	load( FileReader( data, size ) );
 	apply_libopenmpt_defaults();
 }
 module_impl::~module_impl() {
 	m_sndFile->Destroy();
+	delete m_sndFile;
+	delete m_Dither;
+	delete m_Log;
+	delete m_LogForwarder;
 }
 
 std::int32_t module_impl::get_render_param( int param ) const {

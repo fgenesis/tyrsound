@@ -4064,10 +4064,10 @@ void CSoundFile::ProcessMIDIMacro(CHANNELINDEX nChn, bool isSmooth, char *macro,
 			//data = (unsigned char)MIN((pChn->nCalcVolume * pChn->nGlobalVol * m_nGlobalVolume) >> (7 + 6 + 8), 127);
 		} else if(macro[pos] == 'x')		// x: pan set
 		{
-			data = (unsigned char)std::min(pChn->nPan / 2, 127);
+			data = (unsigned char)std::min<int32>(pChn->nPan / 2, 127);
 		} else if(macro[pos] == 'y')		// y: calculated pan
 		{
-			data = (unsigned char)std::min(pChn->nRealPan / 2, 127);
+			data = (unsigned char)std::min<int32>(pChn->nRealPan / 2, 127);
 		} else if(macro[pos] == 'a')		// a: high byte of bank select
 		{
 			if(pIns && pIns->wMidiBank)
