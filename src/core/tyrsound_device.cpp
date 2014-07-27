@@ -15,13 +15,23 @@ static DeviceBase *s_device = NULL;
 static void _applyDefaultFormat(tyrsound_Format& fmt)
 {
     fmt.sampleBits = 16;
-    fmt.bufferSize = 16 * 1024;
-    fmt.channels = 0;
+    fmt.channels = 2;
     fmt.hz = 44100;
-    fmt.numBuffers = 8;
     fmt.bigendian = isBigEndian();
     fmt.signedSamples = 1;
-    fmt.isfloat = 0; // -1: use float if possible
+    fmt.isfloat = -1; // -1: let device decide (device is expected to set this to either 0 or 1)
+}
+
+
+static void _fixFormat(tyrsound_Format& fmt)
+{
+    if(fmt.isfloat < 0) // if the device ignored this, assume it does not support float
+        fmt.isfloat = 0;
+    else if(fmt.isfloat)
+    {
+        fmt.sampleBits = sizeof(float) * 8;
+        fmt.signedSamples = -1; // irrelevant for float
+    }
 }
 
 TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo& di)
@@ -44,12 +54,19 @@ void shutdownDevice()
     }
 }
 
-bool initDevice(const char *name, const tyrsound_Format *fmt)
+bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_DeviceConfig *cfg)
 {
     if(fmt)
         s_format = *fmt;
     else
         _applyDefaultFormat(s_format);
+
+    tyrsound_DeviceConfig localCfg;
+    if(!cfg)
+    {
+        memset(&localCfg, 0, sizeof(*cfg));
+        cfg = &localCfg;
+    }
 
     const unsigned int numDevices = TYRSOUND_DEVICE_HOLDER::Size();
     for(size_t i = 0; i < numDevices; ++i)
@@ -58,10 +75,18 @@ bool initDevice(const char *name, const tyrsound_Format *fmt)
         // allow all devices except null device when name is not specified
         if((name && !strcmp(name, di.name)) || (!name && strcmp(di.name, "null")))
         {
-            s_device = di.factory->create(s_format);
+            tyrsound_Format usefmt = s_format;
+            tyrsound_DeviceConfig usecfg = *cfg;
+            s_device = di.factory->create(usefmt, usecfg); // may change format and then fail, so work on a copy
             if(s_device)
             {
+                s_format = usefmt;
+                _fixFormat(s_format);
                 tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "Using device: %s", di.name);
+                tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "  Format: rate=%d, bits=%d, channels=%d, bigendian=%d, signed=%d, float=%d",
+                    s_format.hz, s_format.sampleBits, s_format.channels, s_format.bigendian, s_format.signedSamples, s_format.isfloat);
+                tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "  Buffers: bufsize=%d, nbuf=%d playbackChannels=",
+                    usecfg.bufferSize, usecfg.numBuffers, usecfg.playbackChannels);
                 return true;
             }
             if(name) // when requesting a device by name and it failed, bail out

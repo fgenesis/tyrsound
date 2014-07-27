@@ -29,7 +29,6 @@ void shutdownDecoders()
         TYRSOUND_DECODER_HOLDER::Get(i)->staticShutdown();
 }
 
-
 static DecoderBase *createDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt, bool skipMagic)
 {
     const unsigned int numDecoders = TYRSOUND_DECODER_HOLDER::Size();
@@ -52,8 +51,10 @@ static DecoderBase *createDecoder(const tyrsound_Stream& strm, const tyrsound_Fo
     {
         if(skipMagic || TYRSOUND_DECODER_HOLDER::Get(i)->checkMagic(magic, magicsize))
         {
+            tyrsound_Format copy = fmt;
+            copy.isfloat = -fmt.isfloat; // decoder is expected to set this to positive if it supports float output
             // The first few bytes look okay, try to create the decoder
-            if(DecoderBase *decoder = TYRSOUND_DECODER_HOLDER::Get(i)->create(fmt, strm))
+            if(DecoderBase *decoder = TYRSOUND_DECODER_HOLDER::Get(i)->create(copy, strm))
                 return decoder;
 
             // Didn't work -- try next decoder, but make sure the stream is at the previous position

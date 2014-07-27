@@ -7,6 +7,10 @@ if(TYRSOUND_LARGEFILE_SUPPORT)
     add_definitions(-DTYRSOUND_LARGEFILE_SUPPORT)
 endif()
 
+if(TYRSOUND_USE_ALEXT)
+    add_definitions(-DTYRSOUND_USE_ALEXT)
+endif()
+
 message(STATUS "Including external dirs: ${INCLUDE_LIST}")
 include_directories("${INCLUDE_LIST}")
 

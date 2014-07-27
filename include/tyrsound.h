@@ -29,16 +29,23 @@ extern "C" {
 
 struct tyrsound_Format
 {
-    unsigned int hz;
-    unsigned int sampleBits;
-    unsigned int channels;
-    unsigned int bufferSize;
-    unsigned int bigendian;
-    unsigned int signedSamples;
-    unsigned int numBuffers;
-    unsigned int isfloat;
+    unsigned int hz;                /* sampling rate */
+    unsigned int sampleBits;        /* bits per sample (8 or 16. Automatically set to 32 if floating-point format is used) */
+    unsigned int channels;          /* 1 = mono, 2 = stereo */
+    unsigned int bigendian;         /* endianness of samples. Not relevant for 8 bit samples */
+    unsigned int signedSamples;     /* not relevant if floating-point format is used */
+             int isfloat;           /* use floating-point output? 0 = don't use, 1 = use if supported, -1 = let device decide */
 };
 typedef struct tyrsound_Format tyrsound_Format;
+
+struct tyrsound_DeviceConfig
+{
+    unsigned int bufferSize;        /* Size of one sample buffer in bytes */
+    unsigned int numBuffers;        /* Number of buffers used for playback */
+    unsigned int playbackChannels;  /* Total number of playback channels to allocate (can play this many sounds at once*/
+    const char *deviceName;         /* Name(s) of the output device to use. If Space-separated string, devices will be tried in that order. */
+};
+typedef struct tyrsound_DeviceConfig tyrsound_DeviceConfig;
 
 typedef unsigned int tyrsound_Handle;
 #define TYRSOUND_NULLHANDLE 0
@@ -140,13 +147,12 @@ typedef void (*tyrsound_MessageCallback)(tyrsound_MessageSeverity severity, cons
 *****************************/
 
 /* Startup the sound system.
- * fmt: Sets the format that should be used by tyrsound_init().
+ * fmt: Sets the format that should be used by the device.
  *      Pass NULL to use default parameters (might not work).
- * output: Space-separated list of output devices to try, in that order.
-           If "" or NULL is passed, try a default output device.
-           Currently supported: openal null
+ * cfg: Sets device parameters to use for the device.
+ *      Pass NULL to use defaults. Any fields in the struct that are 0/NULL will be set to default values.
 */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output);
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const tyrsound_DeviceConfig *cfg);
 
 /* Shuts down the sound system and resets the internal state.
  * Stops & clears all sounds still playing (but emits a warning if it does so).

@@ -54,16 +54,20 @@ int main(int argc, char **argv)
 {
     tyrsound_Format fmt;
     memset(&fmt, 0, sizeof(fmt));
+    tyrsound_DeviceConfig cfg;
+    memset(&cfg, 0, sizeof(cfg));
 
     fmt.sampleBits = 16;
-    fmt.bufferSize = 16 * 1024 + 1 * 1024; // use some weird buffer size
     fmt.channels = 0;
     fmt.hz = 44100;
-    fmt.numBuffers = 8;
     fmt.bigendian = 0;
     fmt.signedSamples = 1;
+    fmt.isfloat = 1;
 
-    if(tyrsound_init(&fmt, NULL) != TYRSOUND_ERR_OK)
+    cfg.bufferSize = 16 * 1024 + 1 * 1024; // use some weird buffer size
+    cfg.numBuffers = 8;
+
+    if(tyrsound_init(&fmt, &cfg) != TYRSOUND_ERR_OK)
     {
         printf("Failed to init tyrsound.\n");
         return 1;
@@ -71,6 +75,7 @@ int main(int argc, char **argv)
 
     tyrsound_getFormat(&fmt);
 
+    playSecs("test.s3m", 2);
     playSecs("test.mod", 2);
     playSecs("test.wav", 2);
     playSecs("test.flac", 2);

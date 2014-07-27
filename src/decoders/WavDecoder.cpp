@@ -34,6 +34,7 @@ WavDecoder::WavDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt, 
 {
     _totaltime = (datasize / fmt.channels) / (float)fmt.hz;
     _totaltime /= (fmt.sampleBits / 8);
+    _fmt.isfloat = 0;
 }
 
 WavDecoder::~WavDecoder()
@@ -94,10 +95,10 @@ WavDecoder *WavDecoder::create(const tyrsound_Format& /*unused*/, const tyrsound
 
 size_t WavDecoder::fillBuffer(void *buf, size_t size)
 {
-    tyrsound_uint64 total = 0;
+    size_t total = 0;
     while(!_eof && total < size)
     {
-        tyrsound_uint64 rd = _strm.read(buf, 1, size, _strm.user);
+        size_t rd = (size_t)_strm.read((char*)buf + total, 1, size - total, _strm.user);
         if(!rd)
         {
             if(!_loopCount || _loopPoint < 0)
@@ -120,7 +121,7 @@ size_t WavDecoder::fillBuffer(void *buf, size_t size)
         }
         total += rd;
     }
-    return (size_t)total;
+    return total;
 }
 
 float WavDecoder::getLength()

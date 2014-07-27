@@ -8,47 +8,11 @@
 #include "tyrsound_begin.h"
 
 #if TYRSOUND_IS_DEBUG
-#  define CHECK_AL() do { ALint err_ = alGetError(); if(err_ != AL_NO_ERROR) breakpoint(); } while(0)
+#  define CHECK_AL() do { ALint err_ = alGetError(); if(err_ != AL_NO_ERROR) {tyrsound_ex_messagef(TYRSOUND_MSG_ERROR, "AL error %d (0x%x)", err_, err_); breakpoint();} } while(0)
 #else
 #  define CHECK_AL()
 #endif
 
-static ALenum getALFormat(const tyrsound_Format& fmt, unsigned int *bytesPerSample)
-{
-    ALint alformat = -1;
-    unsigned int bps = 0;
-    switch(fmt.channels)
-    {
-        case 1:
-            if(fmt.sampleBits <= 8)
-            {
-                alformat = AL_FORMAT_MONO8;
-                bps = 1;
-            }
-            else
-            {
-                alformat = AL_FORMAT_MONO16;
-                bps = 2;
-            }
-        break;
-
-        case 2:
-            if(fmt.sampleBits <= 8)
-            {
-                alformat = AL_FORMAT_STEREO8;
-                bps = 2;
-            }
-            else
-            {
-                alformat = AL_FORMAT_STEREO16;
-                bps = 4;
-            }
-        break;
-    }
-    if(bytesPerSample)
-        *bytesPerSample = bps;
-    return alformat;
-}
 
 OpenALChannel::OpenALChannel(OpenALDevice *dev)
 : _aldev(dev)
@@ -71,7 +35,7 @@ OpenALChannel::~OpenALChannel()
 {
     stop();
     if(_bid)
-        alDeleteBuffers(_aldev->_fmt.numBuffers, _bid);
+        alDeleteBuffers(_aldev->_cfg.numBuffers, _bid);
     alDeleteSources(1, &_sid);
     Free(_bid);
     Free(_pcmbuf);
@@ -110,7 +74,7 @@ void OpenALChannel::setInitialALValues()
 tyrsound_Error OpenALChannel::genBuffers()
 {
     ALenum err = AL_NO_ERROR;
-    unsigned int numBuf = _aldev->_fmt.numBuffers;
+    unsigned int numBuf = _aldev->_cfg.numBuffers;
     if(!_bid)
     {
         _numBuffers = 0;
@@ -127,7 +91,7 @@ tyrsound_Error OpenALChannel::genBuffers()
     if(!_pcmbuf)
     {
         _pcmbufsize = 0;
-        size_t pcmSize = _aldev->_fmt.bufferSize;
+        size_t pcmSize = _aldev->_cfg.bufferSize;
         if(!pcmSize)
             pcmSize = 16 * 1024;
         _pcmbuf = (char*)Alloc(pcmSize);
@@ -193,7 +157,7 @@ tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& f
     if (size > 0)
     {
         unsigned int bytesPerSample = 0;
-        ALenum alformat = getALFormat(fmt, &bytesPerSample);
+        ALenum alformat = OpenALDevice::getALFormat(fmt, &bytesPerSample);
         if(alformat < 0)
         {
             breakpoint();

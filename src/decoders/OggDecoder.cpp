@@ -3,6 +3,7 @@
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
 #include <string.h>
+#include <algorithm>
 
 #include "tyrsound_begin.h"
 
@@ -71,6 +72,10 @@ OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
     _fmt.channels = vi->channels;
     _fmt.hz = vi->rate;
     _fmt.sampleBits = bits;
+
+    // This decoder suppots float output
+    if(_fmt.isfloat)
+        _fmt.isfloat = 1;
 }
 
 OggDecoder::~OggDecoder()
@@ -78,6 +83,7 @@ OggDecoder::~OggDecoder()
     // Stream is closed by ov_clear()
     ov_clear(&((OggDecoderState*)_state)->vf);
     Free(_state);
+
 }
 
 OggDecoder *OggDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
@@ -113,12 +119,25 @@ OggDecoder *OggDecoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
 size_t OggDecoder::fillBuffer(void *buf, size_t size)
 {
     OggDecoderState *state = (OggDecoderState*)_state;
-    char *dst = (char*)buf;
     int dummy;
     size_t totalRead = 0;
     while(totalRead < size)
     {
-        long bytesRead = ov_read(&state->vf, dst + totalRead, size - totalRead, _fmt.bigendian, _sampleWordSize, _fmt.signedSamples, &dummy);
+        long bytesRead = 0;
+        if(_fmt.isfloat)
+        {
+            float **channelp;
+            const int bytesPerSample = sizeof(float) * _fmt.channels;
+            const int sampleSpace = (size - totalRead) / bytesPerSample;
+            const long samplesRead = ov_read_float(&state->vf, &channelp, sampleSpace, &dummy);
+            bytesRead = bytesPerSample * samplesRead;
+            tyrsound_T_streamsToInterleaved((float*)(((char*)buf) + totalRead), channelp, samplesRead, _fmt.channels);
+        }
+        else
+        {
+            bytesRead = ov_read(&state->vf, ((char*)buf) + totalRead, size - totalRead, _fmt.bigendian, _sampleWordSize, _fmt.signedSamples, &dummy);
+        }
+
         if(bytesRead < 0)
             break;
         else if(bytesRead == 0)

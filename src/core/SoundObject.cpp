@@ -6,6 +6,19 @@
 
 #include "tyrsound_begin.h"
 
+
+static void _fixDecoderFormat(tyrsound_Format& fmt)
+{
+    if(fmt.isfloat < 0) // if the decoder ignored -1, assume it does not support float
+        fmt.isfloat = 0;
+    else if(fmt.isfloat)
+    {
+        fmt.sampleBits = sizeof(float) * 8;
+        fmt.signedSamples = -1; // irrelevant for float
+    }
+}
+
+
 SoundObject *SoundObject::create(DecoderBase *decoder)
 {
     void *p = Alloc(sizeof(SoundObject));
@@ -60,6 +73,7 @@ void SoundObject::_decode()
             size_t filled = _decoder->fillBuffer(buf, size);
             tyrsound_ex_messagef(TYRSOUND_MSG_SPAM, "Decoded %u bytes", (unsigned int)filled);
             _decoder->getFormat(&fmt);
+            _fixDecoderFormat(fmt);
             tyrsound_Error err = _channel->filledBuffer(filled, fmt);
             if(err != TYRSOUND_ERR_OK)
             {

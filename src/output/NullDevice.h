@@ -9,6 +9,8 @@ class NullChannel;
 
 class NullDevice : public DeviceBase
 {
+    friend class NullChannel;
+
 protected:
     NullDevice();
     virtual ~NullDevice();
@@ -16,7 +18,7 @@ protected:
     bool _allocateChannels(unsigned int num);
 
 public:
-    static NullDevice *create(tyrsound_Format& fmt);
+    static NullDevice *create(tyrsound_Format& fmt, tyrsound_DeviceConfig& cfg);
 
     virtual tyrsound_Error setVolume(float vol);
     virtual tyrsound_Error setSpeed(float speed);
@@ -31,6 +33,7 @@ private:
     NullChannel **_channels;
     unsigned int _numChannels;
     tyrsound_Format _fmt;
+    tyrsound_DeviceConfig _cfg;
     Mutex _channelLock;
 };
 

@@ -38,8 +38,12 @@ int main(int argc, char **argv)
     if(argc >= 4)
         maxtime = (float)strtod(argv[3], NULL);
 
+    tyrsound_DeviceConfig cfg;
+    memset(&cfg, 0, sizeof(cfg));
+    cfg.deviceName = "null";
+
     /* Don't need an actual audio device, use the nulldevice */
-    if(tyrsound_init(NULL, "null") != TYRSOUND_ERR_OK)
+    if(tyrsound_init(NULL, &cfg) != TYRSOUND_ERR_OK)
     {
         printf("Failed to init tyrsound.\n");
         return 1;

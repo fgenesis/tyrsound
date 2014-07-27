@@ -17,7 +17,7 @@ protected:
     ~NullChannel();
 
 public:
-    static NullChannel *create(const tyrsound_Format& fmt);
+    static NullChannel *create(NullDevice *dev, const tyrsound_Format& fmt);
 
     virtual tyrsound_Error prepare() { return TYRSOUND_ERR_OK; }
     virtual tyrsound_Error setVolume(float vol);
@@ -36,6 +36,7 @@ public:
 
 protected:
     void *_buffer;
+    NullDevice *_dev;
     size_t _bufsize;
     bool _playing;
     bool _wantData;

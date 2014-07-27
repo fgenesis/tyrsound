@@ -240,15 +240,25 @@ Mp3Decoder *Mp3Decoder::create(const tyrsound_Format& fmt, tyrsound_Stream strm)
                     encoding = mp3fmt.signedSamples ? MPG123_ENC_SIGNED_16 : MPG123_ENC_UNSIGNED_16;
                     break;
                 default:
-                    encoding = MPG123_ENC_SIGNED_16; // try to enforce this
-                    encsize = 2;
+                    if(mp3fmt.isfloat && encsize == sizeof(float) && (encoding & MPG123_ENC_FLOAT))
+                    {
+                        encoding = MPG123_ENC_FLOAT_32;
+                    }
+                    else
+                    {
+                        encoding = MPG123_ENC_SIGNED_16; // try to enforce this
+                        encsize = 2;
+                    }
             }
+            if(!mp3fmt.isfloat)
+                encoding &= ~MPG123_ENC_FLOAT;
             if(err == MPG123_OK)
             {
                 mp3fmt.bigendian = isBigEndian(); // mpg123 returns samples in native endian, so runtime-detect this
                 mp3fmt.channels = channels;
                 mp3fmt.hz = rate;
                 mp3fmt.sampleBits = 8 * encsize;
+                mp3fmt.isfloat = !!(encoding & MPG123_ENC_FLOAT);
                 
                 /* Ensure that this output format will not change (it could, when we allow it). */
                 funcs.mpg123_format_none(state->mh);

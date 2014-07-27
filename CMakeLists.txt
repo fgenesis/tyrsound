@@ -18,7 +18,8 @@ option(TYRSOUND_OUTPUT_OPENAL "Use OpenAL for output?" TRUE)
 
 
 if(TYRSOUND_OUTPUT_OPENAL)
-    OPTION(TYRSOUND_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
+    option(TYRSOUND_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
+    option(TYRSOUND_USE_ALEXT "Use OpenAL extensions?" TRUE)
     if(NOT TYRSOUND_INTERNAL_OPENAL)
         find_package(OpenAL)
     endif()

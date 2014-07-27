@@ -61,10 +61,11 @@ ModDecoder::ModDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 , _loopCount(0)
 , _eof(false)
 {
-    _fmt.bigendian = false;
-    _fmt.signedSamples = true;
+    _fmt.bigendian = 0;
+    _fmt.signedSamples = 1;
     _fmt.sampleBits = 16;
-    _fmt.channels = 2;
+    if(_fmt.isfloat)
+        _fmt.isfloat = 1;
 }
 
 ModDecoder::~ModDecoder()
@@ -99,13 +100,48 @@ fail:
     return NULL;
 }
 
+// returns number of bytes read
+size_t ModDecoder::_readSamples(void *buf, size_t size)
+{
+    size_t rd = 0;
+    openmpt_module *mod = (openmpt_module*)_mod;
+    if(_fmt.isfloat)
+    {
+        switch(_fmt.channels)
+        {
+            case 1:
+                rd = 4*openmpt_module_read_float_mono(mod, _fmt.hz, size/4, (float*)buf);
+                break;
+            case 2:
+                rd = 8*openmpt_module_read_interleaved_float_stereo(mod, _fmt.hz, size/8, (float*)buf);
+                break;
+            default:
+                rd = 16*openmpt_module_read_interleaved_float_quad(mod, _fmt.hz, size/16, (float*)buf);
+        }
+    }
+    else
+    {
+        switch(_fmt.channels)
+        {
+        case 1:
+            rd = 2*openmpt_module_read_mono(mod, _fmt.hz, size/2, (int16_t*)buf);
+            break;
+        case 2:
+            rd = 4*openmpt_module_read_interleaved_stereo(mod, _fmt.hz, size/4, (int16_t*)buf);
+            break;
+        default:
+            rd = 8*openmpt_module_read_interleaved_quad(mod, _fmt.hz, size/8, (int16_t*)buf);
+        }
+    }
+    return rd;
+}
+
 size_t ModDecoder::fillBuffer(void *buf, size_t size)
 {
-    size /= 4; // openmpt expects #samples (which are set to 16 bits)
-    tyrsound_uint64 total = 0;
+    size_t total = 0;
     while(!_eof && total < size)
     {
-        size_t rd = openmpt_module_read_interleaved_stereo((openmpt_module*)_mod, _fmt.hz, size, (int16_t*)buf);
+        size_t rd = (size_t)_readSamples((char*)buf + total, size - total);
         if(!rd)
         {
             if(!_loopCount || _loopPoint < 0)
@@ -128,7 +164,7 @@ size_t ModDecoder::fillBuffer(void *buf, size_t size)
         }
         total += rd;
     }
-    return (size_t)total * 4;
+    return total;
 }
 
 float ModDecoder::getLength()

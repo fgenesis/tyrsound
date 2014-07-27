@@ -29,6 +29,7 @@ public:
     virtual void getFormat(tyrsound_Format *fmt);
 
 protected:
+    size_t _readSamples(void *buf, size_t size);
     void *_mod;
     tyrsound_Stream _strm;
     tyrsound_Format _fmt;

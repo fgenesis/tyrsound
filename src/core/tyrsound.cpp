@@ -105,7 +105,7 @@ TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity severity,
     }
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const char *output)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, const tyrsound_DeviceConfig *cfg)
 {
     if(tyrsound::getDevice())
     {
@@ -118,10 +118,11 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
 #endif
 
     bool haveDevice = false;
+    const char *output = cfg ? cfg->deviceName : NULL;
 
     if(!output || !*output)
     {
-        haveDevice = tyrsound::initDevice(NULL, fmt);
+        haveDevice = tyrsound::initDevice(NULL, fmt, cfg);
     }
     else
     {
@@ -134,8 +135,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
             memcpy(buf, prev, len);
             buf[len+1] = 0;
             prev = next + 1;
-
-            if(tyrsound::initDevice(&buf[0], fmt))
+            if(tyrsound::initDevice(&buf[0], fmt, cfg))
             {
                 haveDevice = true;
                 break;

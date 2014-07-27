@@ -15,7 +15,7 @@ class SoundObject;
 
 // in tyrsound_device.cpp
 DeviceBase *getDevice();
-bool initDevice(const char *name, const tyrsound_Format *fmt);
+bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_DeviceConfig *cfg);
 void shutdownDevice();
 
 // in tyrsound_sound.cpp
@@ -62,6 +62,77 @@ private:
     T _data[SZ];
     size_t _idx;
 };
+
+template<typename T> void tyrsound_T_streamsToInterleaved(T *out, T * const * const channels, size_t nsamples, unsigned nchan)
+{
+    switch(nchan)
+    {
+        case 1:
+            memcpy(out, channels[0], sizeof(T) * nsamples);
+            break;
+        case 2:
+        {
+            const T * const ch0 = channels[0];
+            const T * const ch1 = channels[1];
+            for (size_t i = 0; i < nsamples; i++)
+            {
+                *out++ = ch0[i];
+                *out++ = ch1[i];
+            }
+            break;
+        }
+        case 3:
+        {
+            const T * const ch0 = channels[0];
+            const T * const ch1 = channels[1];
+            const T * const ch2 = channels[2];
+            for (size_t i = 0; i < nsamples; i++)
+            {
+                *out++ = ch0[i];
+                *out++ = ch1[i];
+                *out++ = ch2[i];
+            }
+            break;
+        }
+        case 4:
+        {
+            const T * const ch0 = channels[0];
+            const T * const ch1 = channels[1];
+            const T * const ch2 = channels[2];
+            const T * const ch3 = channels[3];
+            for (size_t i = 0; i < nsamples; i++)
+            {
+                *out++ = ch0[i];
+                *out++ = ch1[i];
+                *out++ = ch2[i];
+                *out++ = ch3[i];
+            }
+            break;
+        }
+        case 5:
+        {
+            const T * const ch0 = channels[0];
+            const T * const ch1 = channels[1];
+            const T * const ch2 = channels[2];
+            const T * const ch3 = channels[3];
+            const T * const ch4 = channels[4];
+            for (size_t i = 0; i < nsamples; i++)
+            {
+                *out++ = ch0[i];
+                *out++ = ch1[i];
+                *out++ = ch2[i];
+                *out++ = ch3[i];
+                *out++ = ch4[i];
+            }
+            break;
+        }
+        default:
+            for (size_t i = 0; i < nsamples; i++)
+                for(unsigned c = 0; c < nchan; ++c)
+                    *out++ = channels[c][i];
+            break;
+    }
+}
 
 
 #include "tyrsound_end.h"

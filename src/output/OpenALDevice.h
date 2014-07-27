@@ -19,13 +19,13 @@ class OpenALDevice : public DeviceBase
     };
 
 protected:
-    OpenALDevice(const tyrsound_Format& fmt, void *dev, void *ctx);
+    OpenALDevice(const tyrsound_Format& fmt, const tyrsound_DeviceConfig& cfg, void *dev, void *ctx);
     virtual ~OpenALDevice();
 
     bool _allocateChannels();
 
 public:
-    static OpenALDevice *create(tyrsound_Format& fmt);
+    static OpenALDevice *create(tyrsound_Format& fmt, tyrsound_DeviceConfig& cfg);
 
     virtual tyrsound_Error setVolume(float vol);
     virtual tyrsound_Error setSpeed(float speed);
@@ -36,9 +36,13 @@ public:
     virtual void retainChannel(ChannelBase *);
 
 private:
+    // Used by OpenALChannel
+    static int getALFormat(const tyrsound_Format& fmt, unsigned int *bytesPerSample); // ALEnum
+
     void *_dev; // ALCdevice
     void *_ctx; // ALCcontext
     tyrsound_Format _fmt;
+    tyrsound_DeviceConfig _cfg;
     OpenALChannel *_channels;
     ChannelStatus *_chStatus;
     unsigned int _channelsAllocated;

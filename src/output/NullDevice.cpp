@@ -20,8 +20,17 @@ NullDevice::~NullDevice()
     Free(_channels);
 }
 
-NullDevice *NullDevice::create(tyrsound_Format& fmt)
+NullDevice *NullDevice::create(tyrsound_Format& fmt, tyrsound_DeviceConfig& cfg)
 {
+    if(!cfg.playbackChannels)
+        cfg.playbackChannels = 16;
+    if(!cfg.bufferSize)
+        cfg.bufferSize = 1024 * 16;
+    if(!fmt.channels)
+        fmt.channels = 2;
+    if(!fmt.hz)
+        fmt.hz = 44100;
+
     void *mem = Alloc(sizeof(NullDevice));
     if(!mem)
         return NULL;
@@ -29,8 +38,9 @@ NullDevice *NullDevice::create(tyrsound_Format& fmt)
     NullDevice *dev = new(mem) NullDevice();
 
     dev->_fmt = fmt;
+    dev->_cfg = cfg;
 
-    if(!dev->_allocateChannels(fmt.channels ? fmt.channels : 16))
+    if(!dev->_allocateChannels(fmt.channels))
     {
         dev->destroy();
         return NULL;
@@ -81,7 +91,7 @@ ChannelBase *NullDevice::reserveChannel()
         void *mem = Alloc(sizeof(NullChannel));
         if(!mem)
             return NULL;
-        NullChannel *chan = NullChannel::create(_fmt);
+        NullChannel *chan = NullChannel::create(this, _fmt);
         _channels[freeSlot] = chan;
         return chan;
     }
