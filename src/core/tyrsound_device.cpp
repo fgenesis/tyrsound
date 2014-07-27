@@ -85,7 +85,7 @@ bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_Dev
                 tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "Using device: %s", di.name);
                 tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "  Format: rate=%d, bits=%d, channels=%d, bigendian=%d, signed=%d, float=%d",
                     s_format.hz, s_format.sampleBits, s_format.channels, s_format.bigendian, s_format.signedSamples, s_format.isfloat);
-                tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "  Buffers: bufsize=%d, nbuf=%d playbackChannels=",
+                tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "  Config: bufsize=%d, nbuf=%d, playbackChannels=%d",
                     usecfg.bufferSize, usecfg.numBuffers, usecfg.playbackChannels);
                 return true;
             }
