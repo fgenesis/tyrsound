@@ -3,6 +3,7 @@ add_definitions(-DLIBOPENMPT_BUILD)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions("-fexceptions")
+    add_definitions("-std=c++11")
 endif()
 if(MSVC)
     add_definitions("/EHsc")

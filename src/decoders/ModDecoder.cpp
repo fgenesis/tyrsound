@@ -78,12 +78,13 @@ ModDecoder::~ModDecoder()
 
 ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
 {
-
+    ModDecoder *decode = NULL;
+    
     void *mem = Alloc(sizeof(ModDecoder));
     if(!mem)
         goto fail;
 
-    ModDecoder *decode = new(mem) ModDecoder(strm, fmt);
+    decode = new(mem) ModDecoder(strm, fmt);
     if(!decode)
         goto fail;
 
