@@ -24,6 +24,8 @@ void *dynopen(const char *fn)
     memcpy(s + len, ".so\0", 4);
     h = (void*)dlopen(s, RTLD_NOW | RTLD_LOCAL);
 #endif
+    // TODO: .dylib
+
     Free(s);
     return h;
 }

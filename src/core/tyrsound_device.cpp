@@ -19,18 +19,16 @@ static void _applyDefaultFormat(tyrsound_Format& fmt)
     fmt.hz = 44100;
     fmt.bigendian = isBigEndian();
     fmt.signedSamples = 1;
-    fmt.isfloat = -1; // -1: let device decide (device is expected to set this to either 0 or 1)
+    fmt.isfloat = 0;
 }
 
 
 static void _fixFormat(tyrsound_Format& fmt)
 {
-    if(fmt.isfloat < 0) // if the device ignored this, assume it does not support float
-        fmt.isfloat = 0;
-    else if(fmt.isfloat)
+    if(fmt.isfloat)
     {
         fmt.sampleBits = sizeof(float) * 8;
-        fmt.signedSamples = -1; // irrelevant for float
+        fmt.signedSamples = 1; // irrelevant for float
     }
 }
 

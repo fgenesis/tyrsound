@@ -116,6 +116,8 @@ size_t OpusDecoder::fillBuffer(void *buf, size_t size)
     // FIXME: From the manual: "The number of channels returned can change from link to link in a chained stream."
     // need to pass tyrsound_Format ptr along with fillBuffer() instead of querying it externally everytime
 
+    // TODO: support float samples
+
     while(totalSamplesRead < samplesTodo)
     {
         // op_read() returns samples PER CHANNEL

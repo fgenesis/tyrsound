@@ -20,7 +20,7 @@ RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
         tyrsound_int64 rem = _strm.remain(_strm.user);
         if(rem >= 0)
         {
-            _totaltime = (rem / fmt.channels) / (float)fmt.hz;
+            _totaltime = (rem / fmt.channels) / (float)fmt.hz; // FIXME: probably not correct
             _totaltime /= (fmt.sampleBits / 8);
         }
     }
@@ -81,7 +81,7 @@ tyrsound_Error RawDecoder::seek(float seconds)
 {
     if(_strm.seek)
     {
-        int err = _strm.seek(_strm.user, tyrsound_int64(seconds * 1000), SEEK_SET);
+        int err = _strm.seek(_strm.user, tyrsound_int64(1000.0 * _fmt.hz * _fmt.channels * seconds), SEEK_SET);
         if(!err)
         {
             _eof = false;
@@ -99,7 +99,7 @@ float RawDecoder::tell()
         tyrsound_int64 pos = _strm.tell(_strm.user);
         if(pos > 0)
         {
-            float pf = float(pos / _fmt.channels);
+            float pf = float(pos / _fmt.channels); // FIXME: probably not correct
             return pf / (_fmt.sampleBits / 8);
         }
     }

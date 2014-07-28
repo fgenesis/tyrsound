@@ -27,6 +27,7 @@ int main(int argc, char **argv)
         return 1;
 
     /* Format of the bytebeat tune */
+    memset(&fmt, 0, sizeof(fmt));
     fmt.sampleBits = 8;
     fmt.signedSamples = 0;
     fmt.hz = 8000; // 32000

@@ -438,7 +438,7 @@ float FlacDecoder::getLength()
 
 float FlacDecoder::tell()
 {
-    return -1; //(float)ov_time_tell(&((FlacDecoderState*)_state)->vf);
+    return -1; //(float)ov_time_tell(&((FlacDecoderState*)_state)->vf); // FIXME
 }
 
 bool FlacDecoder::isEOF()

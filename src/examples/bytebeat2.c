@@ -99,6 +99,7 @@ int main(int argc, char **argv)
     strm.user = &bbs;
 
     /* This is the format that the bytebeat generator outputs */
+    memset(&fmt, 0, sizeof(fmt));
     fmt.sampleBits = 8;
     fmt.signedSamples = 0;
     fmt.hz = 32000;

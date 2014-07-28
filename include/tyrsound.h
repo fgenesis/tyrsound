@@ -42,7 +42,7 @@ struct tyrsound_DeviceConfig
 {
     unsigned int bufferSize;        /* Size of one sample buffer in bytes */
     unsigned int numBuffers;        /* Number of buffers used for playback */
-    unsigned int playbackChannels;  /* Total number of playback channels to allocate (can play this many sounds at once*/
+    unsigned int playbackChannels;  /* Total number of playback channels to allocate (can play this many sounds at once) */
     const char *deviceName;         /* Name(s) of the output device to use. If Space-separated string, devices will be tried in that order. */
 };
 typedef struct tyrsound_DeviceConfig tyrsound_DeviceConfig;
@@ -285,8 +285,12 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle, float x
 /* Returns the total play time in seconds. < 0 if unknown. */
 TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle);
 
-/* Seeks to a position in the stream (in seconds). */
+/* Seeks the decoder to a position in the stream (in seconds). Will continue to play already buffered data. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle, float seconds);
+
+// TODO: WRITE ME
+/* Immediately seeks to a position in the stream (in seconds). Throws away any buffered data. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seekNow(tyrsound_Handle, float seconds);
 
 /* When the decoder hits stream EOF, seek back to position
  *    seconds: -1 to disable looping, any value >= 0 to seek to.
