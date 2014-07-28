@@ -2128,7 +2128,7 @@ void ReadFieldCast(FileReader &chunk, std::size_t size, T &field)
 //---------------------------------------------------------------
 {
 	STATIC_ASSERT(sizeof(T) <= sizeof(int));
-	field = static_cast<T>(chunk.ReadSizedIntLE<int>(size));
+	field = static_cast<T>(chunk.ReadSizedIntLE<int32>(size));
 }
 
 
