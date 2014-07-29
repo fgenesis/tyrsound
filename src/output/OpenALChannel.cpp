@@ -132,6 +132,7 @@ void OpenALChannel::update()
     switch(state)
     {
         case AL_STOPPED:
+            tyrsound_ex_messagef(TYRSOUND_MSG_DEBUG, "OpenALChannel: Playback starved (sid = %x)", _sid);
             stop();
             break;
         case AL_INITIAL:
@@ -288,6 +289,11 @@ tyrsound_Error OpenALChannel::stop()
 bool OpenALChannel::isPlaying()
 {
     return _playing && !_paused;
+}
+
+bool OpenALChannel::isStopped()
+{
+    return !_inUse;
 }
 
 tyrsound_Error OpenALChannel::setPosition(float x, float y, float z)

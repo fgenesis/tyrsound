@@ -34,9 +34,18 @@ extern "C" {
 TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
     if(tyrsound::s_alloc)
-        return tyrsound::s_alloc(ptr, size, tyrsound::s_alloc_user);
+        ptr = tyrsound::s_alloc(ptr, size, tyrsound::s_alloc_user);
+    else
+        ptr = realloc(ptr, size);
 
-    return realloc(ptr, size);
+    if(!ptr && size)
+    {
+        // Intentionally send 2 messages, in case the formatting tries to alloc
+        tyrsound_ex_message (TYRSOUND_MSG_ERROR, "Out of memory?");
+        tyrsound_ex_messagef(TYRSOUND_MSG_ERROR, "  Allocation of %u bytes failed!", (unsigned)size);
+    }
+
+    return ptr;
 }
 
 TYRSOUND_DLL_EXPORT int tyrsound_ex_hasMT()

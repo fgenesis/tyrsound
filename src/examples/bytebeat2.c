@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     /* Create sound from stream */
     handle = tyrsound_loadRawStream(strm, &fmt);
 
-    if(handle == TYRSOUND_NULLHANDLE)
+    if(handle == TYRSOUND_NULL_SOUND)
         return 2;
 
     /* Start playing; the stream will generate samples in background as required. */

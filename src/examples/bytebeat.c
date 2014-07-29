@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     handle = tyrsound_loadRawBuffer(buf, samples * fmt.channels, &fmt);
     free(buf); /* No longer needed */
 
-    if(handle == TYRSOUND_NULLHANDLE)
+    if(handle == TYRSOUND_NULL_SOUND)
         return 2;
 
     /* Play until the end of the buffer is reached. */

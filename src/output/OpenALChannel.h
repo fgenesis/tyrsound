@@ -30,6 +30,7 @@ public:
     virtual tyrsound_Error pause();
     virtual tyrsound_Error prepare();
     virtual bool isPlaying();
+    virtual bool isStopped();
 
     virtual bool wantData();
     virtual void getBuffer(void **buf, size_t *size);

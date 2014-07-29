@@ -23,7 +23,7 @@ static void usage(const char *self)
 int main(int argc, char **argv)
 {
     tyrsound_Format fmt;
-    tyrsound_Handle handle;
+    tyrsound_Sound sound;
     tyrsound_Stream strm;
     int ret = 0;
 
@@ -89,8 +89,8 @@ int main(int argc, char **argv)
     strm.close = NULL;
 
     /* Create sound from stream */
-    handle = tyrsound_loadRawStream(strm, &fmt);
-    if(handle == TYRSOUND_NULLHANDLE)
+    sound = tyrsound_loadRawStream(strm, &fmt);
+    if(sound == TYRSOUND_NULL_SOUND)
     {
         fputs("Failed to load stream", stderr);
         ret = 1;
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     }
 
     /* Start playing; the stream will generate samples in background as required. */
-    if(tyrsound_play(handle) != TYRSOUND_ERR_OK)
+    if(tyrsound_play(sound) != TYRSOUND_ERR_OK)
     {
         fputs("Failed to start playback", stderr);
         ret = 1;
@@ -106,16 +106,16 @@ int main(int argc, char **argv)
     }
 
     /* Play until stream ends */
-    while(tyrsound_isPlaying(handle))
+    while(tyrsound_isPlaying(sound))
     {
-        printf("At %.2f   \r", tyrsound_getPlayPosition(handle));
+        printf("At %.2f   \r", tyrsound_getPlayPosition(sound));
         tyrsound_update();
     }
 
 end:
 
-    if(handle != TYRSOUND_NULLHANDLE)
-        tyrsound_unload(handle);
+    if(sound != TYRSOUND_NULL_SOUND)
+        tyrsound_unload(sound);
 
     tyrsound_shutdown();
 

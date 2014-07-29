@@ -29,8 +29,14 @@ set(src_core
     core/tyrsound_sound.cpp
     core/tyrsound_misc.cpp
     core/tyrsound_dyn.cpp
+    core/tyrsound_group.cpp
+    core/BasicClasses.h
     core/SoundObject.h
     core/SoundObject.cpp
+    core/ChannelGroup.h
+    core/ChannelGroup.cpp
+    core/ObjectStore.h
+    core/ObjectStore.cpp
 )
 
 set(src_headers

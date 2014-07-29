@@ -9,6 +9,13 @@
 
 #include "tyrsound_begin.h"
 
+enum Type
+{
+    TY_SOUND,
+    TY_GROUP,
+    TY_EFFECT
+}; // type id must not exceed 7 (see HandleBits)
+
 // Definitions
 class SoundObject;
 
@@ -19,7 +26,7 @@ bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_Dev
 void shutdownDevice();
 
 // in tyrsound_sound.cpp
-tyrsound_Handle registerSoundObject(SoundObject *);
+tyrsound_Sound registerSoundObject(SoundObject *);
 void registerUpdate(SoundObject *);
 void unregisterUpdate(SoundObject *);
 tyrsound_Error initSounds();

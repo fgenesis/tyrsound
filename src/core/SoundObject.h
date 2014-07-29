@@ -1,11 +1,15 @@
 #ifndef TYRSOUND_SOUNDOBJECT_H
 #define TYRSOUND_SOUNDOBJECT_H
+
+#include "BasicClasses.h"
+
 #include "tyrsound_begin.h"
+
 
 class DecoderBase;
 class ChannelBase;
 
-class SoundObject
+class SoundObject : public Referenced, public Playable
 {
 protected:
     SoundObject(DecoderBase *decoder);
@@ -15,6 +19,8 @@ public:
     static SoundObject *create(DecoderBase *decoder);
     void destroy();
     void update();
+    inline void setAutoFree(bool on) { _autofree = on; }
+    inline bool isAutoFree() const { return _autofree; }
 
     float getPlayPosition();
     tyrsound_Error getPosition(float *x, float *y, float *z);
@@ -26,6 +32,7 @@ public:
     tyrsound_Error pause();
     tyrsound_Error play();
     bool isPlaying();
+    bool isStopped();
 
     // sets decoder position. Has no immediate effect on the already buffered data!
     tyrsound_Error seek(float seconds);
@@ -33,15 +40,13 @@ public:
     tyrsound_Error setLoop(float seconds, int loops);
     float getLength();
 
-    unsigned int _idxInStore;
-    bool _dead;
-    bool _update; // CHEAP FIX: might want to remove this again and use a proper list instead...
-
 protected:
     void _decode();
 
     DecoderBase *_decoder;
     ChannelBase *_channel;
+    bool _update;
+    bool _autofree;
     
     float _volume;
     float _speed;

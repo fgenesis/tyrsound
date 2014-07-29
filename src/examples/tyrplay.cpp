@@ -11,31 +11,31 @@ int playFile(const char *name)
         return 2;
     }
 
-    tyrsound_Handle handle = tyrsound_load(strm);
-    if(handle == TYRSOUND_NULLHANDLE)
+    tyrsound_Sound sound = tyrsound_load(strm);
+    if(sound == TYRSOUND_NULL_SOUND)
     {
         printf("Format not recognized / no suitable decoder.\n");
         return 3;
     }
 
-    if(tyrsound_play(handle) != TYRSOUND_ERR_OK)
+    if(tyrsound_play(sound) != TYRSOUND_ERR_OK)
     {
         printf("Failed to start playback.\n");
         return 4;
     }
 
     printf("Playing %s ...\n", name);
-    const float len = tyrsound_getLength(handle);
+    const float len = tyrsound_getLength(sound);
 
     /* This hogs the CPU, don't do it this way in a real program :)*/
-    while(tyrsound_isPlaying(handle))
+    while(tyrsound_isPlaying(sound))
     {
         tyrsound_update();
-        printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(handle), len);
+        printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(sound), len);
     }
 
     /* Free resources after we're done */
-    tyrsound_unload(handle);
+    tyrsound_unload(sound);
 
     return 0;
 }

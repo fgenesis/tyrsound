@@ -6,7 +6,7 @@
 
 
 NullChannel::NullChannel()
-: _buffer(NULL), _playing(false), _wantData(true), x_acquired(false)
+: _buffer(NULL), _playing(false), _stopped(false), _wantData(true), x_acquired(false)
 {
 }
 
@@ -82,12 +82,14 @@ tyrsound_Error NullChannel::pause()
 tyrsound_Error NullChannel::play()
 {
     _playing = true;
+    _stopped = false;
     return TYRSOUND_ERR_OK;
 }
 
 tyrsound_Error NullChannel::stop()
 {
     _playing = false;
+    _stopped = true;
     _samplesDone = 0;
     return TYRSOUND_ERR_OK;
 }
@@ -95,6 +97,10 @@ tyrsound_Error NullChannel::stop()
 bool NullChannel::isPlaying()
 {
     return _playing;
+}
+bool NullChannel::isStopped()
+{
+    return _stopped;
 }
 
 float NullChannel::getPlayPosition()

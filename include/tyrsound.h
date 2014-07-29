@@ -47,8 +47,25 @@ struct tyrsound_DeviceConfig
 };
 typedef struct tyrsound_DeviceConfig tyrsound_DeviceConfig;
 
-typedef unsigned int tyrsound_Handle;
-#define TYRSOUND_NULLHANDLE 0
+/* Opaque handle for sounds */
+enum tyrsound_Sound
+{
+    TYRSOUND_NULL_SOUND = 0,
+    _TYRSOUND_SOUND_FORCE32BIT = 0x7fffffff
+};
+typedef enum tyrsound_Sound tyrsound_Sound;
+
+/* Opaque handle for groups */
+enum tyrsound_Group
+{
+    TYRSOUND_NULL_GROUP = 0,
+    _TYRSOUND_GROUP_FORCE32BIT = 0x7fffffff
+};
+typedef enum tyrsound_Group tyrsound_Group;
+
+/* Opaque generic handle type */
+typedef unsigned tyrsound_Handle;
+#define TYRSOUND_NULL_HANDLE 0
 
 struct tyrsound_Stream
 {
@@ -96,7 +113,7 @@ enum tyrsound_Error
 
     /* < 0: errors */
     TYRSOUND_ERR_UNSPECIFIED           = -1, /* Generic error */
-    TYRSOUND_ERR_INVALID_HANDLE        = -2, /* Invalid handle passed to function (TYRSOUND_NULLHANDLE is always invalid) */
+    TYRSOUND_ERR_INVALID_HANDLE        = -2, /* Invalid handle passed to function (A NULL handle is always invalid) */
     TYRSOUND_ERR_INVALID_VALUE         = -3, /* Parameter error */
     TYRSOUND_ERR_UNSUPPORTED           = -4, /* Action not supported by device / Stream format not recognized */
     TYRSOUND_ERR_NO_DEVICE             = -5, /* No device was found */
@@ -129,7 +146,7 @@ typedef enum tyrsound_MessageSeverity tyrsound_MessageSeverity;
 ********************/
 
 
-typedef tyrsound_Error (*tyrsound_positionCallback)(tyrsound_Handle, float position, void *user);
+typedef tyrsound_Error (*tyrsound_positionCallback)(tyrsound_Sound, float position, void *user);
 
 /* Generic memory allocation function, following the same semantics as realloc:
    * (ptr, 0) -> delete
@@ -214,9 +231,9 @@ TYRSOUND_DLL_EXPORT void tyrsound_setMessageCallback(tyrsound_MessageCallback ms
 * Sound creation/destruction *
 *****************************/
 
-/* Load a sound using a stream loader. Returns TYRSOUND_NULLHANDLE on failure.
+/* Load a sound using a stream loader. Returns TYRSOUND_NULL_SOUND on failure.
  * Uses the output format currently used by the output device. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_load(tyrsound_Stream stream);
 
 /* More configurable version of tyrsound_load().
  * The optional format parameter may be set to the desired output format;
@@ -224,13 +241,13 @@ TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_load(tyrsound_Stream stream);
  * Setting tryHard to true disables quick header checks. While this might be able to open files that
  * tyrsound_load() rejects, this can involve a bunch more memory allocations / reads
  * depending on how long each decoder takes to figure out whether it can decode the stream or not. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadEx(tyrsound_Stream stream, const tyrsound_Format *fmt, int tryHard);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadEx(tyrsound_Stream stream, const tyrsound_Format *fmt, int tryHard);
 
 /* Stops a sound, and frees all related resources.
  * The actual deletion is delayed and performed in the next update() call.
  * (This avoids some multithreading issues; don't call tyrsound_update() right after
  * deleting a sound when a second thread is involved. You have been warned.) */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Sound);
 
 /* Create a sound and attach an already configured decoder.
  * The decoder is a C++ pointer to a valid class derived from DecoderBase.
@@ -238,40 +255,69 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle);
  * and it will be deleted together with the sound.
  * Warning: Only pass decoders allocated with tyrsound_ex_alloc() or any of
  * the shortcut functions in the tyrsound namespace, otherwise it will crash! */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_fromDecoder(void *decoder);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_fromDecoder(void *decoder);
 
 /* Load a raw stream directly, with format fmt.
  * If fmt is NULL, use the format currently used by the output device.
  * (As this is probably wrong, just don't do it except for testing.) */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawStream(tyrsound_Stream, const tyrsound_Format *fmt);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawStream(tyrsound_Stream, const tyrsound_Format *fmt);
 
 /* Load a raw memory buffer, like tyrsound_loadRawStream().
  * Makes an internal copy of the memory buffer. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawBuffer(void *buf, size_t bytes, const tyrsound_Format *fmt);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBuffer(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
 /* Load a raw memory buffer, like tyrsound_loadRawStream().
    Does NOT make in internal copy, so make sure the pointer stays alive while accessed. */
-TYRSOUND_DLL_EXPORT tyrsound_Handle tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt);
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
-/**********************
- * Sound manipulation *
- *********************/
 
-/* Starts playing a sound or unpauses a paused sound.
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_autoFree(tyrsound_Sound);
+
+/*********************************
+* Sound manipulation/information *
+*********************************/
+
+/* Returns the current playback position in seconds. -1 if unknown, 0 if not playing. */
+TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Sound);
+
+/* Returns the total play time in seconds. < 0 if unknown. */
+TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Sound);
+
+/* Seeks the decoder to a position in the stream (in seconds). Will continue to play already buffered data. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Sound, float seconds);
+
+// TODO: WRITE ME
+/* Immediately seeks to a position in the stream (in seconds). Throws away any buffered data. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seekNow(tyrsound_Sound, float seconds);
+
+/* When the decoder hits stream EOF, seek back to position
+*    seconds: -1 to disable looping, any value >= 0 to seek to.
+*    loops: How often to loop. 0 disables looping (plays exactly once),
+1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Sound, float seconds, int loops);
+
+
+// TODO: WRITE ME
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound, tyrsound_Group group);
+
+
+/*************************************
+ * Sound/Group playback/manipulation *
+ ************************************/
+
+/* Starts playing a sound/group or unpauses a paused sound/group.
    If already playing, the call has no effect and will not fail. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_play(tyrsound_Handle);
 
-/* Pauses a playing sound. Pausing multiple times has no effect and does not fail. */
+/* Pauses a playing sound/group. Pausing multiple times has no effect and does not fail. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_pause(tyrsound_Handle);
 
-/* Stops a sound. Subsequent tyrsound_play() will start from the beginning */
+/* Stops a sound/group. Subsequent tyrsound_play() will start from the beginning */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_stop(tyrsound_Handle);
 
-/* Returns 1 when a sound is currently playing, i.e. not stopped and not paused. */
+/* Returns 1 when a sound is currently playing, i.e. not stopped and not paused.
+   For groups, this returns the number of currently playing sounds in that group */
 TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle);
-
-/* Returns the current playback position in seconds. -1 if unknown, 0 if not playing. */
-TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Handle);
 
 /* Sets volume. 0 = silent, 1 = normal, > 1: louder than normal */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle, float);
@@ -279,24 +325,11 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle, float);
 /* Sets speed. (0, 1) slows down, 1 is normal, > 1 is faster. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Handle, float);
 
-/* Sets sound world position in (x, y, z)-coordinates. */
+/* Sets sound world position in (x, y, z)-coordinates.
+   For groups, sets the position of the group.
+   Sounds positions are relative to the position of their group. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle, float x, float y, float z);
 
-/* Returns the total play time in seconds. < 0 if unknown. */
-TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle);
-
-/* Seeks the decoder to a position in the stream (in seconds). Will continue to play already buffered data. */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle, float seconds);
-
-// TODO: WRITE ME
-/* Immediately seeks to a position in the stream (in seconds). Throws away any buffered data. */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seekNow(tyrsound_Handle, float seconds);
-
-/* When the decoder hits stream EOF, seek back to position
- *    seconds: -1 to disable looping, any value >= 0 to seek to.
- *    loops: How often to loop. 0 disables looping (plays exactly once),
-             1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Handle, float seconds, int loops);
 
 /************************
 * Listener manipulation *
@@ -321,11 +354,22 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterSpeed(float);
    Only one callback can be set at a time.
    Note: Keep in mind that the callback will be triggered from the thread
          that calls tyrsound_update() ! */
-/*TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPositionCallback(tyrsound_Handle,
+/*TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPositionCallback(tyrsound_Sound,
                                                         tyrsound_positionCallback func,
                                                         float position,
                                                         void *user);
 */
+
+/*************
+* Groups API *
+*************/
+
+TYRSOUND_DLL_EXPORT tyrsound_Group tyrsound_createGroup();
+
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_deleteGroup(tyrsound_Group);
+
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_clearGroup(tyrsound_Group);
+
 
 /********************
 * Helper functions  *
@@ -377,6 +421,14 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst,
                                                          tyrsound_Format *srcfmt,
                                                          int tryHard,
                                                          float maxSeconds);
+
+
+/***************
+* Effects API  *
+***************/
+
+/*TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createEffectReverb();
+*/
 
 #ifdef __cplusplus
 } /* end extern "C" */

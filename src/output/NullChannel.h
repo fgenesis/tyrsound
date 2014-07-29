@@ -27,6 +27,7 @@ public:
     virtual tyrsound_Error pause();
     virtual tyrsound_Error setPosition(float x, float y, float z);
     virtual bool isPlaying();
+    virtual bool isStopped();
     virtual float getPlayPosition();
 
     virtual bool wantData();
@@ -39,6 +40,7 @@ protected:
     NullDevice *_dev;
     size_t _bufsize;
     bool _playing;
+    bool _stopped;
     bool _wantData;
     tyrsound_int64 _samplesDone;
     int _hz;

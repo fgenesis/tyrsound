@@ -10,18 +10,19 @@
 
 #include "tyrsound.h"
 
-#include "tyrsound_begin.h"
 
 #if !defined(NDEBUG) && (defined(DEBUG) || defined(_DEBUG))
 #  define TYRSOUND_IS_DEBUG 1
 #endif
 
+#include "tyrsound_begin.h"
 struct DeviceInfo;
 class DecoderBase;
 class DecoderFactoryBase;
 class ChannelBase;
 class DeviceBase;
 class DeviceFactoryBase;
+#include "tyrsound_end.h"
 
 // Functions provided by the library, for use by extensions
 extern "C"
@@ -34,8 +35,8 @@ extern "C"
     TYRSOUND_DLL_EXPORT int tyrsound_ex_lockMutex(void *);
     TYRSOUND_DLL_EXPORT void tyrsound_ex_unlockMutex(void *);
 
-    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo&);
-    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDecoder(DecoderFactoryBase *);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const tyrsound::DeviceInfo&);
+    TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDecoder(tyrsound::DecoderFactoryBase *);
 
     TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name);
     TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *);
@@ -44,6 +45,8 @@ extern "C"
     TYRSOUND_DLL_EXPORT void tyrsound_ex_message(tyrsound_MessageSeverity, const char *);
     TYRSOUND_DLL_EXPORT void tyrsound_ex_messagef(tyrsound_MessageSeverity, const char *, ...);
 }
+
+#include "tyrsound_begin.h"
 
 // Memory related functions, using the allocator set via tyrsound_setAlloc()
 inline void *Realloc(void *ptr, size_t size) { return tyrsound_ex_alloc(ptr, size); }
@@ -77,6 +80,7 @@ public:
     MutexGuard(Mutex *m) : _m(m), _ok(!m || m->lock()) {}
     ~MutexGuard() { if(_m) _m->unlock(); }
     operator int() const { return _ok; }
+    void unlock() { if(_m) { _m->unlock(); _m = NULL; _ok = false; } }
 private:
     int _ok;
     Mutex *_m;

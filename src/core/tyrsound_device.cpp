@@ -6,7 +6,7 @@
 
 #include "tyrsound_begin.h"
 
-#define TYRSOUND_DEVICE_HOLDER RegistrationHolder<DeviceInfo, 32>
+#define DEVICE_HOLDER tyrsound::RegistrationHolder<tyrsound::DeviceInfo, 32>
 
 static tyrsound_Format s_format;
 static DeviceBase *s_device = NULL;
@@ -30,11 +30,6 @@ static void _fixFormat(tyrsound_Format& fmt)
         fmt.sampleBits = sizeof(float) * 8;
         fmt.signedSamples = 1; // irrelevant for float
     }
-}
-
-TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const DeviceInfo& di)
-{
-    TYRSOUND_DEVICE_HOLDER::Register(di);
 }
 
 DeviceBase *getDevice()
@@ -66,10 +61,10 @@ bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_Dev
         cfg = &localCfg;
     }
 
-    const unsigned int numDevices = TYRSOUND_DEVICE_HOLDER::Size();
+    const unsigned int numDevices = DEVICE_HOLDER::Size();
     for(size_t i = 0; i < numDevices; ++i)
     {
-        const DeviceInfo& di = TYRSOUND_DEVICE_HOLDER::Get(i);
+        const DeviceInfo& di = DEVICE_HOLDER::Get(i);
         // allow all devices except null device when name is not specified
         if((name && !strcmp(name, di.name)) || (!name && strcmp(di.name, "null")))
         {
@@ -98,6 +93,12 @@ bool initDevice(const char *name, const tyrsound_Format *fmt, const tyrsound_Dev
 
 #include "tyrsound_end.h"
 
+
+
+TYRSOUND_DLL_EXPORT void tyrsound_ex_registerDevice(const tyrsound::DeviceInfo& di)
+{
+    DEVICE_HOLDER::Register(di);
+}
 
 TYRSOUND_DLL_EXPORT void tyrsound_getFormat(tyrsound_Format *fmt)
 {

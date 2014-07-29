@@ -14,14 +14,14 @@ static int playSecs(const char *name, float secs)
         return 2;
     }
 
-    tyrsound_Handle handle = tyrsound_load(strm);
-    if(handle == TYRSOUND_NULLHANDLE)
+    tyrsound_Sound sound = tyrsound_load(strm);
+    if(sound == TYRSOUND_NULL_SOUND)
     {
         printf("Format not recognized / no suitable decoder.\n");
         return 3;
     }
 
-    tyrsound_Error err = tyrsound_play(handle);
+    tyrsound_Error err = tyrsound_play(sound);
     if(err != TYRSOUND_ERR_OK)
     {
         printf("Failed to start playback. err = %d\n", err);
@@ -29,14 +29,14 @@ static int playSecs(const char *name, float secs)
     }
 
     printf("Playing %s for %f secs ...\n", name, secs);
-    const float len = tyrsound_getLength(handle);
+    const float len = tyrsound_getLength(sound);
 
     /* This hogs the CPU, don't do it this way in a real program :)*/
     float playpos = 0;
-    while(tyrsound_isPlaying(handle) && ((playpos = tyrsound_getPlayPosition(handle)) < secs))
+    while(tyrsound_isPlaying(sound) && ((playpos = tyrsound_getPlayPosition(sound)) < secs))
     {
 #ifdef _WIN32
-        Sleep(10);
+        Sleep(100);
 #endif
         tyrsound_update();
         //printf("[At %.3f / %.3f]\r", playpos, len);
@@ -45,7 +45,7 @@ static int playSecs(const char *name, float secs)
     printf("Done playing '%s'\n", name);
 
     /* Free resources after we're done */
-    tyrsound_unload(handle);
+    tyrsound_unload(sound);
 
     return 0;
 }
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     fmt.isfloat = 1;
 
     cfg.bufferSize = 16 * 1024 + 1 * 1024; // use some weird buffer size
-    cfg.numBuffers = 8;
+    cfg.numBuffers = 16;
 
     if(tyrsound_init(&fmt, &cfg) != TYRSOUND_ERR_OK)
     {
@@ -73,17 +73,23 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    tyrsound_getFormat(&fmt);
+    tyrsound_Stream bgstrm;
+    tyrsound_createFileNameStream(&bgstrm, "test.mod", "rb");
+    tyrsound_Sound sound = tyrsound_load(bgstrm);
+    tyrsound_play(sound);
+    tyrsound_autoFree(sound);
 
     playSecs("test.s3m", 2);
-    playSecs("test.mod", 2);
     playSecs("test.wav", 2);
     playSecs("test.flac", 2);
     playSecs("test2.mp3", 2);
     playSecs("test.mp3", 1);
     playSecs("test.ogg", 1);
+    tyrsound_stop(sound);
     playSecs("test2.ogg", 1);
     playSecs("test3.ogg", 1);
+
+    tyrsound_unload(sound); // handle is invalid here because autodeleted
 
     tyrsound_shutdown();
 

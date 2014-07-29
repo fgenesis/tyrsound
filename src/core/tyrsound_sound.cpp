@@ -1,189 +1,83 @@
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
+#include "ObjectStore.h"
 
 #include "tyrsound_begin.h"
 
 
-struct ObjectData
+static ObjectStore soundstore(TY_SOUND);
+
+tyrsound_Sound registerSoundObject(SoundObject *sound)
 {
-    SoundObject *obj;
-    unsigned int generation;
-};
-
-static ObjectData *objectStore = NULL;
-static unsigned int objectStoreCapacity = 0;
-static Mutex *updateMutex = NULL;
-static SoundObject *updateObjRoot = NULL;
-
-static bool getFreeIdx(unsigned int *idxp)
-{
-    for(unsigned int i = 0; i < objectStoreCapacity; ++i)
-        if(!objectStore[i].obj)
-        {
-            *idxp = i;
-            return true;
-        }
-    return false;
-}
-
-static bool enlargeStore(unsigned int *idxp)
-{
-    unsigned int newCap = objectStoreCapacity + (objectStoreCapacity >> 1) + 8;
-    ObjectData *newStore = (ObjectData*)Realloc(objectStore, newCap * sizeof(ObjectData));
-    if(!newStore)
-        return false;
-
-    *idxp = objectStoreCapacity; // first free idx
-    memset(newStore + objectStoreCapacity, 0, (newCap - objectStoreCapacity) * sizeof(ObjectData));
-    objectStore = newStore;
-    objectStoreCapacity = newCap;
-    return true;
-}
-
-static tyrsound_Error lookupHandle(tyrsound_Handle handle, SoundObject **soundp, bool allowNull = false)
-{
-    unsigned int idx = (handle & 0xFFFFFF); // mask out generation
-    if(!idx)
-    {
-        *soundp = NULL;
-        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Invalid/Malformed handle");
-        return TYRSOUND_ERR_INVALID_HANDLE;
-    }
-
-    --idx;
-    unsigned int generation = handle >> 24;
-
-    const ObjectData data = objectStore[idx];
-    if(data.generation != generation || data.obj->_idxInStore != idx || data.obj->_dead)
-    {
-        *soundp = NULL;
-        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Invalid handle (already deleted?)");
-        return TYRSOUND_ERR_INVALID_HANDLE;
-    }
-
-    *soundp = data.obj;
-    return TYRSOUND_ERR_OK;
-}
-
-tyrsound_Handle registerSoundObject(SoundObject *sound)
-{
-    MutexGuard guard(updateMutex);
-    if(!guard)
-        return 0;
-
-    unsigned int idx;
-    if(!getFreeIdx(&idx))
-    {
-        if(!enlargeStore(&idx))
-            return TYRSOUND_ERR_OUT_OF_MEMORY;
-    }
-
-    const unsigned int generation = objectStore[idx].generation;
-    objectStore[idx].obj = sound;
-    sound->_idxInStore = idx;
-    sound->_dead = false;
-    
-    return (idx + 1) | (generation << 24); // 8 bits for generation should be enough
+    return static_cast<tyrsound_Sound>(soundstore.add(sound));
 }
 
 static tyrsound_Error unregisterSoundObject(SoundObject *sound)
 {
-    MutexGuard guard(updateMutex);
-    if(!guard)
-        return TYRSOUND_ERR_UNSPECIFIED;
-
-    const unsigned int idx = sound->_idxInStore;
-    sound->_idxInStore = unsigned(-1);
-
-    if(objectStore[idx].obj != sound)
-    {
-        tyrsound_ex_messagef(TYRSOUND_MSG_INTERNAL_ERROR, "unregisterSoundObject(): objectStore[idx].obj != sound. idx = %u", idx);
+    if(!soundstore.remove(sound))
         return TYRSOUND_ERR_SHIT_HAPPENED;
-    }
-
-    objectStore[idx].obj = NULL;
-    objectStore[idx].generation++;
 
     return TYRSOUND_ERR_OK;
-}
-
-void registerUpdate(SoundObject *sound)
-{
-    MutexGuard guard(updateMutex);
-    sound->_update = true;
-}
-
-void unregisterUpdate(SoundObject *sound)
-{
-    MutexGuard guard(updateMutex);
-    sound->_update = false;
-}
-
-static tyrsound_Error destroySoundObject(SoundObject *sound)
-{
-    tyrsound_Error err = unregisterSoundObject(sound);
-    sound->destroy();
-    return err;
 }
 
 tyrsound_Error initSounds()
 {
-    updateMutex = Mutex::create();
-    if(!updateMutex && tyrsound_ex_hasMT())
+    if(!soundstore.init())
         return TYRSOUND_ERR_OUT_OF_MEMORY;
 
-
     return TYRSOUND_ERR_OK;
+}
+
+static void deleteDead()
+{
+    if(const unsigned sz = soundstore.deadlist.size())
+    {
+        //tyrsound_ex_messagef(TYRSOUND_MSG_DEBUG, "Deleting %u dead sounds", sz);
+        for(unsigned i = 0; i < sz; ++i)
+            ((SoundObject*)soundstore.deadlist[i])->destroy();
+        soundstore.deadlist.resize(0); // not clear() to avoid actually freeing the memory
+    }
 }
 
 void shutdownSounds()
 {
-    // Cleanup all dead sounds that are still there in case update() stopped earlier
-    for(unsigned int i = 0; i < objectStoreCapacity; ++i)
-        if(SoundObject *sound = objectStore[i].obj)
-            if(sound->_dead)
-                destroySoundObject(sound);
+    // clear add list
+    soundstore.update();
 
-    // Now clean all that are still playing
-    unsigned soundsActive = 0;
-    for(unsigned int i = 0; i < objectStoreCapacity; ++i)
-        if(SoundObject *sound = objectStore[i].obj)
-        {
-            ++soundsActive;
-            sound->destroy();
-        }
-    if(soundsActive)
-        tyrsound_ex_messagef(TYRSOUND_MSG_WARNING, "Shutting down while %u sounds are still active. Deleted.");
-    Free(objectStore);
-    objectStore = NULL;
-    objectStoreCapacity = 0;
-    if(updateMutex)
+    const unsigned alive = soundstore.size();
+    for(unsigned i = 0; i < soundstore.size(); ++i)
     {
-        updateMutex->destroy();
-        updateMutex = NULL;
+        SoundObject *sound = (SoundObject*)soundstore[i];
+        sound->stop();
+        tyrsound::unregisterSoundObject(sound);
     }
+
+    // clear delete list
+    soundstore.update();
+
+    // this should delete all of them
+    deleteDead();
+
+    const unsigned stillAlive = soundstore.size();
+    if(alive || stillAlive)
+        tyrsound_ex_messagef(TYRSOUND_MSG_WARNING, "Shutting down while %u sounds were still active. %u sounds not deleted.", alive, stillAlive);
+    soundstore.clear();
 }
 
 tyrsound_Error updateSounds()
 {
-    for(unsigned int i = 0; i < objectStoreCapacity; ++i)
-        if(SoundObject *sound = objectStore[i].obj)
-        {
-            if(sound->_dead)
-                destroySoundObject(sound);
-            else
-            {
-                MutexGuard guard(updateMutex);
-                sound->update();
-            }
-        }
+    soundstore.update();
 
-    return TYRSOUND_ERR_OK;
-}
+    for(unsigned i = 0; i < soundstore.size(); ++i)
+    {
+        SoundObject *sound = (SoundObject*)soundstore[i];
+        sound->update();
+        if(sound->isAutoFree() && sound->isStopped())
+            unregisterSoundObject(sound);
+    }
 
-static tyrsound_Error enqueueDeletion(SoundObject *sound)
-{
-    sound->_dead = true;
+    deleteDead();
+
     return TYRSOUND_ERR_OK;
 }
 
@@ -191,20 +85,21 @@ static tyrsound_Error enqueueDeletion(SoundObject *sound)
 #include "tyrsound_end.h"
 
 #define LOOKUP_RET(var, h, ret)                    \
-    tyrsound::SoundObject *var;                    \
-    do {                                           \
-        tyrsound_Error _err = tyrsound::lookupHandle(h, &var); \
-        if(!var || _err != TYRSOUND_ERR_OK)        \
+    tyrsound::SoundObject *var = NULL;             \
+    do { tyrsound::Referenced *ref;                \
+        tyrsound_Error _err = tyrsound::soundstore.lookupHandle(h, &ref); \
+        if(!ref || _err != TYRSOUND_ERR_OK)        \
             return ret;                            \
+        var = (tyrsound::SoundObject*)ref;         \
     } while(0)
 
 #define LOOKUP(var, h) LOOKUP_RET(var, h, _err)
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Sound handle)
 {
     LOOKUP(sound, handle);
     sound->stop();
-    return tyrsound::enqueueDeletion(sound);
+    return tyrsound::unregisterSoundObject(sound);
 }
 
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)
@@ -213,13 +108,13 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, fl
     return sound->setVolume(vol);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Handle handle, float speed)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Sound handle, float speed)
 {
     LOOKUP(sound, handle);
     return sound->setSpeed(speed);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Handle handle, float seconds)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Sound handle, float seconds)
 {
     LOOKUP(sound, handle);
     return sound->seek(seconds);
@@ -231,13 +126,13 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle handle, 
     return sound->setPosition(x, y, z);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Handle handle, float seconds, int loops)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Sound handle, float seconds, int loops)
 {
     LOOKUP(sound, handle);
     return sound->setLoop(seconds, loops);
 }
 
-TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Sound handle)
 {
     LOOKUP_RET(sound, handle, -1.0f);
     return sound->getLength();
@@ -267,7 +162,14 @@ TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle handle)
     return sound->isPlaying();
 }
 
-TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Handle handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_autoFree(tyrsound_Sound handle)
+{
+    LOOKUP_RET(sound, handle, _err);
+    sound->setAutoFree(true);
+    return TYRSOUND_ERR_OK;
+}
+
+TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Sound handle)
 {
     LOOKUP_RET(sound, handle, 0);
     return sound->getPlayPosition();
