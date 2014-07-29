@@ -155,9 +155,9 @@ OpenALDevice *OpenALDevice::create(tyrsound_Format& fmt, tyrsound_DeviceConfig& 
     ALCint req_attributes[] =
     {
         ALC_MONO_SOURCES,
-        cfg.playbackChannels,
+        (ALCint)cfg.playbackChannels,
         ALC_STEREO_SOURCES,
-        cfg.playbackChannels,
+        (ALCint)cfg.playbackChannels,
         0
     };
 

@@ -31,10 +31,17 @@ static bool killGroup(ChannelGroup *group)
 
 void shutdownGroups()
 {
-    for(unsigned i = 0; i < soundstore.size(); ++i)
+    groupstore.update();
+    
+    for(unsigned i = 0; i < groupstore.size(); ++i)
         groupstore.remove(groupstore[i]);
 
     groupstore.update();
+    
+    if(groupstore.size())
+        tyrsound_ex_messagef(TYRSOUND_MSG_WARNING, "shutdownGroups(): %u groups not deleted", groupstore.size());
+    
+    groupstore.clear();
 }
 
 static tyrsound_Error lookupGroup(tyrsound_Handle handle, ChannelGroup **pgroup)

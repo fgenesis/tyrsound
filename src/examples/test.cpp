@@ -14,7 +14,7 @@ static int playSecs(const char *name, float secs)
         return 2;
     }
 
-    tyrsound_Sound sound = tyrsound_load(strm);
+    tyrsound_Sound sound = tyrsound_load(&strm);
     if(sound == TYRSOUND_NULL_SOUND)
     {
         printf("Format not recognized / no suitable decoder.\n");
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 
     tyrsound_Stream bgstrm;
     tyrsound_createFileNameStream(&bgstrm, "test.mod", "rb");
-    tyrsound_Sound sound = tyrsound_load(bgstrm);
+    tyrsound_Sound sound = tyrsound_load(&bgstrm);
     tyrsound_fireAndForget(sound);
 
     tyrsound_Group g = tyrsound_createGroup();

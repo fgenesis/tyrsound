@@ -36,7 +36,21 @@ TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size)
     if(tyrsound::s_alloc)
         ptr = tyrsound::s_alloc(ptr, size, tyrsound::s_alloc_user);
     else
-        ptr = realloc(ptr, size);
+    {
+        // From the C99 standard. regarding malloc(0):
+        // If the size of the space requested is zero, the behavior is implementation- deﬁned [...]
+        // Apparently some use malloc(0) for realloc(p, 0), so we should not just assume realloc(p, 0) was *equal* to free()
+        //ptr = realloc(ptr, size);
+        if(!ptr && size)
+            ptr = malloc(size);
+        else if(ptr && !size)
+        {
+            free(ptr);
+            ptr = NULL;
+        }
+        else if(ptr && size)
+            ptr = realloc(ptr, size);
+    }
 
     if(!ptr && size)
     {
@@ -162,6 +176,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
     }
 
     tyrsound::initDecoders();
+    tyrsound::initGroups();
 
     return tyrsound::initSounds();
 }
@@ -169,8 +184,10 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
+    tyrsound::shutdownGroups();
     tyrsound::shutdownDevice();
     tyrsound::shutdownDecoders();
+    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Shutdown complete");
     return TYRSOUND_ERR_OK;
 }
 

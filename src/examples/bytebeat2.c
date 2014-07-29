@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     fmt.channels = 1;
 
     /* Create sound from stream */
-    handle = tyrsound_loadRawStream(strm, &fmt);
+    handle = tyrsound_loadRawStream(&strm, &fmt);
 
     if(handle == TYRSOUND_NULL_SOUND)
         return 2;

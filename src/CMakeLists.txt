@@ -126,10 +126,14 @@ endif()
 
 if(TYRSOUND_SUPPORT_MOD)
     include_directories("${TYRSOUND_SRC_ROOT}/dep/libopenmpt/include")
-    list(APPEND src_decoders
+    set(MOD_files
         decoders/ModDecoder.cpp
         decoders/ModDecoder.h
     )
+    if(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
+        set_source_files_properties(${MOD_files} PROPERTIES COMPILE_FLAGS "-std=c++11")
+    endif()
+    list(APPEND src_decoders ${MOD_files})
     list(APPEND libs openmpt)
 endif()
 

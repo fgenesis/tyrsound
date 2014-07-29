@@ -9,6 +9,10 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/silk/float")
 
 add_definitions("-DHAVE_CONFIG_H")
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
+    add_definitions("-DHAVE_LRINTF=1")
+endif()
+
 add_library(opus
     config.h
     celt/_kiss_fft_guts.h

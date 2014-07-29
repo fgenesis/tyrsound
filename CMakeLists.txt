@@ -37,12 +37,15 @@ endif()
 
 # non-msvc needs build type - if no build type was provided, set a default one
 if(NOT MSVC)
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        set(CLANG 1)
+    endif()
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
     endif()
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
     add_definitions("-fPIC") # required
     add_definitions("-fno-rtti")
     add_definitions("-fno-exceptions")

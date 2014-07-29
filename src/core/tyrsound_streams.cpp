@@ -89,7 +89,10 @@ static tyrsound_int64 wrap_fremain(void *fh)
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createFileStream(tyrsound_Stream *strm, void *fh, int closeWhenDone)
 {
     if(!fh)
+    {
+        memset(strm, 0, sizeof(*strm));
         return TYRSOUND_ERR_INVALID_VALUE;
+    }
     strm->user = fh;
     strm->close = closeWhenDone ? wrap_fclose : NULL;
     strm->read = wrap_fread;
@@ -211,11 +214,11 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_createMemStream(tyrsound_Stream *str
     return TYRSOUND_ERR_OK;
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size, tyrsound_Stream src)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, tyrsound_uint64 *size, tyrsound_Stream *src)
 {
     tyrsound_int64 remain = 0;
-    if(src.remain)
-        remain = src.remain(src.user);
+    if(src->remain)
+        remain = src->remain(src->user);
     tyrsound_Error err = tyrsound_createGrowingBuffer(dst, remain < 128 ? 128 : remain);
     if(err != TYRSOUND_ERR_OK)
         return err;
@@ -225,7 +228,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_bufferStream(tyrsound_Stream *dst, t
     tyrsound_int64 copied = 0;
     while(true)
     {
-        tyrsound_int64 rb = src.read(buf, 1, sizeof(buf), src.user);
+        tyrsound_int64 rb = src->read(buf, 1, sizeof(buf), src->user);
         if(!rb)
             break;
         tyrsound_int64 wb = dst->write(buf, 1, rb, dst->user);

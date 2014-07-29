@@ -92,7 +92,7 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& infmt, tyrsound_Stream str
         if(tyrsound_createGrowingBuffer(&sbuf, 128) != TYRSOUND_ERR_OK)
             return NULL;
         tyrsound_uint64 totalsizeu;
-        if(tyrsound_bufferStream(&sbuf, &totalsizeu, strm) != TYRSOUND_ERR_OK)
+        if(tyrsound_bufferStream(&sbuf, &totalsizeu, &strm) != TYRSOUND_ERR_OK)
             return NULL;
         totalsize = totalsizeu;
         if(strm.close)

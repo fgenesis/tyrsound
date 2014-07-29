@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     strm.close = NULL;
 
     /* Create sound from stream */
-    sound = tyrsound_loadRawStream(strm, &fmt);
+    sound = tyrsound_loadRawStream(&strm, &fmt);
     if(sound == TYRSOUND_NULL_SOUND)
     {
         fputs("Failed to load stream", stderr);

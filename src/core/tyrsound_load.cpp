@@ -23,7 +23,7 @@ void shutdownDecoders()
         TYRSOUND_DECODER_HOLDER::Get(i)->staticShutdown();
 }
 
-static DecoderBase *createDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt, bool skipMagic)
+static DecoderBase *createDecoder(tyrsound_Stream& strm, const tyrsound_Format& fmt, bool skipMagic)
 {
     const unsigned int numDecoders = TYRSOUND_DECODER_HOLDER::Size();
     if(!numDecoders)
@@ -78,7 +78,7 @@ static tyrsound_Sound createSoundObjectWithDecoder(DecoderBase *decoder)
     return handle;
 }
 
-static tyrsound_Sound createSoundObject(const tyrsound_Stream& strm, const tyrsound_Format& fmt, bool skipMagic)
+static tyrsound_Sound createSoundObject(tyrsound_Stream& strm, const tyrsound_Format& fmt, bool skipMagic)
 {
     DecoderBase *decoder = createDecoder(strm, fmt, skipMagic);
     if(!decoder)
@@ -87,29 +87,35 @@ static tyrsound_Sound createSoundObject(const tyrsound_Stream& strm, const tyrso
     return createSoundObjectWithDecoder(decoder);
 }
 
-tyrsound_Sound loadStream(tyrsound_Stream stream, const tyrsound_Format *fmt, bool skipMagic)
+tyrsound_Sound loadStream(tyrsound_Stream *stream, const tyrsound_Format *fmt, bool skipMagic)
 {
-    if(!stream.read)
+    if(!stream)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "stream == NULL");
+        return TYRSOUND_NULL_SOUND;
+    }
+    
+    if(!stream->read)
     {
         tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Stream needs a read function");
         return TYRSOUND_NULL_SOUND;
     }
+    
+    tyrsound_Stream useStream = *stream;
 
     // FIXME: This should go at some point.
-    if(!stream.seek)
+    if(!stream->seek)
     {
         tyrsound_ex_message(TYRSOUND_MSG_WARNING, "Stream is not seekable, prebuffering");
-        tyrsound_Stream srcbuf;
-        tyrsound_Error err = tyrsound_bufferStream(&srcbuf, NULL, stream);
+        tyrsound_Error err = tyrsound_bufferStream(&useStream, NULL, stream);
         if(err != TYRSOUND_ERR_OK)
             return TYRSOUND_NULL_SOUND;
-        stream = srcbuf;
     }
 
     tyrsound_Format f;
     if(!fmt)
         tyrsound_getFormat(&f);
-    return tyrsound::createSoundObject(stream, fmt ? *fmt : f, false);
+    return tyrsound::createSoundObject(useStream, fmt ? *fmt : f, false);
 }
 
 
@@ -122,12 +128,12 @@ void tyrsound_ex_registerDecoder(tyrsound::DecoderFactoryBase *f)
     TYRSOUND_DECODER_HOLDER::Register(f);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_load(tyrsound_Stream stream)
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_load(tyrsound_Stream *stream)
 {
     return tyrsound::loadStream(stream, NULL, false);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadEx(tyrsound_Stream stream, const tyrsound_Format *fmt, int tryHard)
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadEx(tyrsound_Stream *stream, const tyrsound_Format *fmt, int tryHard)
 {
     return tyrsound::loadStream(stream, fmt, !!tryHard);
 }
@@ -138,36 +144,40 @@ TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_fromDecoder(void *decoder)
     return tyrsound::createSoundObjectWithDecoder((tyrsound::DecoderBase*)decoder);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, tyrsound_Format *dstfmt, tyrsound_Stream src, tyrsound_Format *srcfmt, int tryHard, float maxSeconds)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream *dst, tyrsound_Format *dstfmt, tyrsound_Stream *src, tyrsound_Format *srcfmt, int tryHard, float maxSeconds)
 {
-    if(!src.read)
+    if(!src || !dst)
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "stream == NULL");
+        return TYRSOUND_ERR_INVALID_VALUE;
+    }
+    if(!src->read)
     {
         tyrsound_ex_message(TYRSOUND_MSG_ERROR, "src stream needs read function");
         return TYRSOUND_ERR_INVALID_VALUE;
     }
-    if(!dst.write)
+    if(!dst->write)
     {
         tyrsound_ex_message(TYRSOUND_MSG_ERROR,  "dst stream needs write function");
         return TYRSOUND_ERR_INVALID_VALUE;
     }
 
 
-    if(!src.seek)
+    tyrsound_Stream useStream = *src;
+    if(!src->seek)
     {
-        tyrsound_Stream srcbuf;
-        tyrsound_Error err = tyrsound_bufferStream(&srcbuf, NULL, src);
+        tyrsound_Error err = tyrsound_bufferStream(&useStream, NULL, src);
         if(err != TYRSOUND_ERR_OK)
             return err;
-        src = srcbuf;
     }
 
     tyrsound_Format f;
     if(!srcfmt)
         tyrsound_getFormat(&f);
 
-    tyrsound::DecoderBase *decoder = tyrsound::createDecoder(src, srcfmt ? *srcfmt : f, !!tryHard);
+    tyrsound::DecoderBase *decoder = tyrsound::createDecoder(useStream, srcfmt ? *srcfmt : f, !!tryHard);
     if(!decoder)
-        TYRSOUND_ERR_UNSUPPORTED;
+        return TYRSOUND_ERR_UNSUPPORTED;
 
     if(decoder->getLength() < 0 && !maxSeconds)
     {
@@ -182,7 +192,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_decodeStream(tyrsound_Stream dst, ty
         if(maxSeconds > 0 && decoder->tell() >= maxSeconds)
             break;
         size_t filled = decoder->fillBuffer(buf, sizeof(buf));
-        tyrsound_int64 written = dst.write(buf, 1, filled, dst.user);
+        tyrsound_int64 written = dst->write(buf, 1, filled, dst->user);
         if(!written)
             return TYRSOUND_ERR_NOT_READY;
     }
@@ -213,23 +223,23 @@ TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBuffer(void *buf, size_t byte
     tyrsound_Stream strm;
     tyrsound_createMemStream(&strm, p, bytes, _deleteMem, 0);
 
-    return tyrsound_loadRawStream(strm, fmt);
+    return tyrsound_loadRawStream(&strm, fmt);
 }
 
 TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt)
 {
     tyrsound_Stream strm;
     tyrsound_createMemStream(&strm, buf, bytes, NULL, 0);
-    return tyrsound_loadRawStream(strm, fmt);
+    return tyrsound_loadRawStream(&strm, fmt);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawStream(tyrsound_Stream strm, const tyrsound_Format *fmt)
+TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawStream(tyrsound_Stream *strm, const tyrsound_Format *fmt)
 {
     tyrsound_Format f;
     if(!fmt)
         tyrsound_getFormat(&f);
 
-    tyrsound::RawDecoder *decoder = tyrsound::RawDecoder::create(fmt ? *fmt : f, strm);
+    tyrsound::RawDecoder *decoder = tyrsound::RawDecoder::create(fmt ? *fmt : f, *strm);
     return tyrsound::createSoundObjectWithDecoder(decoder);
 }
 
