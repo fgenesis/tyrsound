@@ -76,10 +76,15 @@ int main(int argc, char **argv)
     tyrsound_Stream bgstrm;
     tyrsound_createFileNameStream(&bgstrm, "test.mod", "rb");
     tyrsound_Sound sound = tyrsound_load(bgstrm);
-    tyrsound_play(sound);
-    tyrsound_autoFree(sound);
+    tyrsound_fireAndForget(sound);
+
+    tyrsound_Group g = tyrsound_createGroup();
+    tyrsound_setGroup(sound, g);
+    tyrsound_setSpeed(g, 2);
+    tyrsound_unload((tyrsound_Sound)g); // should detect wrong handle type even if doing stupid things
 
     playSecs("test.s3m", 2);
+    tyrsound_play(sound);
     playSecs("test.wav", 2);
     playSecs("test.flac", 2);
     playSecs("test2.mp3", 2);

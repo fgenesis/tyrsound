@@ -4,50 +4,13 @@
 
 #include "tyrsound_begin.h"
 
-// Handle bits:
-// GGGGGGGG TTT00000 00000000 00000000
-// 256 distinct generations (G)
-// 8 possible types
-// 2m possible objects
 
-enum HandleBits
-{
-    // shift right by this many bits...
-    OFFS_GENERATION = 24,
-    OFFS_TYPE       = 21,
-    OFFS_ID         = 0,
-
-    // ... and mask with this to get the actual number
-    MASK_GENERATION = 0x000000FF,
-    MASK_TYPE       = 0x00000007,
-    MASK_ID         = 0x001FFFFF
-
-};
-
-inline unsigned handle2generation(tyrsound_Handle h)
-{
-    return (h >> OFFS_GENERATION) & MASK_GENERATION;
-}
-inline Type handle2type(tyrsound_Handle h)
-{
-    return (Type)((h >> OFFS_TYPE) & MASK_TYPE);
-}
-inline unsigned handle2idx(tyrsound_Handle h)
-{
-    return ((h >> OFFS_ID) & MASK_ID) - 1; // For zero handles, this will underflow, resulting in an invalid index
-}
-inline tyrsound_Handle makehandle(unsigned gen, Type ty, unsigned id)
-{
-    return ((gen & MASK_GENERATION) << OFFS_GENERATION)
-         | ((ty & MASK_TYPE) << OFFS_TYPE)
-         | (id + 1);
-}
-
-ObjectStore::ObjectStore(Type ty)
+ObjectStore::ObjectStore(Type ty, Destructor f)
 : _type(ty)
 , addmtx(NULL)
 , delmtx(NULL)
 , storemtx(NULL)
+, dtor(f)
 {
     // Don't to anything else in here, as we're probably in the static init phase
 }
@@ -58,7 +21,7 @@ bool ObjectStore::init()
         && _store.reserve(64)
         && addlist.reserve(16)
         && dellist.reserve(16)
-        && deadlist.reserve(16)
+        && (dtor || deadlist.reserve(16))
         && (!tyrsound_ex_hasMT() || (
                (storemtx = Mutex::create())
             && (addmtx  = Mutex::create())
@@ -251,7 +214,10 @@ void ObjectStore::update()
             }
 
             obj->_dead = true;
-            deadlist.push_back(obj);
+            if(dtor)
+                dtor(obj);
+            else
+                deadlist.push_back(obj);
         }
     }
 

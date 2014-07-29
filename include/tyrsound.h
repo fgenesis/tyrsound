@@ -245,8 +245,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadEx(tyrsound_Stream stream, const
 
 /* Stops a sound, and frees all related resources.
  * The actual deletion is delayed and performed in the next update() call.
- * (This avoids some multithreading issues; don't call tyrsound_update() right after
- * deleting a sound when a second thread is involved. You have been warned.) */
+ * Upon deletion, the sound will be removed from its group if one is set. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Sound);
 
 /* Create a sound and attach an already configured decoder.
@@ -270,8 +269,15 @@ TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBuffer(void *buf, size_t byte
    Does NOT make in internal copy, so make sure the pointer stays alive while accessed. */
 TYRSOUND_DLL_EXPORT tyrsound_Sound tyrsound_loadRawBufferNoCopy(void *buf, size_t bytes, const tyrsound_Format *fmt);
 
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_autoFree(tyrsound_Sound);
+/* Calling this on a playing sound will cause it to be automatically deleted as soon as playback stops.
+   After the call, handles to the sound will continue to work, but are no longer safe to use,
+   as the sound may be deleted at any point.
+   As a convenience, this may be set on a sound before playing it,
+   delaying the deletion to after playback finishes.
+   In that case, handles will stay safe to use until tyrsound_play() is called.
+   Controlling a sound flagged for automatic deletion is still safely possible if it is in a group.
+   Upon deletion, the sound will be removed from its group if one is set. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_fireAndForget(tyrsound_Sound);
 
 /*********************************
 * Sound manipulation/information *
@@ -290,20 +296,23 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Sound, float seconds);
 /* Immediately seeks to a position in the stream (in seconds). Throws away any buffered data. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seekNow(tyrsound_Sound, float seconds);
 
-/* When the decoder hits stream EOF, seek back to position
+/* When the decoder hits stream EOF, seek back to position.
 *    seconds: -1 to disable looping, any value >= 0 to seek to.
 *    loops: How often to loop. 0 disables looping (plays exactly once),
-1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
+            1 repeats once (= plays 2 times, etc). -1 to loop infinitely. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Sound, float seconds, int loops);
 
-
-// TODO: WRITE ME
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound, tyrsound_Group group);
+/* Attaches a sound to a group. A sound can never be attached to > 1 group at once.
+  If already attached to a group, detach from that group first.
+  If 'target' is TYRSOUND_NULL_GROUP, detach from current group, if any. */
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound, tyrsound_Group target);
 
 
 /*************************************
  * Sound/Group playback/manipulation *
  ************************************/
+/* All of the functions in this block can be applied to invidual sounds
+  as well as groups. */
 
 /* Starts playing a sound/group or unpauses a paused sound/group.
    If already playing, the call has no effect and will not fail. */
@@ -364,10 +373,14 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setMasterSpeed(float);
 * Groups API *
 *************/
 
+/* Create a group that can hold multiple sounds.
+   Functions to play/pause/stop/etc work on groups as well. */
 TYRSOUND_DLL_EXPORT tyrsound_Group tyrsound_createGroup();
 
+/* Detaches any sound attached and deletes the group. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_deleteGroup(tyrsound_Group);
 
+/* Detaches any sound attached. */
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_clearGroup(tyrsound_Group);
 
 

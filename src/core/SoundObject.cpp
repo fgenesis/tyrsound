@@ -1,5 +1,6 @@
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
+#include "ChannelGroup.h"
 #include "tyrDeviceBase.h"
 #include "tyrDecoderBase.h"
 #include "tyrChannelBase.h"
@@ -33,20 +34,33 @@ void SoundObject::destroy()
 
 SoundObject::~SoundObject()
 {
+    detachFromGroup();
     stop();
     _decoder->destroy();
 }
 
-SoundObject::SoundObject(DecoderBase *decoder) : Referenced(TY_SOUND)
+SoundObject::SoundObject(DecoderBase *decoder) : ReferencedPlayable(TY_SOUND)
+, group(NULL)
 , _decoder(decoder)
 , _channel(NULL)
 , _update(false)
+, _autofree(false)
+, _initial(true)
 , _volume(1.0f)
 , _speed(1.0f)
 , _posX(0.0f)
 , _posY(0.0f)
 , _posZ(0.0f)
+, groupvolume(1.0f)
+, groupspeed(1.0f)
+, groupx(0.0f), groupy(1.0f), groupz(1.0f)
 {
+}
+
+void SoundObject::detachFromGroup()
+{
+    if(group)
+        group->detachSound(this);
 }
 
 void SoundObject::_decode()
@@ -93,13 +107,35 @@ void SoundObject::update()
 tyrsound_Error SoundObject::setVolume(float vol)
 {
     _volume = vol;
-    return _channel ? _channel->setVolume(vol) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
+    return updateVolume();
+}
+
+tyrsound_Error SoundObject::setGroupVolume(float vol)
+{
+    groupvolume = vol;
+    return updateVolume();
+}
+
+tyrsound_Error SoundObject::updateVolume()
+{
+    return _channel ? _channel->setVolume(_volume * groupvolume) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 tyrsound_Error SoundObject::setSpeed(float speed)
 {
     _speed = speed;
-    return _channel ? _channel->setSpeed(speed) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
+    return updateSpeed();
+}
+
+tyrsound_Error SoundObject::setGroupSpeed(float speed)
+{
+    groupspeed = speed;
+    return updateSpeed();
+}
+
+tyrsound_Error SoundObject::updateSpeed()
+{
+    return _channel ? _channel->setSpeed(_speed * groupspeed) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 tyrsound_Error SoundObject::play()
@@ -111,7 +147,10 @@ tyrsound_Error SoundObject::play()
         reserved = true;
     }
     if(!_channel)
+    {
+        _initial = false;
         return TYRSOUND_ERR_CHANNELS_FULL;
+    }
 
     tyrsound_Error err = TYRSOUND_ERR_OK;
     if(reserved)
@@ -121,6 +160,7 @@ tyrsound_Error SoundObject::play()
         {
             if(reserved)
                 getDevice()->retainChannel(_channel);
+            _initial = false;
             return err;
         }
 
@@ -128,9 +168,9 @@ tyrsound_Error SoundObject::play()
         _decode();
 
         // If this was set when no channel pointer existed, do it now
-        _channel->setVolume(_volume);
-        _channel->setSpeed(_speed);
-        _channel->setPosition(_posX, _posY, _posZ);
+        updateVolume();
+        updateSpeed();
+        updatePosition();
     }
 
     err = _channel->play();
@@ -144,6 +184,7 @@ tyrsound_Error SoundObject::play()
         _update = true;
     }
 
+    _initial = false;
     return err;
 }
 
@@ -186,14 +227,14 @@ float SoundObject::getLength()
     return _decoder->getLength();
 }
 
-bool SoundObject::isPlaying()
+int SoundObject::isPlaying()
 {
     return _channel && _channel->isPlaying();
 }
 
-bool SoundObject::isStopped()
+int SoundObject::isStopped()
 {
-    return !_channel || _channel->isStopped();
+    return !_initial  && (!_channel || _channel->isStopped());
 }
 
 
@@ -202,12 +243,27 @@ float SoundObject::getPlayPosition()
     return _channel ? _channel->getPlayPosition() : 0.0f;
 }
 
-tyrsound_Error SoundObject::setPosition(float x,  float y, float z)
+tyrsound_Error SoundObject::setPosition(float x, float y, float z)
 {
     _posX = x;
     _posY = y;
     _posZ = z;
-    return _channel ? _channel->setPosition(x, y, z) : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
+    return updatePosition();
+}
+
+tyrsound_Error SoundObject::setGroupPosition(float x, float y, float z)
+{
+    groupx = x;
+    groupy = y;
+    groupz = z;
+    return updatePosition();
+}
+
+tyrsound_Error SoundObject::updatePosition()
+{
+    return _channel
+        ? _channel->setPosition(_posX + groupx, _posY + groupx, _posZ + groupz)
+        : TYRSOUND_ERR_NOT_APPLIED_TO_CHANNEL;
 }
 
 #include "tyrsound_end.h"

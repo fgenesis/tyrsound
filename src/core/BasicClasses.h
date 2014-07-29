@@ -8,6 +8,8 @@ class ObjectStore;
 class Referenced
 {
     friend class ObjectStore;
+public:
+    Type getType() const { return _type; }
 protected:
     inline Referenced(Type ty) : _idxInStore(unsigned(-1)), _idxInList(unsigned(-1)), _type(ty), _dead(false) {}
 private:
@@ -30,8 +32,15 @@ public:
     virtual tyrsound_Error play() = 0;
     virtual tyrsound_Error pause() = 0;
     virtual tyrsound_Error setPosition(float x, float y, float z) = 0;
-    virtual bool isPlaying() = 0;
-    virtual bool isStopped() = 0;
+    virtual int isPlaying() = 0;
+    virtual int isStopped() = 0;
+};
+
+class ReferencedPlayable : public Referenced, public Playable
+{
+protected:
+    ReferencedPlayable(Type ty) : Referenced(ty) {}
+    virtual ~ReferencedPlayable() {}
 };
 
 // very simple std::vector replacement for POD types
@@ -73,6 +82,17 @@ public:
     }
     inline T& operator[](unsigned i) { return _arr[i]; }
     inline const T& operator[](unsigned i) const { return _arr[i]; }
+    bool dropAndPop(const T& out) // find 'out' and move last element into its place
+    {
+        for(unsigned i = 0; i < _sz; ++i)
+            if(_arr[i] == out)
+            {
+                if(i != --_sz) // replace if not tail
+                    _arr[i] = _arr[_sz];
+                return true;
+            }
+        return false;
+    }
 private:
     bool _alloc(unsigned n)
     {

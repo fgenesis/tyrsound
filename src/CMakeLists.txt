@@ -30,6 +30,7 @@ set(src_core
     core/tyrsound_misc.cpp
     core/tyrsound_dyn.cpp
     core/tyrsound_group.cpp
+    core/tyrsound_play.cpp
     core/BasicClasses.h
     core/SoundObject.h
     core/SoundObject.cpp

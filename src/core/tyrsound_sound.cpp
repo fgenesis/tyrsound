@@ -1,11 +1,12 @@
 #include "tyrsound_internal.h"
 #include "SoundObject.h"
 #include "ObjectStore.h"
+#include "ChannelGroup.h"
 
 #include "tyrsound_begin.h"
 
 
-static ObjectStore soundstore(TY_SOUND);
+ObjectStore soundstore(TY_SOUND, NULL);
 
 tyrsound_Sound registerSoundObject(SoundObject *sound)
 {
@@ -82,15 +83,23 @@ tyrsound_Error updateSounds()
 }
 
 
+
+static tyrsound_Error lookupSound(tyrsound_Handle handle, SoundObject **psound)
+{
+    Referenced *ref = NULL;
+    tyrsound_Error err = soundstore.lookupHandle(handle, &ref);
+    *psound = static_cast<SoundObject*>(ref);
+    return err;
+}
+
+
 #include "tyrsound_end.h"
 
 #define LOOKUP_RET(var, h, ret)                    \
-    tyrsound::SoundObject *var = NULL;             \
-    do { tyrsound::Referenced *ref;                \
-        tyrsound_Error _err = tyrsound::soundstore.lookupHandle(h, &ref); \
-        if(!ref || _err != TYRSOUND_ERR_OK)        \
-            return ret;                            \
-        var = (tyrsound::SoundObject*)ref;         \
+    tyrsound::SoundObject *var;                    \
+    do { tyrsound_Error _err = tyrsound::lookupSound(h, &var); \
+    if(_err != TYRSOUND_ERR_OK || !var)            \
+        return ret;                                \
     } while(0)
 
 #define LOOKUP(var, h) LOOKUP_RET(var, h, _err)
@@ -102,28 +111,11 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Sound handle)
     return tyrsound::unregisterSoundObject(sound);
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setVolume(tyrsound_Handle handle, float vol)
-{
-    LOOKUP(sound, handle);
-    return sound->setVolume(vol);
-}
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setSpeed(tyrsound_Sound handle, float speed)
-{
-    LOOKUP(sound, handle);
-    return sound->setSpeed(speed);
-}
 
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Sound handle, float seconds)
 {
     LOOKUP(sound, handle);
     return sound->seek(seconds);
-}
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setPosition(tyrsound_Handle handle, float x, float y, float z)
-{
-    LOOKUP(sound, handle);
-    return sound->setPosition(x, y, z);
 }
 
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setLoop(tyrsound_Sound handle, float seconds, int loops)
@@ -138,31 +130,7 @@ TYRSOUND_DLL_EXPORT float tyrsound_getLength(tyrsound_Sound handle)
     return sound->getLength();
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_play(tyrsound_Handle handle)
-{
-    LOOKUP(sound, handle);
-    return sound->play();
-}
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_pause(tyrsound_Handle handle)
-{
-    LOOKUP(sound, handle);
-    return sound->pause();
-}
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_stop(tyrsound_Handle handle)
-{
-    LOOKUP(sound, handle);
-    return sound->stop();
-}
-
-TYRSOUND_DLL_EXPORT int tyrsound_isPlaying(tyrsound_Handle handle)
-{
-    LOOKUP_RET(sound, handle, 0);
-    return sound->isPlaying();
-}
-
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_autoFree(tyrsound_Sound handle)
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_fireAndForget(tyrsound_Sound handle)
 {
     LOOKUP_RET(sound, handle, _err);
     sound->setAutoFree(true);
@@ -175,3 +143,19 @@ TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Sound handle)
     return sound->getPlayPosition();
 }
 
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound handle, tyrsound_Group grouphandle)
+{
+    LOOKUP(sound, handle);
+    tyrsound::Referenced *gref = NULL;
+    if(grouphandle != TYRSOUND_NULL_GROUP)
+    {
+        tyrsound_Error err = tyrsound::groupstore.lookupHandle(grouphandle, &gref);
+        if(err != TYRSOUND_ERR_OK || !gref)
+            return err;
+        tyrsound::ChannelGroup *group = static_cast<tyrsound::ChannelGroup*>(gref);
+        return group->attachSound(sound);
+    }
+
+    sound->detachFromGroup();
+    return TYRSOUND_ERR_OK;
+}

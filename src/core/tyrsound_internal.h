@@ -18,6 +18,8 @@ enum Type
 
 // Definitions
 class SoundObject;
+class ObjectStore;
+class ChannelGroup;
 
 
 // in tyrsound_device.cpp
@@ -32,6 +34,11 @@ void unregisterUpdate(SoundObject *);
 tyrsound_Error initSounds();
 void shutdownSounds();
 tyrsound_Error updateSounds();
+
+// in tyrsound_group.cpp
+tyrsound_Error initGroups();
+void shutdownGroups();
+
 
 // in tyrsound_load.cpp
 void initDecoders();
@@ -140,6 +147,9 @@ template<typename T> void tyrsound_T_streamsToInterleaved(T *out, T * const * co
             break;
     }
 }
+
+extern ObjectStore soundstore;
+extern ObjectStore groupstore;
 
 
 #include "tyrsound_end.h"
