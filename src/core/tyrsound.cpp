@@ -91,7 +91,23 @@ TYRSOUND_DLL_EXPORT void tyrsound_ex_unlockMutex(void *mtx)
 
 TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name)
 {
-    return tyrsound::dynopen(name);
+    void *h = NULL;
+    if((h = tyrsound::dynopen(name)))
+        return h;
+
+    size_t len = strlen(name);
+    char *buf = (char*)alloca(len + 10);
+    memcpy(buf, "lib", 3);
+    memcpy(buf+3, name, len+1);
+
+    if((h = tyrsound::dynopen(buf)))
+        return h;
+
+    memcpy(buf+3+len, "-0", 3);
+    if((h = tyrsound::dynopen(buf)))
+        return h;
+
+    return tyrsound::dynopen(buf+3);
 }
 
 TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)

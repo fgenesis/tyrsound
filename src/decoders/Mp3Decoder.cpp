@@ -74,7 +74,7 @@ bool Mp3Decoder::s_enabled = false;
 
 void Mp3Decoder::staticInit()
 {
-    s_dynHandle = tyrsound_ex_loadLibrary("libmpg123");
+    s_dynHandle = tyrsound_ex_loadLibrary("mpg123");
     if(!s_dynHandle)
     {
         tyrsound_ex_message(TYRSOUND_MSG_INFO, "MP3 support not enabled, failed to load libmpg123 dynamic library");

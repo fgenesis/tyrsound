@@ -12,6 +12,7 @@
 
 void *dynopen(const char *fn)
 {
+    tyrsound_ex_messagef(TYRSOUND_MSG_DEBUG, "Trying to dynopen '%s'", fn);
     void *h = NULL;
     size_t len = strlen(fn);
     char *s = (char*)Alloc(len + 10);
@@ -23,6 +24,10 @@ void *dynopen(const char *fn)
 #else
     memcpy(s + len, ".so\0", 4);
     h = (void*)dlopen(s, RTLD_NOW | RTLD_LOCAL);
+    if(!h)
+        memcpy(s + len + 3, ".0\0", 3);
+    h = (void*)dlopen(s, RTLD_NOW | RTLD_LOCAL);
+
 #endif
     // TODO: .dylib
 
