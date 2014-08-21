@@ -2,6 +2,28 @@
 
 #include <stdio.h>
 
+// for sleep / nanosleep
+#ifdef _WIN32
+#include <windows.h>
+static void sleep_ms(int ms)
+{
+    Sleep(ms);
+}
+#elif defined(__linux__)
+#include <time.h>
+static void sleep_ms(int ms)
+{
+    timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = (1000000L * ms) % (1000000L * 1000L);
+    nanosleep(&ts, NULL);
+}
+#else
+static void sleep_ms(int)
+{
+}
+#endif
+
 int playFile(const char *name)
 {
     tyrsound_Stream strm;
@@ -32,6 +54,8 @@ int playFile(const char *name)
     {
         tyrsound_update();
         printf("[At %.3f / %.3f]\r", tyrsound_getPlayPosition(sound), len);
+        fflush(stdout);
+        sleep_ms(100);
     }
 
     /* Free resources after we're done */
