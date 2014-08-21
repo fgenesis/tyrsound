@@ -146,9 +146,19 @@ OpenALDevice *OpenALDevice::create(tyrsound_Format& fmt, tyrsound_DeviceConfig& 
     if(!cfg.numBuffers)
         cfg.numBuffers = 8;
 
+    const char *alldevnames = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+    tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "OpenALDevice: Found devices: %s", alldevnames);
+
+    if(!cfg.deviceName || !*cfg.deviceName)
+    {
+        cfg.deviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+        tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "OpenALDevice: No device specified, using default: %s", cfg.deviceName);
+    }
+
+
     // See http://digitalstarcode.googlecode.com/svn-history/r39/trunk/ofxSoundPlayerExample/src/ofxSoundPlayer/OpenAL/AudioDevice.cpp
 
-    ALCdevice *dev = alcOpenDevice(NULL); // TODO: allow specifying this in detail
+    ALCdevice *dev = alcOpenDevice(cfg.deviceName);
     if (!dev)
         return NULL;
 
@@ -167,6 +177,9 @@ OpenALDevice *OpenALDevice::create(tyrsound_Format& fmt, tyrsound_DeviceConfig& 
         alcCloseDevice(dev);
         return NULL;
     }
+
+    const char *devname = alcGetString(dev, ALC_DEVICE_SPECIFIER);
+    tyrsound_ex_messagef(TYRSOUND_MSG_INFO, "OpenALDevice: Device specifier = %s", devname);
 
     // This is a bit messy. OpenALSoft pretends not to know AL_EXT_float32, even though it does.
     // But it will return values for AL_FORMAT_[MONO|STEREO]_FLOAT32.
