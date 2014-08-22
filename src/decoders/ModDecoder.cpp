@@ -93,9 +93,14 @@ ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream
     if(!decode)
         goto fail;
 
-    decode->_mod = openmpt_module_create(stream_callbacks, &decode->_strm, logfunc_wrap, NULL, NULL);
-    if(!decode->_mod)
+    openmpt_module *mod = openmpt_module_create(stream_callbacks, &decode->_strm, logfunc_wrap, NULL, NULL);
+    if(!mod)
         goto fail;
+
+    // FIXME: this lowers quality but speeds up processing -- add an API to enable this if desired
+    openmpt_module_set_render_param(mod, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, 4);
+
+    decode->_mod = mod;
 
     return decode;
 
