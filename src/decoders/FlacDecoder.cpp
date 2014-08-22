@@ -248,7 +248,7 @@ FlacDecoder *FlacDecoder::create(const tyrsound_Format& /*not used*/, tyrsound_S
         seemsgood = seemsgood && checkMagic(&magic[0], 4);
         strm.seek(strm.user, 0, SEEK_SET);
         if(!seemsgood)
-            return false;
+            return NULL;
     }
     //------------
 

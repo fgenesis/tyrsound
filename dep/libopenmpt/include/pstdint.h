@@ -1,4 +1,4 @@
-#ifndef _PSTDINT_H_INLCUDED
+#ifndef _PSTDINT_H_INCLUDED
 #define _PSTDINT_H_INCLUDED
 
 #include <limits.h>
