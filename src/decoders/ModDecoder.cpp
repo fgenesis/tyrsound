@@ -84,6 +84,7 @@ ModDecoder::~ModDecoder()
 ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
 {
     ModDecoder *decode = NULL;
+    openmpt_module *mod = NULL;
     
     void *mem = Alloc(sizeof(ModDecoder));
     if(!mem)
@@ -93,7 +94,7 @@ ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream
     if(!decode)
         goto fail;
 
-    openmpt_module *mod = openmpt_module_create(stream_callbacks, &decode->_strm, logfunc_wrap, NULL, NULL);
+    mod = openmpt_module_create(stream_callbacks, &decode->_strm, logfunc_wrap, NULL, NULL);
     if(!mod)
         goto fail;
 
