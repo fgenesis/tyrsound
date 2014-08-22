@@ -197,14 +197,12 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
     return tyrsound::initSounds();
 }
 
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown()
+TYRSOUND_DLL_EXPORT void tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
     tyrsound::shutdownGroups();
     tyrsound::shutdownDevice();
     tyrsound::shutdownDecoders();
-    tyrsound_ex_message(TYRSOUND_MSG_INFO, "Shutdown complete");
-    return TYRSOUND_ERR_OK;
 }
 
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setupMT(void *(*newMutexFunc)(void), void (*deleteMutexFunc)(void*), int (*lockFunc)(void*), void (*unlockFunc)(void*))

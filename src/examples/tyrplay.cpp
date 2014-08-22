@@ -36,6 +36,11 @@ int playFile(const char *name)
     tyrsound_Sound sound = tyrsound_load(&strm);
     if(sound == TYRSOUND_NULL_SOUND)
     {
+        printf("Fast format detection failed, trying harder...\n");
+        sound = tyrsound_loadEx(&strm, NULL, 1);
+    }
+    if(sound == TYRSOUND_NULL_SOUND)
+    {
         printf("Format not recognized / no suitable decoder.\n");
         return 3;
     }

@@ -50,7 +50,12 @@ bool ModDecoder::checkMagic(const unsigned char *magic, size_t size)
     tyrsound_Stream strm;
     if(tyrsound_createMemStream(&strm, (void*)magic, size, NULL, 0) != TYRSOUND_ERR_OK)
         return false;
-    return openmpt_could_open_propability(stream_callbacks, &strm, 0.25, logfunc_wrap, NULL) > 0;
+    bool maybe = openmpt_could_open_propability(stream_callbacks, &strm, 0.25, logfunc_wrap, NULL) > 0;
+    // <manx> fgenesis: btw, i think you can get your 'dunno' answer just fine. you can
+    //        detect if libopenmpt tried to read past the first n bytes you want to
+    //        give it for checking, and if it does, just ignore any answer and return
+    //        "dunno" from your magic checking function afterwards
+    return maybe || (strm.tell && strm.tell(strm.user) > 16);
 }
 
 

@@ -236,6 +236,23 @@ static FLAC__StreamDecoderWriteStatus s_writeCallback(const FLAC__StreamDecoder 
 
 FlacDecoder *FlacDecoder::create(const tyrsound_Format& /*not used*/, tyrsound_Stream strm)
 {
+    // FIXME: -------------
+    // FLAC is exceptionally annoying and apparently does not check for any magic bytes
+    // at the beginning of the file; instead it hammers the error callback until it
+    // eventually figures it can't deal with the file format.
+    // So we do the magic check (possibly again), according to the spec, to avoid spamming errors.
+    if(strm.seek)
+    {
+        unsigned char magic[4];
+        bool seemsgood = strm.read(&magic[0], 4, 1, strm.user) != 4;
+        seemsgood = seemsgood && checkMagic(&magic[0], 4);
+        strm.seek(strm.user, 0, SEEK_SET);
+        if(!seemsgood)
+            return false;
+    }
+    //------------
+
+
     FlacDecoderState *state = (FlacDecoderState*)Alloc(sizeof(FlacDecoderState));
     if(!state)
         return NULL;

@@ -109,14 +109,18 @@ void Mp3Decoder::staticInit()
 
 void Mp3Decoder::staticShutdown()
 {
+    s_enabled = false;
+
     if(funcs.mpg123_exit)
         funcs.mpg123_exit();
 
     memset(&funcs, 0, sizeof(funcs));
-    tyrsound_ex_unloadLibrary(s_dynHandle);
-    s_dynHandle = NULL;
-    s_enabled = false;
-    tyrsound_ex_message(TYRSOUND_MSG_DEBUG, "Mp3Decoder: Unloaded dynamic library");
+    if(s_dynHandle)
+    {
+        tyrsound_ex_unloadLibrary(s_dynHandle);
+        tyrsound_ex_message(TYRSOUND_MSG_DEBUG, "Mp3Decoder: Unloaded dynamic library");
+        s_dynHandle = NULL;
+    }
 }
 
 
@@ -178,8 +182,9 @@ Mp3Decoder::~Mp3Decoder()
 
 bool Mp3Decoder::checkMagic(const unsigned char *magic, size_t size)
 {
-    return (magic[0] == 0xFF && (magic[1] & 0xF0) == 0xF0)
-        || (tolower(magic[0]) == 'i' && tolower(magic[1]) == 'd' && magic[2] == '3');
+    return s_enabled &&
+        ((magic[0] == 0xFF && (magic[1] & 0xF0) == 0xF0)
+        || (tolower(magic[0]) == 'i' && tolower(magic[1]) == 'd' && magic[2] == '3'));
 }
 
 

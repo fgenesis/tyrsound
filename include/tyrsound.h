@@ -175,7 +175,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
  * Stops & clears all sounds still playing (but emits a warning if it does so).
  * Does NOT clear the custom mutex and related functions, nor the memory allocator.
  * Do not call this while having a background thread active that calls tyrsound_update()! */
-TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_shutdown(void);
+TYRSOUND_DLL_EXPORT void tyrsound_shutdown(void);
 
 /* Sets up the library for multithreading,
  * allowing to call tyrsound_update() from one or more separate threads.

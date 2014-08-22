@@ -115,7 +115,7 @@ tyrsound_Sound loadStream(tyrsound_Stream *stream, const tyrsound_Format *fmt, b
     tyrsound_Format f;
     if(!fmt)
         tyrsound_getFormat(&f);
-    return tyrsound::createSoundObject(useStream, fmt ? *fmt : f, false);
+    return tyrsound::createSoundObject(useStream, fmt ? *fmt : f, skipMagic);
 }
 
 
