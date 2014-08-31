@@ -65,6 +65,7 @@ ModDecoder::ModDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 , _loopPoint(-1)
 , _loopCount(0)
 , _eof(false)
+, _mod(NULL)
 {
     _fmt.bigendian = 0;
     _fmt.signedSamples = 1;
@@ -76,9 +77,11 @@ ModDecoder::ModDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
 ModDecoder::~ModDecoder()
 {
     if(_mod)
+    {
         openmpt_module_destroy((openmpt_module*)_mod);
-    if(_strm.close)
-        _strm.close(_strm.user);
+        if(_strm.close)
+            _strm.close(_strm.user);
+    }
 }
 
 ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
