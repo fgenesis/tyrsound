@@ -5,7 +5,6 @@
 
 #include "tyrsound_begin.h"
 
-
 ObjectStore soundstore(TY_SOUND, NULL);
 
 tyrsound_Sound registerSoundObject(SoundObject *sound)
@@ -111,6 +110,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_unload(tyrsound_Sound handle)
     return tyrsound::unregisterSoundObject(sound);
 }
 
+// TODO: seek percentage
 
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_seek(tyrsound_Sound handle, float seconds)
 {
@@ -143,6 +143,12 @@ TYRSOUND_DLL_EXPORT float tyrsound_getPlayPosition(tyrsound_Sound handle)
     return sound->getPlayPosition();
 }
 
+TYRSOUND_DLL_EXPORT float tyrsound_getDecodePosition(tyrsound_Sound handle)
+{
+    LOOKUP_RET(sound, handle, 0);
+    return sound->tell();
+}
+
 TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound handle, tyrsound_Group grouphandle)
 {
     LOOKUP(sound, handle);
@@ -158,4 +164,18 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_setGroup(tyrsound_Sound handle, tyrs
 
     sound->detachFromGroup();
     return TYRSOUND_ERR_OK;
+}
+
+TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_attachDSP(tyrsound_Sound handle, tyrsound_DSP dsphandle)
+{
+    tyrsound::DSPAPI *dsp = NULL;
+    if(dsphandle != TYRSOUND_NULL_DSP)
+    {
+        tyrsound_Error err;
+        if((err = tyrsound::lookupDSP(dsphandle, &dsp)) != TYRSOUND_ERR_OK)
+            return err;
+    }
+
+    LOOKUP(sound, handle);
+    return sound->attachDSP(dsp);
 }

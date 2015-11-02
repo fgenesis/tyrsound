@@ -20,21 +20,16 @@ public:
     static bool checkMagic(const unsigned char *magic, size_t size);
 
     virtual size_t fillBuffer(void *buf, size_t size);
-    virtual float getLength();
-    virtual tyrsound_Error seek(float seconds);
-    virtual float tell();
+    virtual tyrsound_Error seekSample(tyrsound_uint64 sample);
+    virtual tyrsound_uint64 tellSample();
     virtual tyrsound_Error setLoop(float seconds, int loops);
     virtual float getLoopPoint();
     virtual bool isEOF();
-    virtual void getFormat(tyrsound_Format *fmt);
 
 protected:
     tyrsound_Stream _strm;
-    tyrsound_Format _fmt;
-    unsigned int _datasize;
     float _loopPoint;
     int _loopCount;
-    float _totaltime;
     bool _eof;
 };
 

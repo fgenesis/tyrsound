@@ -133,16 +133,17 @@ bool FlacDecoder::checkMagic(const unsigned char *magic, size_t size)
 
 
 FlacDecoder::FlacDecoder(void *pstate, const tyrsound_Format& fmt)
-: _state(pstate)
+: DecoderBase(fmt)
+, _state(pstate)
 , _loopPoint(-1.0f)
 , _eof(false)
 , _loopCount(0)
-, _fmt(fmt)
 {
     FlacDecoderState *state = (FlacDecoderState*)pstate;
 
     _seekable = state->strm.seek && state->strm.remain && state->strm.tell;
-    _totaltime = !state->totalSamples ? -1.0f : (state->totalSamples / float(fmt.hz));
+    c.length = state->totalSamples / float(fmt.hz);
+    c.totalsamples = state->totalSamples;
 }
 
 FlacDecoder::~FlacDecoder()
@@ -328,7 +329,7 @@ size_t FlacDecoder::fillBuffer(void *buf, size_t size)
 
     // Copy whatever is in the decoded buffer to the output buffer, up to size.
     // Might not be able to supply size bytes, in that case we'll continue below.
-    size_t copysize = Min(size, (size_t)state->buffered);
+    size_t copysize = vmin(size, (size_t)state->buffered);
     if(copysize % state->bytesPerSample)
         breakpoint();
     if(copysize)
@@ -410,27 +411,6 @@ end:
     return totalWritten;
 }
 
-// FIXME: just guessing here, the FLAC doc is somewhat hard to understand
-tyrsound_Error FlacDecoder::seek(float seconds)
-{
-    FlacDecoderState *state = (FlacDecoderState*)_state;
-    FLAC__bool seeked = FLAC__stream_decoder_seek_absolute(state->flac, FLAC__uint64(seconds * state->sampleRate));
-    FLAC__bool flushOk = 1;
-    if(FLAC__stream_decoder_get_state(state->flac) == FLAC__STREAM_DECODER_SEEK_ERROR)
-        flushOk = FLAC__stream_decoder_flush(state->flac);
-
-    if(!seeked && !flushOk)
-        _eof = true;
-
-    if(seeked)
-    {
-        _eof = false;
-        return TYRSOUND_ERR_OK;
-    }
-
-    return flushOk ? TYRSOUND_ERR_UNSUPPORTED : TYRSOUND_ERR_UNSPECIFIED;
-}
-
 tyrsound_Error FlacDecoder::setLoop(float seconds, int loops)
 {
     if(_seekable)
@@ -447,27 +427,40 @@ float FlacDecoder::getLoopPoint()
     return _loopPoint;
 }
 
-
-float FlacDecoder::getLength()
-{
-    return _totaltime;
-}
-
-float FlacDecoder::tell()
-{
-    return -1; //(float)ov_time_tell(&((FlacDecoderState*)_state)->vf); // FIXME
-}
-
 bool FlacDecoder::isEOF()
 {
     return _eof;
 }
 
-void FlacDecoder::getFormat(tyrsound_Format *fmt)
+// FIXME: just guessing here, the FLAC doc is somewhat hard to understand
+tyrsound_Error FlacDecoder::seekSample(tyrsound_uint64 sample)
 {
-    *fmt = _fmt;
+    FlacDecoderState *state = (FlacDecoderState*)_state;
+    FLAC__uint64 seekpos = sample * state->channels;
+    FLAC__bool seeked = FLAC__stream_decoder_seek_absolute(state->flac, seekpos);
+    FLAC__bool flushOk = 1;
+    if(FLAC__stream_decoder_get_state(state->flac) == FLAC__STREAM_DECODER_SEEK_ERROR)
+        flushOk = FLAC__stream_decoder_flush(state->flac);
+
+    if(!seeked && !flushOk)
+        _eof = true;
+
+    if(seeked)
+    {
+        _eof = false;
+        return TYRSOUND_ERR_OK;
+    }
+
+    return flushOk ? TYRSOUND_ERR_UNSUPPORTED : TYRSOUND_ERR_UNSPECIFIED;
 }
 
+tyrsound_uint64 FlacDecoder::tellSample()
+{
+    FlacDecoderState *state = (FlacDecoderState*)_state;
+    FLAC__uint64 pos = 0;
+    FLAC__stream_decoder_get_decode_position(state->flac, &pos);
+    return pos / (state->bytesPerSample * state->channels);
+}
 
 #include "tyrsound_end.h"
 

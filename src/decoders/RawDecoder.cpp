@@ -8,11 +8,10 @@
 //TYRSOUND_REGISTER_DECODER(RawDecoder);
 
 RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
-: _strm(strm)
-, _fmt(fmt)
+: DecoderBase(fmt)
+, _strm(strm)
 , _loopPoint(-1)
 , _loopCount(0)
-, _totaltime(-1)
 , _eof(false)
 {
     if(strm.remain)
@@ -20,8 +19,8 @@ RawDecoder::RawDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
         tyrsound_int64 rem = _strm.remain(_strm.user);
         if(rem >= 0)
         {
-            _totaltime = (rem / fmt.channels) / (float)fmt.hz; // FIXME: probably not correct
-            _totaltime /= (fmt.sampleBits / 8);
+            c.totalsamples = rem / (fmt.channels * (fmt.sampleBits / 8));
+            c.length = c.totalsamples / float(fmt.hz);
         }
     }
 }
@@ -72,16 +71,11 @@ size_t RawDecoder::fillBuffer(void *buf, size_t size)
     return (size_t)total;
 }
 
-float RawDecoder::getLength()
-{
-    return _totaltime;
-}
-
-tyrsound_Error RawDecoder::seek(float seconds)
+tyrsound_Error RawDecoder::seekSample(tyrsound_uint64 sample)
 {
     if(_strm.seek)
     {
-        int err = _strm.seek(_strm.user, tyrsound_int64(1000.0 * _fmt.hz * _fmt.channels * seconds), SEEK_SET);
+        int err = _strm.seek(_strm.user, sample * _fmt.channels * (_fmt.sampleBits / 8), SEEK_SET);
         if(!err)
         {
             _eof = false;
@@ -92,18 +86,9 @@ tyrsound_Error RawDecoder::seek(float seconds)
     return TYRSOUND_ERR_UNSUPPORTED;
 }
 
-float RawDecoder::tell()
+tyrsound_uint64 RawDecoder::tellSample()
 {
-    if(_strm.tell)
-    {
-        tyrsound_int64 pos = _strm.tell(_strm.user);
-        if(pos > 0)
-        {
-            float pf = float(pos / _fmt.channels); // FIXME: probably not correct
-            return pf / (_fmt.sampleBits / 8);
-        }
-    }
-    return -1;
+    return _strm.tell ? (_strm.tell(_strm.user) / (_fmt.channels * (_fmt.sampleBits / 8))) : 0;
 }
 
 tyrsound_Error RawDecoder::setLoop(float seconds, int loops)
@@ -121,11 +106,6 @@ float RawDecoder::getLoopPoint()
 bool RawDecoder::isEOF()
 {
     return _eof;
-}
-
-void RawDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
 }
 
 #include "tyrsound_end.h"

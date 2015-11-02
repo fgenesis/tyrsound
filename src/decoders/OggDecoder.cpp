@@ -57,7 +57,8 @@ bool OggDecoder::checkMagic(const unsigned char *magic, size_t size)
 
 
 OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
-: _state(state)
+: DecoderBase(fmt)
+, _state(state)
 , _loopPoint(-1.0f)
 , _eof(false)
 , _loopCount(0)
@@ -65,7 +66,8 @@ OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
     // 16 bits if not specified
     unsigned int bits = fmt.sampleBits == 0 ? 16 : fmt.sampleBits;
     _sampleWordSize = (bits <= 8 ? 1 : 2);
-    _totaltime = (float)ov_time_total(&((OggDecoderState*)state)->vf, -1);
+    c.totalsamples = ov_pcm_total(&((OggDecoderState*)state)->vf, -1);
+    c.length = (float)ov_time_total(&((OggDecoderState*)state)->vf, -1);
     _seekable = ov_seekable(&((OggDecoderState*)state)->vf) != 0;
     _fmt = fmt;
     vorbis_info *vi = ov_info(&((OggDecoderState*)state)->vf, -1);
@@ -73,9 +75,8 @@ OggDecoder::OggDecoder(void *state, const tyrsound_Format& fmt)
     _fmt.hz = vi->rate;
     _fmt.sampleBits = bits;
 
-    // This decoder suppots float output
-    if(_fmt.isfloat)
-        _fmt.isfloat = 1;
+    // This decoder supports float output
+    _fmt.isfloat = !!_fmt.isfloat;
 }
 
 OggDecoder::~OggDecoder()
@@ -175,6 +176,14 @@ tyrsound_Error OggDecoder::seek(float seconds)
         : TYRSOUND_ERR_OK;
 }
 
+tyrsound_Error OggDecoder::seekSample(tyrsound_uint64 sample)
+{
+    _eof = false;
+    return ov_pcm_seek(&((OggDecoderState*)_state)->vf, sample)
+        ? TYRSOUND_ERR_UNSPECIFIED
+        : TYRSOUND_ERR_OK;
+}
+
 tyrsound_Error OggDecoder::setLoop(float seconds, int loops)
 {
     if(_seekable)
@@ -191,25 +200,19 @@ float OggDecoder::getLoopPoint()
     return _loopPoint;
 }
 
-
-float OggDecoder::getLength()
-{
-    return _totaltime;
-}
-
 float OggDecoder::tell()
 {
     return (float)ov_time_tell(&((OggDecoderState*)_state)->vf);
 }
 
+tyrsound_uint64 OggDecoder::tellSample()
+{
+    return ov_pcm_tell(&((OggDecoderState*)_state)->vf);
+}
+
 bool OggDecoder::isEOF()
 {
     return _eof;
-}
-
-void OggDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
 }
 
 

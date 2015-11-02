@@ -5,21 +5,25 @@
 #include <string.h>
 #include <new>
 
+#include "tyrsound_util.h"
 #include "tyrsound_ex.h"
+#include "tyrsound_transform.h"
 
 #include "tyrsound_begin.h"
+
 
 enum Type
 {
     TY_SOUND,
     TY_GROUP,
-    TY_EFFECT
+    TY_DSP
 }; // type id must not exceed 7 (see HandleBits)
 
 // Definitions
 class SoundObject;
 class ObjectStore;
 class ChannelGroup;
+class DSPAPI;
 
 
 // in tyrsound_device.cpp
@@ -39,6 +43,10 @@ tyrsound_Error updateSounds();
 tyrsound_Error initGroups();
 void shutdownGroups();
 
+// in tyrsound_dsp.cpp
+tyrsound_Error initDSPs();
+tyrsound_Error lookupDSP(tyrsound_DSP handle, DSPAPI **pdsp);
+void shutdownDSPs();
 
 // in tyrsound_load.cpp
 void initDecoders();
@@ -51,11 +59,13 @@ unsigned int readLE32(const void *buf);
 unsigned short readLE16(const void *buf);
 void writeLE32(void *buf, unsigned int i);
 void writeLE16(void *buf, unsigned short i);
+unsigned nextPowerOf2(unsigned x);
 
 // in tyrsound_dyn.cpp
 void *dynopen(const char *fn);
 void dynclose(void *);
 void *dynsym(void *, const char *name);
+
 
 // Helper for static initialization
 template <typename T, int SZ> class RegistrationHolder

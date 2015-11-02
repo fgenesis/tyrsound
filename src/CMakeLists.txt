@@ -17,6 +17,7 @@ include_directories("${INCLUDE_LIST}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/core")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/decoders")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/output")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dsp")
 
 set(libs)
 
@@ -31,6 +32,12 @@ set(src_core
     core/tyrsound_dyn.cpp
     core/tyrsound_group.cpp
     core/tyrsound_play.cpp
+    core/tyrsound_platform.h
+    core/tyrsound_util.h
+    core/tyrsound_dsp.cpp
+    core/tyrsound_transform.h
+    core/tyrsound_intrin_sse.h
+    core/tyrsound_intrin_fallback.h
     core/BasicClasses.h
     core/SoundObject.h
     core/SoundObject.cpp
@@ -64,6 +71,26 @@ set(src_decoders
     decoders/RawDecoder.cpp
     decoders/RawDecoder.h
 )
+
+set(src_dsp
+    dsp/DSPAPI.h
+    dsp/DSPChain.cpp
+    dsp/DSPChain.h
+    dsp/FilterAPI.h
+    dsp/IIRFilter.h
+    dsp/PassFilters.cpp
+    dsp/PassFilters.h
+    dsp/SampleConverter.cpp
+    dsp/SampleConverter.h
+    dsp/_kiss_fft_guts.h
+    dsp/kiss_fft.c
+    dsp/kiss_fft.h
+    dsp/kiss_fftr.c
+    dsp/kiss_fftr.h
+    dsp/SpectrumCallback.cpp
+    dsp/SpectrumCallback.h
+)
+    
 
 if(TYRSOUND_SUPPORT_WAV)
     list(APPEND src_decoders
@@ -148,12 +175,13 @@ if(TYRSOUND_OUTPUT_OPENAL)
     list(APPEND libs "${OPENAL_LIBRARY}")
 endif()
 
-set(src ${src_headers} ${src_core} ${src_output} ${src_decoders})
+set(src ${src_headers} ${src_core} ${src_output} ${src_decoders} ${src_dsp})
 
 source_group("headers" FILES ${src_headers})
 source_group("core" FILES ${src_core})
 source_group("output" FILES ${src_output})
 source_group("decoders" FILES ${src_decoders})
+source_group("dsp" FILES ${src_dsp})
 
 
 add_library(tyrsound ${LIB_TYPE} ${src})

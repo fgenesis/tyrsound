@@ -163,15 +163,16 @@ static void close_wrap(void *src)
 }
 
 Mp3Decoder::Mp3Decoder(void *state, const tyrsound_Format& fmt, bool seekable)
-: _state(state)
+: DecoderBase(fmt)
+, _state(state)
 , _loopPoint(-1.0f)
 , _loopCount(0)
 , _seekable(seekable)
 , _eof(false)
-, _fmt(fmt)
 {
     mpg123_handle *mh = ((Mp3DecoderState*)state)->mh;
-    _totaltime = funcs.mpg123_length(mh) / (float)_fmt.hz;
+    c.totalsamples = funcs.mpg123_length(mh);
+    c.length = c.totalsamples / (float)_fmt.hz;
 }
 
 Mp3Decoder::~Mp3Decoder()
@@ -342,9 +343,9 @@ size_t Mp3Decoder::fillBuffer(void *buf, size_t size)
     return totalRead;
 }
 
-tyrsound_Error Mp3Decoder::seek(float seconds)
+tyrsound_Error Mp3Decoder::seekSample(tyrsound_uint64 sample)
 {
-    if(funcs.mpg123_seek(((Mp3DecoderState*)_state)->mh, off_t(_fmt.hz * seconds), SEEK_SET) < 0) // TODO: check this
+    if(funcs.mpg123_seek(((Mp3DecoderState*)_state)->mh, off_t(sample), SEEK_SET) < 0) // TODO: check this
     {
         _eof = true;
         return TYRSOUND_ERR_UNSPECIFIED;
@@ -370,27 +371,15 @@ float Mp3Decoder::getLoopPoint()
 }
 
 
-float Mp3Decoder::getLength()
+tyrsound_uint64 Mp3Decoder::tellSample()
 {
-    return _totaltime;
-}
-
-float Mp3Decoder::tell()
-{
-    tyrsound_int64 samplePos = funcs.mpg123_tell(((Mp3DecoderState*)_state)->mh);
-    return samplePos < 0 ? -1.0f : samplePos / float(_fmt.hz);
+    return funcs.mpg123_tell(((Mp3DecoderState*)_state)->mh);
 }
 
 bool Mp3Decoder::isEOF()
 {
     return _eof;
 }
-
-void Mp3Decoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
-}
-
 
 #include "tyrsound_end.h"
 

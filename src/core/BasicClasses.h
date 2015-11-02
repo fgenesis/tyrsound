@@ -16,7 +16,7 @@ private:
     unsigned _idxInStore;
     unsigned _idxInList;
     Type _type;
-    bool _dead;
+    bool _dead; // TODO: merge this into _type (highest bit)
 };
 
 class Playable
@@ -80,6 +80,13 @@ public:
         _arr[_sz++] = e;
         return true;
     }
+    size_t shift(size_t n)
+    {
+        n = vmin(_sz, n);
+        memmove(_arr, _arr + n, n);
+        _sz -= n;
+        return n;
+    }
     inline T& operator[](unsigned i) { return _arr[i]; }
     inline const T& operator[](unsigned i) const { return _arr[i]; }
     bool dropAndPop(const T& out) // find 'out' and move last element into its place
@@ -107,7 +114,6 @@ private:
     unsigned _sz;
     unsigned _capacity;
 };
-
 
 #include "tyrsound_end.h"
 #endif

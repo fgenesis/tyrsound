@@ -4,6 +4,9 @@
 #include "tyrDeviceBase.h"
 #include "tyrDecoderBase.h"
 #include "tyrChannelBase.h"
+#include "DSPAPI.h"
+
+#include "SampleConverter.h"
 
 #include "tyrsound_begin.h"
 
@@ -54,6 +57,8 @@ SoundObject::SoundObject(DecoderBase *decoder) : ReferencedPlayable(TY_SOUND)
 , groupvolume(1.0f)
 , groupspeed(1.0f)
 , groupx(0.0f), groupy(1.0f), groupz(1.0f)
+, _dsp(NULL)
+, _dspState(NULL)
 {
 }
 
@@ -61,6 +66,27 @@ void SoundObject::detachFromGroup()
 {
     if(group)
         group->detachSound(this);
+}
+
+tyrsound_Error SoundObject::attachDSP(DSPAPI *dsp)
+{
+    if(_dsp)
+    {
+        Free(_dspState);
+        _dspState = NULL;
+        _dsp = NULL;
+    }
+    _dsp = dsp;
+    if(dsp)
+    {
+        tyrsound_Format fmt;
+        _decoder->getFormat(&fmt);
+        _dspState = dsp->allocState(fmt.channels); // TODO: make this set a ptr and return an error instead
+    }
+    else
+        dspBuf.clear();
+
+    return TYRSOUND_ERR_OK;
 }
 
 void SoundObject::_decode()
@@ -82,12 +108,10 @@ void SoundObject::_decode()
         _channel->getBuffer(&buf, &size);
         if(buf && size)
         {
-            size_t filled = _decoder->fillBuffer(buf, size);
-            tyrsound_ex_messagef(TYRSOUND_MSG_SPAM, "Decoded %u bytes", (unsigned int)filled);
             _decoder->getFormat(&fmt);
             _fixDecoderFormat(fmt);
-            tyrsound_Error err = _channel->filledBuffer(filled, fmt);
-            if(err != TYRSOUND_ERR_OK)
+            size_t bytesDecoded = _decodeBlock(buf, size, fmt);
+            if(_channel->filledBuffer(bytesDecoded, fmt) != TYRSOUND_ERR_OK)
             {
                 breakpoint();
                 return;
@@ -95,6 +119,37 @@ void SoundObject::_decode()
         }
     }
 }
+
+size_t SoundObject::_decodeBlock(void *buf, size_t size, tyrsound_Format& fmt)
+{
+    size_t nMaxFloats = size / sizeof(float);
+    size_t bytesPerSample = fmt.sampleBits / 8;
+    size_t bytesToDecode = nMaxFloats * bytesPerSample;
+    size_t filled;
+    size_t nSamplesDecoded;
+    if(!dspBuf.resize(bytesToDecode))
+    {
+        tyrsound_ex_message(TYRSOUND_MSG_ERROR, "Not enough memory for DSP buffer");
+        //goto noDSP;
+    }
+
+    filled = _decoder->fillBuffer(&dspBuf[0], bytesToDecode);
+    tyrsound_ex_messagef(TYRSOUND_MSG_SPAM, "Decoded %u bytes (pre-DSP)", (unsigned int)filled);
+
+    nSamplesDecoded = filled / bytesPerSample;
+
+    if(_dsp)
+    {
+        copyConvertToFloat(fmt, (float*)buf, &dspBuf[0], nSamplesDecoded);
+        _dsp->process((float)fmt.hz, fmt.channels, _dspState, (float*)buf, nSamplesDecoded);
+        convertFloatToS16Inplace(fmt, buf, nSamplesDecoded);
+    }
+    else
+        copyConvertToS16(fmt, (s16*)buf, &dspBuf[0], nSamplesDecoded);
+
+    return nSamplesDecoded * sizeof(s16);
+}
+
 
 void SoundObject::update()
 {

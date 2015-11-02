@@ -119,4 +119,17 @@ void writeLE16(void *buf, unsigned short i)
     x[1] = i >> 8;
 }
 
+unsigned nextPowerOf2(unsigned x)
+{
+    --x;
+    x |= x >> 1u;
+    x |= x >> 2u;
+    x |= x >> 4u;
+    x |= x >> 8u;
+    x |= x >> 16u;
+    ++x;
+    x += !x;
+    return x;
+}
+
 #include "tyrsound_end.h"

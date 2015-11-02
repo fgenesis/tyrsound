@@ -141,7 +141,7 @@ static int wrap_memseek(void *memp, tyrsound_int64 offs, int whence)
             m->cur += offs;
             break;
         case SEEK_END:
-            m->cur = (m->mem + m->size) - offs;
+            m->cur = (m->mem + m->size) + offs;
             break;
         default:
             return -1;

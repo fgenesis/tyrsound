@@ -4,7 +4,6 @@
 
 #include "tyrsound_begin.h"
 
-// Do NOT register this decoder! It's instantiated manually if required.
 TYRSOUND_REGISTER_DECODER(WavDecoder);
 
 
@@ -24,16 +23,14 @@ bool WavDecoder::checkMagic(const unsigned char *magic, size_t size)
 
 
 WavDecoder::WavDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt, unsigned int datasize)
-: _strm(strm)
-, _fmt(fmt)
-, _datasize(datasize)
+: DecoderBase(_fmt)
+, _strm(strm)
 , _loopPoint(-1)
 , _loopCount(0)
-, _totaltime(-1)
 , _eof(false)
 {
-    _totaltime = (datasize / fmt.channels) / (float)fmt.hz;
-    _totaltime /= (fmt.sampleBits / 8);
+    c.totalsamples = datasize / (fmt.channels * (fmt.sampleBits / 8));
+    c.length = c.totalsamples / (float)fmt.hz;
     _fmt.isfloat = 0;
 }
 
@@ -124,16 +121,11 @@ size_t WavDecoder::fillBuffer(void *buf, size_t size)
     return total;
 }
 
-float WavDecoder::getLength()
-{
-    return _totaltime;
-}
-
-tyrsound_Error WavDecoder::seek(float seconds)
+tyrsound_Error WavDecoder::seekSample(tyrsound_uint64 sample)
 {
     if(_strm.seek)
     {
-        int err = _strm.seek(_strm.user, tyrsound_int64(seconds * 1000), SEEK_SET);
+        int err = _strm.seek(_strm.user, sample * _fmt.channels, SEEK_SET);
         if(!err)
         {
             _eof = false;
@@ -144,18 +136,9 @@ tyrsound_Error WavDecoder::seek(float seconds)
     return TYRSOUND_ERR_UNSUPPORTED;
 }
 
-float WavDecoder::tell()
+tyrsound_uint64 WavDecoder::tellSample()
 {
-    if(_strm.tell)
-    {
-        tyrsound_int64 pos = _strm.tell(_strm.user);
-        if(pos > 0)
-        {
-            float pf = float(pos / _fmt.channels);
-            return pf / (_fmt.sampleBits / 8);
-        }
-    }
-    return -1;
+    return _strm.tell ? _strm.tell(_strm.user) : 0;
 }
 
 tyrsound_Error WavDecoder::setLoop(float seconds, int loops)
@@ -173,11 +156,6 @@ float WavDecoder::getLoopPoint()
 bool WavDecoder::isEOF()
 {
     return _eof;
-}
-
-void WavDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
 }
 
 #include "tyrsound_end.h"

@@ -31,6 +31,12 @@ static tyrsound_MessageCallback s_msgCallback = _debugMsg;
 
 extern "C" {
 
+TYRSOUND_DLL_EXPORT void tyrsound_setMessageCallback(tyrsound_MessageCallback f, void *user)
+{
+    tyrsound::s_msgCallback = f;
+    tyrsound::s_msgPtr = user;
+}
+
 TYRSOUND_DLL_EXPORT void *tyrsound_ex_alloc(void *ptr, size_t size)
 {
     if(tyrsound::s_alloc)
@@ -96,18 +102,21 @@ TYRSOUND_DLL_EXPORT void *tyrsound_ex_loadLibrary(const char *name)
         return h;
 
     size_t len = strlen(name);
-    char *buf = (char*)alloca(len + 10);
+    char *buf = (char*)TYRSOUND_STACK_ALLOC(len + 10);
     memcpy(buf, "lib", 3);
     memcpy(buf+3, name, len+1);
 
     if((h = tyrsound::dynopen(buf)))
-        return h;
+        goto done;
 
     memcpy(buf+3+len, "-0", 3);
     if((h = tyrsound::dynopen(buf)))
-        return h;
+        goto done;
 
-    return tyrsound::dynopen(buf+3);
+    h = tyrsound::dynopen(buf+3);
+done:
+    TYRSOUND_STACK_FREE(buf);
+    return h;
 }
 
 TYRSOUND_DLL_EXPORT void tyrsound_ex_unloadLibrary(void *h)
@@ -193,6 +202,7 @@ TYRSOUND_DLL_EXPORT tyrsound_Error tyrsound_init(const tyrsound_Format *fmt, con
 
     tyrsound::initDecoders();
     tyrsound::initGroups();
+    tyrsound::initDSPs();
 
     return tyrsound::initSounds();
 }
@@ -201,6 +211,7 @@ TYRSOUND_DLL_EXPORT void tyrsound_shutdown()
 {
     tyrsound::shutdownSounds();
     tyrsound::shutdownGroups();
+    tyrsound::shutdownDSPs();
     tyrsound::shutdownDevice();
     tyrsound::shutdownDecoders();
 }

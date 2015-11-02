@@ -4,6 +4,7 @@
 #include "tyrsound_internal.h"
 #include "OpenALChannel.h"
 #include "OpenALDevice.h"
+#include "tyrsound_transform.h"
 
 #include "tyrsound_begin.h"
 
@@ -94,7 +95,7 @@ tyrsound_Error OpenALChannel::genBuffers()
         size_t pcmSize = _aldev->_cfg.bufferSize;
         if(!pcmSize)
             pcmSize = 16 * 1024;
-        _pcmbuf = (char*)Alloc(pcmSize);
+        _pcmbuf = (char*)BufferAlloc(pcmSize);
         if(!_pcmbuf)
             return TYRSOUND_ERR_OUT_OF_MEMORY;
         _pcmbufsize = pcmSize;
@@ -153,7 +154,10 @@ void OpenALChannel::update()
 tyrsound_Error OpenALChannel::filledBuffer(size_t size, const tyrsound_Format& fmt)
 {
     if(size > _pcmbufsize)
+    {
+        breakpoint(); // congrats, you've just stomped memory
         return TYRSOUND_ERR_SHIT_HAPPENED;
+    }
 
     if (size > 0)
     {
@@ -275,7 +279,7 @@ tyrsound_Error OpenALChannel::stop()
 
     alSourcei(_sid, AL_BUFFER, 0);
     CHECK_AL();
-    Free(_pcmbuf);
+    AlignedFree(_pcmbuf);
     _pcmbuf = NULL;
     _pcmbufsize = 0;
     Free(_bid);

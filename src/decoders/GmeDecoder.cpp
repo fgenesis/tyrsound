@@ -18,12 +18,11 @@ static gme_err_t reader_wrap( void* your_data, void* out, int count)
 #define EMU ((gme_t*)_emu)
 
 GmeDecoder::GmeDecoder(void *emu, const tyrsound_Format& fmt)
-: _emu(emu)
+: DecoderBase(fmt)
+, _emu(emu)
 , _loopPoint(-1.0f)
 , _eof(false)
 , _loopCount(0)
-, _totaltime(-1.0f)
-, _fmt(fmt)
 {
     gme_info_t *info = NULL;
     gme_track_info(EMU, &info, 0);
@@ -38,7 +37,8 @@ GmeDecoder::GmeDecoder(void *emu, const tyrsound_Format& fmt)
             if(info->loop_length >= 0)
                 len += info->loop_length;
         }
-        _totaltime = len > 0 ? len / 1000.0f : -1;
+        c.length = len / 1000.0f;
+        c.totalsamples = tyrsound_uint64(c.length * fmt.hz);
     }
     gme_free_info(info);
 }
@@ -75,7 +75,6 @@ GmeDecoder *GmeDecoder::create(const tyrsound_Format& infmt, tyrsound_Stream str
     if(!emu)
         return NULL;
 
-    bool prebuffer = false;
     tyrsound_int64 totalsize = 0;
 
     if(!strm.seek)
@@ -150,6 +149,17 @@ tyrsound_Error GmeDecoder::seek(float seconds)
     return TYRSOUND_ERR_OK;
 }
 
+tyrsound_Error GmeDecoder::seekSample(tyrsound_uint64 sample)
+{
+    tyrsound_uint64 ms = (sample * 1000) / _fmt.hz;
+    gme_err_t err = gme_seek(EMU, (int)ms);
+    if(err)
+        return TYRSOUND_ERR_UNSPECIFIED;
+
+    _eof = false;
+    return TYRSOUND_ERR_OK;
+}
+
 tyrsound_Error GmeDecoder::setLoop(float seconds, int loops)
 {
     _loopPoint = seconds;
@@ -162,25 +172,20 @@ float GmeDecoder::getLoopPoint()
     return _loopPoint;
 }
 
-
-float GmeDecoder::getLength()
-{
-    return _totaltime;
-}
-
 float GmeDecoder::tell()
 {
     return gme_tell(EMU) / 1000.0f;
 }
 
+tyrsound_uint64 GmeDecoder::tellSample()
+{
+    tyrsound_uint64 ms = gme_tell(EMU);
+    return (ms * _fmt.hz) / 1000;
+}
+
 bool GmeDecoder::isEOF()
 {
     return _eof || gme_track_ended(EMU);
-}
-
-void GmeDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
 }
 
 

@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     fmt.sampleBits = 16;
     fmt.signedSamples = 1;
 
-    err = tyrsound_decodeStream(&out, &fmt, &in, &fmt, 0, maxtime);
+    err = tyrsound_decodeStreamToStream(&out, &fmt, &in, 0, maxtime);
     if(err == TYRSOUND_ERR_INFINITE)
     {
         printf("Refusing to decode %s - This is an infinite stream, must supply max. time!\n", argv[1]);

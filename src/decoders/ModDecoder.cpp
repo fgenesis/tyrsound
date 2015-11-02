@@ -60,8 +60,8 @@ bool ModDecoder::checkMagic(const unsigned char *magic, size_t size)
 
 
 ModDecoder::ModDecoder(const tyrsound_Stream& strm, const tyrsound_Format& fmt)
-: _strm(strm)
-, _fmt(fmt)
+: DecoderBase(fmt)
+, _strm(strm)
 , _loopPoint(-1)
 , _loopCount(0)
 , _eof(false)
@@ -84,6 +84,13 @@ ModDecoder::~ModDecoder()
     }
 }
 
+void ModDecoder::setMod(void *mod)
+{
+    _mod = mod;
+    c.length = (float)openmpt_module_get_duration_seconds((openmpt_module*)mod);
+    c.totalsamples = tyrsound_uint64(c.length * _fmt.hz);
+}
+
 ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream& strm)
 {
     ModDecoder *decode = NULL;
@@ -97,14 +104,15 @@ ModDecoder *ModDecoder::create(const tyrsound_Format& fmt, const tyrsound_Stream
     if(!decode)
         goto fail;
 
+    // needs to create the module first, since we need the address of the stream in the decoder object
     mod = openmpt_module_create(stream_callbacks, &decode->_strm, logfunc_wrap, NULL, NULL);
     if(!mod)
         goto fail;
 
     // FIXME: this lowers quality but speeds up processing -- add an API to enable this if desired
-    openmpt_module_set_render_param(mod, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, 4);
+    //openmpt_module_set_render_param(mod, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, 4);
 
-    decode->_mod = mod;
+    decode->setMod(mod);
 
     return decode;
 
@@ -156,7 +164,7 @@ size_t ModDecoder::fillBuffer(void *buf, size_t size)
     size_t total = 0;
     while(!_eof && total < size)
     {
-        size_t rd = (size_t)_readSamples((char*)buf + total, size - total);
+        size_t rd = _readSamples((char*)buf + total, size - total);
         if(!rd)
         {
             if(!_loopCount || _loopPoint < 0)
@@ -182,20 +190,25 @@ size_t ModDecoder::fillBuffer(void *buf, size_t size)
     return total;
 }
 
-float ModDecoder::getLength()
-{
-    return (float)openmpt_module_get_duration_seconds((openmpt_module*)_mod);
-}
-
 tyrsound_Error ModDecoder::seek(float seconds)
 {
     openmpt_module_set_position_seconds((openmpt_module*)_mod, seconds);
     return TYRSOUND_ERR_OK; // FIXME
 }
 
+tyrsound_Error ModDecoder::seekSample(tyrsound_uint64 sample)
+{
+    return seek(sample / float(_fmt.hz));
+}
+
 float ModDecoder::tell()
 {
     return (float)openmpt_module_get_position_seconds((openmpt_module*)_mod);
+}
+
+tyrsound_uint64 ModDecoder::tellSample()
+{
+    return tyrsound_uint64(tell() * _fmt.hz);
 }
 
 tyrsound_Error ModDecoder::setLoop(float seconds, int loops)
@@ -213,11 +226,6 @@ float ModDecoder::getLoopPoint()
 bool ModDecoder::isEOF()
 {
     return _eof;
-}
-
-void ModDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
 }
 
 #include "tyrsound_end.h"

@@ -22,7 +22,7 @@ tyrsound_Error initGroups()
 
 static bool killGroup(ChannelGroup *group)
 {
-    bool ok = tyrsound::groupstore.remove(group);
+    bool ok = groupstore.remove(group);
     if(ok)
         groupstore.update();
     return ok;

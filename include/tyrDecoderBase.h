@@ -3,25 +3,53 @@
 #include "tyrsound_ex.h"
 #include "tyrsound_begin.h"
 
+struct DecoderConstants
+{
+    DecoderConstants() : length(0), totalsamples(0) {}
+
+    float length;
+    tyrsound_uint64 totalsamples; // number of samples divided by number of channels. depends on sampling rate.
+};
 
 class DecoderBase
 {
 protected:
 
-    DecoderBase() {}
+    DecoderBase(const tyrsound_Format& fmt);
     virtual ~DecoderBase() {}
 
 public:
     void destroy();
 
     virtual size_t fillBuffer(void *buf, size_t size) = 0;
-    virtual float getLength() = 0;
-    virtual tyrsound_Error seek(float seconds) = 0;
-    virtual float tell() = 0;
+    virtual tyrsound_Error seekSample(tyrsound_uint64 sample) = 0;
+    virtual tyrsound_uint64 tellSample() = 0;
     virtual tyrsound_Error setLoop(float seconds, int loops) = 0;
     virtual float getLoopPoint() = 0;
     virtual bool isEOF() = 0;
-    virtual void getFormat(tyrsound_Format *fmt) = 0;
+
+    // have default implementations
+    virtual tyrsound_Error seek(float seconds);
+    virtual float tell();
+
+    // non-virtuals
+    inline float getLength() const // 0 if unknown
+    {
+        return c.length;
+    }
+    inline tyrsound_uint64 getTotalSamples() const // 0 if unknown
+    {
+        return c.totalsamples;
+    }
+    inline void getFormat(tyrsound_Format *fmt)
+    {
+        *fmt = _fmt;
+    }
+
+protected:
+
+    DecoderConstants c;
+    tyrsound_Format _fmt;
 };
 
 class DecoderFactoryBase

@@ -19,24 +19,19 @@ public:
     static void staticShutdown() {}
     static bool checkMagic(const unsigned char *magic, size_t size);
 
-    virtual size_t fillBuffer(void *buf, size_t size);
-    virtual float getLength();
-    virtual tyrsound_Error seek(float seconds);
-    virtual float tell();
-    virtual tyrsound_Error setLoop(float seconds, int loops);
-    virtual float getLoopPoint();
-    virtual bool isEOF();
-    virtual void getFormat(tyrsound_Format *fmt);
+    size_t fillBuffer(void *buf, size_t size);
+    tyrsound_Error seekSample(tyrsound_uint64 seconds);
+    tyrsound_uint64 tellSample();
+    tyrsound_Error setLoop(float seconds, int loops);
+    float getLoopPoint();
+    bool isEOF();
 
     int writeCallback(const void *decoder, const void *frame, const void *const buffer[]);
 
 private:
 
     void *_samplebuf;
-
     void *_state;
-    float _totaltime;
-    tyrsound_Format _fmt;
     float _loopPoint;
     int _loopCount;
     bool _seekable;

@@ -11,6 +11,8 @@
 #include "tyrsound.h"
 
 
+#define tyrsound_compile_assert(cond) switch(0){case 0:; case cond:;}
+
 #if !defined(NDEBUG) && (defined(DEBUG) || defined(_DEBUG))
 #  define TYRSOUND_IS_DEBUG 1
 #endif
@@ -48,10 +50,42 @@ extern "C"
 
 #include "tyrsound_begin.h"
 
+inline void *alignPointer(void *ptr, size_t align)
+{
+    tyrsound_compile_assert(sizeof(uintptr_t) == sizeof(void*));
+    if(!align)
+        return ptr;
+    --align;
+    uintptr_t p = uintptr_t(ptr);
+    return (void*)((p + align) & ~uintptr_t(align));
+}
+inline bool pointerIsAligned(void *ptr, size_t align)
+{
+    return !align || !(uintptr_t(ptr) % uintptr_t(align));
+}
+
 // Memory related functions, using the allocator set via tyrsound_setAlloc()
 inline void *Realloc(void *ptr, size_t size) { return tyrsound_ex_alloc(ptr, size); }
 inline void  Free(void *ptr)                 { tyrsound_ex_alloc(ptr, 0); }
 inline void *Alloc(size_t size)              { return tyrsound_ex_alloc(NULL, size); }
+inline void *AlignedAlloc(size_t size, size_t alignment)
+{
+    unsigned char *p = (unsigned char*)Alloc(size+alignment); // in theory, up to (alignment-1) bytes are needed as padding. one byte extra is for the offset
+    if(!p)
+        return NULL;
+    unsigned char *a = (unsigned char*)alignPointer(p+1, alignment); // always make sure at least 1 byte is free, that will hold the offset
+    a[-1] = (unsigned char)(a - p);
+    return a;
+}
+inline void AlignedFree(void *ptr)
+{
+    if(!ptr)
+        return;
+    unsigned char *a = (unsigned char*)ptr;
+    unsigned off = a[-1]; // always >= 1
+    void *p = a - off;
+    Free(p);
+}
 
 
 // Body is in tyrsound_misc.cpp

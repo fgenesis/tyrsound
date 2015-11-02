@@ -5,9 +5,11 @@
 
 #include "tyrsound_begin.h"
 
+
 class ChannelGroup;
 class DecoderBase;
 class ChannelBase;
+class DSPAPI;
 
 class SoundObject : public ReferencedPlayable
 {
@@ -35,6 +37,8 @@ public:
     int isPlaying();
     int isStopped();
 
+    tyrsound_Error attachDSP(DSPAPI *dsp);
+
     // sets decoder position. Has no immediate effect on the already buffered data!
     tyrsound_Error seek(float seconds);
     float tell();
@@ -47,6 +51,7 @@ public:
 
 protected:
     void _decode();
+    size_t _decodeBlock(void *buf, size_t sz, tyrsound_Format& fmt);
 
     DecoderBase *_decoder;
     ChannelBase *_channel;
@@ -71,6 +76,9 @@ protected:
     float groupspeed;
     float groupx, groupy, groupz;
 
+    DSPAPI *_dsp;
+    void *_dspState;
+    PODArray<char> dspBuf;
 };
 
 #include "tyrsound_end.h"

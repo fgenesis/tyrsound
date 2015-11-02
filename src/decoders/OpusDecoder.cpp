@@ -1,6 +1,6 @@
-#include "tyrsound_internal.h"
 #include "OpusDecoder.h"
 #include <opusfile.h>
+#include "tyrsound_internal.h"
 
 #include "tyrsound_begin.h"
 
@@ -44,19 +44,20 @@ static const OpusFileCallbacks stream_callbacks =
 #define OPUS ((OggOpusFile*)_state)
 
 OpusDecoder::OpusDecoder(void *state, const tyrsound_Format& fmt)
-: _state(state)
+: DecoderBase(fmt)
+, _state(state)
 , _loopPoint(-1.0f)
 , _eof(false)
 , _loopCount(0)
 {
     opus_int64 pcmlen = op_pcm_total(OPUS, -1);
-    _totaltime = pcmlen < 0 ? -1.0f : float((double)pcmlen / 48000.0);
+    pcmlen = vmax<opus_int64>(pcmlen, 0);
+    c.totalsamples = pcmlen;
+    c.length = float((double)pcmlen / 48000.0);
     _seekable = op_seekable(OPUS) != 0;
-    _fmt = fmt;
     const OpusHead *oh = op_head(OPUS, -1);
     _fmt.channels = oh->channel_count ? oh->channel_count : 1;
     _fmt.hz = 48000; // oh->input_sample_rate; // 48k is opus internal format
-    // TODO: check whether hardware/output device really supports 48k playback
     _fmt.sampleBits = 16;
     _fmt.signedSamples = 1;
     _fmt.bigendian = isBigEndian();
@@ -158,9 +159,13 @@ size_t OpusDecoder::fillBuffer(void *buf, size_t size)
 
 tyrsound_Error OpusDecoder::seek(float seconds)
 {
+    return seekSample((opus_int64)(double(seconds) * 48000.0));
+}
+
+tyrsound_Error OpusDecoder::seekSample(tyrsound_uint64 sample)
+{
     _eof = false;
-    opus_int64 samplepos = (opus_int64)(double(seconds) * 48000.0);
-    return op_pcm_seek(OPUS, samplepos)
+    return op_pcm_seek(OPUS, sample)
         ? TYRSOUND_ERR_UNSPECIFIED
         : TYRSOUND_ERR_OK;
 }
@@ -181,28 +186,21 @@ float OpusDecoder::getLoopPoint()
     return _loopPoint;
 }
 
-
-float OpusDecoder::getLength()
+tyrsound_uint64 OpusDecoder::tellSample()
 {
-    return _totaltime;
+    opus_int64 pcmpos = op_pcm_tell(OPUS);
+    return (tyrsound_uint64)vmax<opus_int64>(0, pcmpos);
 }
 
 float OpusDecoder::tell()
 {
-    opus_int64 pcmpos = op_pcm_tell(OPUS);
-    return pcmpos < 0 ? -1.0f : float((double)pcmpos / 48000.0);
+    return float((double)tellSample() / 48000.0);
 }
 
 bool OpusDecoder::isEOF()
 {
     return _eof;
 }
-
-void OpusDecoder::getFormat(tyrsound_Format *fmt)
-{
-    *fmt = _fmt;
-}
-
 
 #include "tyrsound_end.h"
 
